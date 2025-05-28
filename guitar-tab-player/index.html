@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guitar Tab Player</title>
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- AlphaTab CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/alphaTab.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🎸 Guitar Tab Player</h1>
+            <p>Load and play Guitar Pro files with interactive controls</p>
+        </header>
+
+        <!-- File Input Section -->
+        <div class="file-section">
+            <div class="file-input-container" id="fileInputContainer">
+                <input type="file" id="fileInput" accept=".gp,.gp3,.gp4,.gp5,.gpx,.gp6,.gp7" class="file-input">
+                <label for="fileInput" class="file-input-label" tabindex="-1">
+                    <span class="file-input-icon">📁</span>
+                    <span class="file-input-text">Choose Guitar Pro File</span>
+                </label>
+            </div>
+            <div id="fileNameDisplay" class="file-name-display" style="display: none;"></div>
+        </div>
+
+        <!-- Track Info -->
+        <div id="trackInfo" class="track-info" style="display: none;">
+            <div class="song-details">
+                <h2 id="songTitle">Song Title</h2>
+                <p id="songArtist">Artist Name</p>
+                <p id="trackCount">Tracks: 0</p>
+            </div>
+        </div>
+
+        <!-- Track Controls -->
+        <div id="trackControls" class="track-controls" style="display: none;">
+            <div class="track-controls-header">
+                <h3>Track Controls</h3>
+                <div class="bulk-controls">
+                    <button id="showAllTracks" class="bulk-btn">Show All</button>
+                    <button id="hideAllTracks" class="bulk-btn">Hide All</button>
+                    <button id="unmuteAllTracks" class="bulk-btn">Unmute All</button>
+                    <button id="unsoloAllTracks" class="bulk-btn">Unsolo All</button>
+                </div>
+            </div>
+            <div id="tracksGrid" class="tracks-grid"></div>
+        </div>
+
+        <!-- Horizontal Playback Controls -->
+        <div id="horizontalControls" class="horizontal-controls">
+            <button id="playBtn" class="horizontal-btn" disabled>
+                <span class="btn-icon">▶️</span>
+            </button>
+            <button id="pauseBtn" class="horizontal-btn" disabled>
+                <span class="btn-icon">⏸️</span>
+            </button>
+            <button id="stopBtn" class="horizontal-btn" disabled>
+                <span class="btn-icon">⏹️</span>
+            </button>
+            
+            <div class="horizontal-divider"></div>
+            
+            <div class="horizontal-volume">
+                <span class="volume-icon">🔊</span>
+                <input type="range" id="volumeSlider" min="0" max="100" value="80" class="horizontal-slider">
+                <span id="volumeValue" class="horizontal-display">80%</span>
+            </div>
+
+            <div class="horizontal-divider"></div>
+
+            <div class="horizontal-speed">
+                <span class="speed-icon">🎵</span>
+                <input type="range" id="speedSlider" min="25" max="200" value="100" step="5" class="horizontal-slider">
+                <span id="speedValue" class="horizontal-display">100%</span>
+            </div>
+
+            <div class="horizontal-divider"></div>
+
+            <button id="exportPngBtn" class="horizontal-btn" disabled title="Export Tab (HTML/JPEG)">
+                <span class="btn-icon">📤</span>
+            </button>
+        </div>
+
+        <!-- HTML Export Modal -->
+        <div id="pngExportModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Export HTML</h3>
+                    <button class="modal-close" id="closeExportModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="export-section">
+                        <label for="exportFormat">Export Format:</label>
+                        <select id="exportFormat" class="export-input">
+                            <option value="html" selected>HTML (Web-ready)</option>
+                            <option value="jpeg">JPEG Image</option>
+                        </select>
+                    </div>
+                    <div class="export-section">
+                        <label for="startBar">Start Bar:</label>
+                        <select id="startBar" class="export-input">
+                            <option value="1">Bar 1</option>
+                        </select>
+                    </div>
+                    <div class="export-section">
+                        <label for="endBar">End Bar:</label>
+                        <select id="endBar" class="export-input">
+                            <option value="1">Bar 1</option>
+                        </select>
+                    </div>
+                    <div class="export-section">
+                        <label for="exportScale">Quality (Scale):</label>
+                        <select id="exportScale" class="export-input">
+                            <option value="1">1x (Normal)</option>
+                            <option value="2" selected>2x (High)</option>
+                            <option value="3">3x (Very High)</option>
+                            <option value="4">4x (Ultra)</option>
+                        </select>
+                    </div>
+                    <div class="export-preview">
+                        <p id="exportPreview">Selected: Bar 1 to Bar 1</p>
+                        <p id="formatInfo" style="font-size: 12px; color: #666; margin-top: 8px;">
+                            💡 HTML files can be embedded in websites using &lt;iframe&gt; or opened directly in browsers
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancelExport" class="btn-secondary">Cancel</button>
+                    <button id="confirmExport" class="btn-primary">Export HTML</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AlphaTab Container -->
+        <div id="alphaTab">
+        </div>
+    </div>
+
+    <!-- External Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/alphaTab.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
