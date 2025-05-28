@@ -1,6 +1,8 @@
 let api = null;
 let isPlayerReady = false;
 let trackStates = {}; // Store track states (visible, muted, solo)
+let currentScore = null; // Global score reference
+let isRenderingComplete = false; // Track rendering state
 
 // DOM elements
 const fileInput = document.getElementById('fileInput');
@@ -26,6 +28,20 @@ const showAllTracks = document.getElementById('showAllTracks');
 const hideAllTracks = document.getElementById('hideAllTracks');
 const unmuteAllTracks = document.getElementById('unmuteAllTracks');
 const unsoloAllTracks = document.getElementById('unsoloAllTracks');
+
+// PNG Export elements
+const exportPngBtn = document.getElementById('exportPngBtn');
+const visualCropBtn = document.getElementById('visualCropBtn');
+const pngExportModal = document.getElementById('pngExportModal');
+const closeExportModal = document.getElementById('closeExportModal');
+const cancelExportBtn = document.getElementById('cancelExport');
+const confirmExportBtn = document.getElementById('confirmExport');
+const exportFormatSelect = document.getElementById('exportFormat');
+const startBarSelect = document.getElementById('startBar');
+const endBarSelect = document.getElementById('endBar');
+const exportScaleSelect = document.getElementById('exportScale');
+const exportPreview = document.getElementById('exportPreview');
+const formatInfo = document.getElementById('formatInfo');
 
 // Initialize AlphaTab
 function initializeAlphaTab() {
@@ -125,23 +141,15 @@ function initializeAlphaTab() {
             updatePlayerButtons(e.state);
         });
         
-        // Add click-to-seek functionality
-        api.beatMouseDown.on((beat) => {
-            if (api && beat) {
-                try {
-                    console.log('Beat clicked, seeking to:', beat.absolutePlaybackStart);
-                    // Set playback position to the clicked beat
-                    api.tickPosition = beat.absolutePlaybackStart;
-                } catch (error) {
-                    console.error('Error seeking to position:', error);
-                }
-            }
-        });
-        
         // Add playback cursor functionality
         api.playerPositionChanged.on((e) => {
             // The cursor position is automatically handled by AlphaTab
             // This event fires when the playback position changes
+            
+            // Update loop system position (for compatibility, though not needed with AlphaTab's native looping)
+            if (loopSystem) {
+                loopSystem.currentPosition = e.currentTime;
+            }
         });
         
         api.error.on((error) => {
@@ -638,6 +646,10 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeAlphaTab();
     setupEventListeners();
     initializePngExport();
+    initializeVisualCropping();
+    
+    // Initialize loop system
+    loopSystem.initialize();
     
     // Force hide modal on page load to prevent it from being stuck open
     forceHideModal();
@@ -939,27 +951,343 @@ function getGeneralMidiInstrumentName(program) {
     return instruments[program] || `Program ${program}`;
 }
 
-// PNG Export Functionality
-let currentScore = null;
-let isRenderingComplete = false;
+// Loop Functionality System
+class LoopSystem {
+    constructor() {
+        this.isLooping = false;
+        this.isSelectionMode = false;
+        this.startBar = 1;
+        this.endBar = 1;
+        this.loopInterval = null;
+        this.currentPosition = 0;
+        this.barDuration = 0;
+        this.isInitialized = false;
+        this.originalBeatMouseDownHandler = null;
+        this.currentRange = null; // Store the current loop range
+        this.loopStartTime = 0; // Track when loop started for timing
+        this.lastLogTime = null; // Track last log time for throttled logging
+        this.currentSelection = null; // Store the visual selection data
+    }
 
-// PNG Export Modal Elements
-const exportPngBtn = document.getElementById('exportPngBtn');
-const pngExportModal = document.getElementById('pngExportModal');
-const closeExportModal = document.getElementById('closeExportModal');
-const exportFormatSelect = document.getElementById('exportFormat');
-const startBarSelect = document.getElementById('startBar');
-const endBarSelect = document.getElementById('endBar');
-const exportScaleSelect = document.getElementById('exportScale');
-const exportPreview = document.getElementById('exportPreview');
-const formatInfo = document.getElementById('formatInfo');
-const cancelExportBtn = document.getElementById('cancelExport');
-const confirmExportBtn = document.getElementById('confirmExport');
+    // Initialize loop system
+    initialize() {
+        if (this.isInitialized) return;
+        
+        this.loopButton = document.getElementById('loopBtn');
+        if (!this.loopButton) {
+            console.error('Loop button not found');
+            return;
+        }
+
+        // Add event listener
+        this.loopButton.addEventListener('click', () => this.toggleLoopMode());
+        
+        // Setup selection handlers when API is available
+        if (api) {
+            this.setupSelectionHandlers();
+        } else {
+            // Wait for API to be ready
+            const checkApi = () => {
+                if (api) {
+                    this.setupSelectionHandlers();
+                } else {
+                    setTimeout(checkApi, 100);
+                }
+            };
+            checkApi();
+        }
+
+        this.isInitialized = true;
+        console.log('Loop system initialized with AlphaTab selection');
+    }
+
+    // Setup AlphaTab selection event handlers
+    setupSelectionHandlers() {
+        if (!api) return;
+
+        // Listen for beat mouse up to detect when selection is complete
+        api.beatMouseUp.on((beat) => {
+            if (this.isSelectionMode && beat) {
+                console.log('Beat mouse up detected in selection mode:', beat);
+                // Check if AlphaTab has created a playback range
+                setTimeout(() => {
+                    if (api.playbackRange) {
+                        console.log('Selection detected, starting loop with AlphaTab range');
+                        this.startLoopWithAlphaTabRange();
+                    } else {
+                        console.log('Single beat clicked, using default range');
+                        this.startLoopFromBeat(beat);
+                    }
+                }, 100); // Small delay to let AlphaTab process the selection
+            }
+        });
+
+        // Listen for player position changes to handle looping
+        api.playerPositionChanged.on((e) => {
+            if (this.isLooping && this.currentRange) {
+                this.checkLoopPosition(e.currentTime);
+            }
+        });
+
+        // Listen for player state changes to handle when playback stops
+        api.playerStateChanged.on((e) => {
+            if (this.isLooping && e.state === 0) { // PlayerState.Paused
+                // If we're looping and playback stopped, restart from beginning of selection
+                setTimeout(() => {
+                    if (this.isLooping && this.currentRange) {
+                        console.log('Playback stopped, restarting loop');
+                        api.tickPosition = this.currentRange.startTick;
+                        api.playPause();
+                    }
+                }, 100);
+            }
+        });
+
+        console.log('Selection handlers setup complete');
+    }
+
+    // Toggle loop mode (selection mode)
+    toggleLoopMode() {
+        if (!api || !currentScore) {
+            console.log('No score loaded for looping');
+            return;
+        }
+
+        if (this.isLooping) {
+            this.stopLoop();
+        } else {
+            this.enterSelectionMode();
+        }
+    }
+
+    // Enter selection mode
+    enterSelectionMode() {
+        this.isSelectionMode = true;
+        this.updateLoopButton();
+        
+        // Show instruction message
+        this.showSelectionMessage();
+        
+        console.log('Loop selection mode activated - click and drag to select range');
+    }
+
+    // Start loop with AlphaTab's native playback range
+    startLoopWithAlphaTabRange() {
+        if (!api || !api.playbackRange) return;
+
+        const range = api.playbackRange;
+        this.currentRange = range; // Store the range for loop checking
+        this.isLooping = true;
+        this.isSelectionMode = false;
+        this.loopStartTime = Date.now();
+        
+        // Start playback if not already playing
+        if (api.playerState !== 1) { // Not playing
+            api.tickPosition = range.startTick; // Start from beginning of selection
+            api.playPause();
+        }
+        
+        this.updateLoopButton();
+        this.showLoopActiveMessage();
+        
+        console.log('Loop started with AlphaTab range:', range);
+    }
+
+    // Start loop from a single beat (default 4-bar range)
+    startLoopFromBeat(beat) {
+        if (!api || !beat) return;
+
+        // Calculate a 4-bar range starting from the clicked beat
+        const startBar = beat.voice.bar.index;
+        const totalBars = this.getTotalBars();
+        const endBar = Math.min(startBar + 3, totalBars - 1); // 4 bars or to end
+
+        // Create a playback range
+        const startTick = beat.voice.bar.masterBar.start;
+        const endMasterBar = currentScore.masterBars[endBar];
+        const endTick = endMasterBar.start + endMasterBar.calculateDuration();
+
+        const range = {
+            startTick: startTick,
+            endTick: endTick
+        };
+
+        // Set the range in AlphaTab and start our loop
+        api.playbackRange = range;
+        this.currentRange = range;
+        this.startLoopWithAlphaTabRange();
+        
+        console.log(`Loop started from beat: bars ${startBar + 1}-${endBar + 1}`);
+    }
+
+    // Stop looping
+    stopLoop() {
+        this.isLooping = false;
+        this.isSelectionMode = false;
+        this.currentRange = null;
+        
+        // Clear AlphaTab's playback range
+        if (api) {
+            api.playbackRange = null;
+        }
+        
+        this.updateLoopButton();
+        this.hideMessages();
+        
+        console.log('Loop stopped');
+    }
+
+    // Get total number of bars
+    getTotalBars() {
+        if (!currentScore || !currentScore.masterBars) return 1;
+        return currentScore.masterBars.length;
+    }
+
+    // Update loop button appearance
+    updateLoopButton() {
+        if (!this.loopButton) return;
+
+        // Remove all state classes first
+        this.loopButton.classList.remove('active', 'selection-mode');
+
+        if (this.isLooping) {
+            this.loopButton.classList.add('active');
+            this.loopButton.title = 'Looping Active (Click to stop)';
+        } else if (this.isSelectionMode) {
+            this.loopButton.classList.add('selection-mode');
+            this.loopButton.title = 'Selection Mode - Click and drag to select loop range';
+        } else {
+            this.loopButton.title = 'Loop Selected Bars - Click to start selection';
+        }
+    }
+
+    // Show selection instruction message
+    showSelectionMessage() {
+        this.showMessage('🎯 Click and drag on the tab to select loop range', '#FF9800');
+    }
+
+    // Show loop active message
+    showLoopActiveMessage() {
+        // Get range info for display
+        let rangeText = 'Selected Range';
+        if (api && api.playbackRange) {
+            // Try to determine bar numbers from the range
+            rangeText = 'Selected Range';
+        }
+        
+        this.showMessage(`🔄 Looping ${rangeText}`, '#4CAF50');
+    }
+
+    // Show status message
+    showMessage(text, color = '#4CAF50') {
+        // Create or update loop status display
+        let loopStatus = document.getElementById('loopStatus');
+        if (!loopStatus) {
+            loopStatus = document.createElement('div');
+            loopStatus.id = 'loopStatus';
+            loopStatus.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${color};
+                color: white;
+                padding: 12px 18px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 600;
+                z-index: 1000;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                transition: all 0.3s ease;
+                font-family: 'Inter', sans-serif;
+            `;
+            document.body.appendChild(loopStatus);
+        }
+
+        loopStatus.style.background = color;
+        loopStatus.textContent = text;
+        loopStatus.style.display = 'block';
+        loopStatus.style.opacity = '1';
+
+        // Auto-hide after delay (except for active loop message)
+        if (color !== '#4CAF50' || !this.isLooping) {
+            setTimeout(() => {
+                if (loopStatus && loopStatus.style.opacity === '1') {
+                    loopStatus.style.opacity = '0';
+                    setTimeout(() => {
+                        if (loopStatus && loopStatus.style.opacity === '0') {
+                            loopStatus.style.display = 'none';
+                        }
+                    }, 300);
+                }
+            }, 3000);
+        }
+    }
+
+    // Hide status messages
+    hideMessages() {
+        const loopStatus = document.getElementById('loopStatus');
+        if (loopStatus) {
+            loopStatus.style.opacity = '0';
+            setTimeout(() => {
+                if (loopStatus) {
+                    loopStatus.style.display = 'none';
+                }
+            }, 300);
+        }
+    }
+
+    // Enable/disable loop button
+    setEnabled(enabled) {
+        if (this.loopButton) {
+            this.loopButton.disabled = !enabled;
+        }
+    }
+
+    // Reset loop system
+    reset() {
+        this.stopLoop();
+        this.startBar = 1;
+        this.endBar = 1;
+        this.currentPosition = 0;
+        this.barDuration = 0;
+        this.currentRange = null;
+    }
+
+    // Check if we need to loop back to the start
+    checkLoopPosition(currentTime) {
+        if (!this.isLooping || !this.currentRange || !api) return;
+
+        // Convert current time to ticks (approximate)
+        const currentTick = api.tickPosition;
+        
+        // Log position for debugging (throttled)
+        if (!this.lastLogTime || Date.now() - this.lastLogTime > 1000) {
+            console.log(`Loop position: ${currentTick} / ${this.currentRange.endTick} (${Math.round((currentTick / this.currentRange.endTick) * 100)}%)`);
+            this.lastLogTime = Date.now();
+        }
+        
+        // Check if we've reached or passed the end of the loop
+        if (currentTick >= this.currentRange.endTick - 100) { // Small buffer to prevent timing issues
+            console.log('🔄 Loop end reached, jumping back to start');
+            // Jump back to the start of the loop
+            api.tickPosition = this.currentRange.startTick;
+            
+            // Update the visual feedback
+            this.showMessage('🔄 Loop restarted', '#4CAF50');
+        }
+    }
+}
+
+// Create global loop system instance
+const loopSystem = new LoopSystem();
 
 // Initialize PNG export functionality
 function initializePngExport() {
     // Add event listeners for export
     exportPngBtn.addEventListener('click', openExportModal);
+    
+    // Add event listener for visual crop button
+    visualCropBtn.addEventListener('click', toggleVisualCropping);
     
     // Multiple ways to close the modal
     closeExportModal.addEventListener('click', (e) => {
@@ -1024,42 +1352,6 @@ function openExportModal() {
     if (!api || !currentScore) {
         alert('Please load a score first');
         return;
-    }
-    
-    // Debug: Check AlphaTab container and canvas elements
-    const alphaTabContainer = document.getElementById('alphaTab');
-    console.log('AlphaTab container:', alphaTabContainer);
-    
-    if (alphaTabContainer) {
-        const canvasElements = alphaTabContainer.querySelectorAll('canvas');
-        console.log(`Found ${canvasElements.length} canvas elements in container`);
-        
-        // Log details about each canvas
-        canvasElements.forEach((canvas, index) => {
-            console.log(`Canvas ${index}:`, {
-                width: canvas.width,
-                height: canvas.height,
-                styleWidth: canvas.style.width,
-                styleHeight: canvas.style.height,
-                offsetWidth: canvas.offsetWidth,
-                offsetHeight: canvas.offsetHeight,
-                visible: canvas.offsetParent !== null
-            });
-        });
-        
-        // Also check for SVG elements (in case AlphaTab is using SVG)
-        const svgElements = alphaTabContainer.querySelectorAll('svg');
-        console.log(`Found ${svgElements.length} SVG elements in container`);
-        
-        svgElements.forEach((svg, index) => {
-            console.log(`SVG ${index}:`, {
-                width: svg.getAttribute('width'),
-                height: svg.getAttribute('height'),
-                viewBox: svg.getAttribute('viewBox'),
-                offsetWidth: svg.offsetWidth,
-                offsetHeight: svg.offsetHeight
-            });
-        });
     }
     
     populateBarSelections();
@@ -1157,841 +1449,297 @@ function updateExportPreview() {
     
     exportPreview.textContent = previewText;
     
-    // Update format info
+    // Update button text based on format
     if (format === 'html') {
-        formatInfo.textContent = '💡 HTML files can be embedded in websites using <iframe> or opened directly in browsers';
         confirmExportBtn.textContent = 'Export HTML';
-    } else if (format === 'jpeg') {
-        formatInfo.textContent = '📷 JPEG images are perfect for sharing and embedding in documents or websites';
+        formatInfo.textContent = '💡 HTML files can be embedded in websites using <iframe> or opened directly in browsers';
+    } else {
         confirmExportBtn.textContent = 'Export JPEG';
+        formatInfo.textContent = '💡 JPEG images are perfect for sharing, printing, or embedding in documents';
     }
 }
 
-// Main export function that routes to the appropriate format
+// Perform export based on selected format
 async function performExport() {
     const format = exportFormatSelect.value;
     
     if (format === 'html') {
         await performHtmlExport();
-    } else if (format === 'jpeg') {
+    } else {
         await performJpegExport();
     }
 }
 
-// Helper function to wait for rendering completion
-async function waitForRenderingComplete(maxWaitTime = 10000) {
-    console.log('Waiting for rendering to complete...');
-    const startTime = Date.now();
-    
-    while (!isRenderingComplete && (Date.now() - startTime) < maxWaitTime) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    
-    if (!isRenderingComplete) {
-        console.warn('Rendering did not complete within timeout, proceeding anyway...');
-    } else {
-        console.log('Rendering completed successfully');
-    }
-    
-    // Give a bit more time for DOM updates
-    await new Promise(resolve => setTimeout(resolve, 500));
+// Placeholder functions for export functionality
+async function performHtmlExport() {
+    console.log('HTML export not yet implemented');
+    alert('HTML export functionality will be implemented soon!');
 }
 
-// Perform HTML export
-async function performHtmlExport() {
-    const startBar = parseInt(document.getElementById('startBar').value) - 1;
-    const endBar = parseInt(document.getElementById('endBar').value) - 1;
-    const scale = parseFloat(document.getElementById('exportScale').value);
-    const confirmExportBtn = document.getElementById('confirmExport');
-    
-    // Update button state
-    confirmExportBtn.classList.add('loading');
-    confirmExportBtn.textContent = 'Exporting...';
-    confirmExportBtn.disabled = true;
-    
+// Perform JPEG export with cropping support
+async function performJpegExport() {
     try {
-        console.log('Starting HTML export...', { startBar, endBar, scale });
+        console.log('Starting JPEG export...');
         
-        // First, render the specific bar range
-        const rangeInfo = await renderBarRange(startBar, endBar);
-        console.log('Bar range rendering completed:', rangeInfo);
+        // Update button state
+        confirmExportBtn.classList.add('loading');
+        confirmExportBtn.textContent = 'Exporting...';
+        confirmExportBtn.disabled = true;
         
-        // Find the AlphaTab container
+        const startBar = parseInt(startBarSelect.value) - 1; // Convert to 0-based
+        const endBar = parseInt(endBarSelect.value) - 1;     // Convert to 0-based
+        const scale = parseFloat(exportScaleSelect.value);
+        
+        // Ensure rendering is complete
+        if (!isRenderingComplete) {
+            console.log('Waiting for rendering to complete...');
+            await waitForRenderingComplete();
+        }
+        
+        // Get the AlphaTab container and find all canvas elements
         const alphaTabContainer = document.getElementById('alphaTab');
         if (!alphaTabContainer) {
             throw new Error('AlphaTab container not found');
         }
         
-        console.log('AlphaTab container found:', alphaTabContainer);
+        // Find all canvas elements in the container
+        const canvases = alphaTabContainer.querySelectorAll('canvas');
+        console.log(`Found ${canvases.length} canvas elements`);
         
-        // Force a re-render to ensure content is available
-        if (api && api.score) {
-            console.log('Forcing re-render...');
-            api.renderScore(api.score);
-            // Wait for re-render to complete
-            await waitForRenderingComplete();
+        if (canvases.length === 0) {
+            throw new Error('No canvas elements found. Make sure the score is fully rendered.');
         }
         
-        // Look for all possible rendering elements with more detailed logging
-        const canvasElements = alphaTabContainer.querySelectorAll('canvas');
-        const svgElements = alphaTabContainer.querySelectorAll('svg');
-        const imgElements = alphaTabContainer.querySelectorAll('img');
+        // Create a composite canvas from all AlphaTab canvases
+        const compositeCanvas = await createCompositeCanvas(canvases, scale);
         
-        console.log(`Found ${canvasElements.length} canvas, ${svgElements.length} SVG, ${imgElements.length} img elements`);
-        
-        // Log detailed information about each element type
-        canvasElements.forEach((canvas, i) => {
-            console.log(`Canvas ${i}:`, {
-                width: canvas.width,
-                height: canvas.height,
-                offsetWidth: canvas.offsetWidth,
-                offsetHeight: canvas.offsetHeight,
-                visible: canvas.offsetParent !== null,
-                style: canvas.style.cssText
-            });
-        });
-        
-        svgElements.forEach((svg, i) => {
-            console.log(`SVG ${i}:`, {
-                width: svg.getAttribute('width'),
-                height: svg.getAttribute('height'),
-                viewBox: svg.getAttribute('viewBox'),
-                offsetWidth: svg.offsetWidth,
-                offsetHeight: svg.offsetHeight,
-                visible: svg.offsetParent !== null,
-                innerHTML: svg.innerHTML.substring(0, 100) + '...'
-            });
-        });
-        
-        let htmlContent = '';
-        
-        if (canvasElements.length > 0) {
-            // Handle Canvas rendering - convert to images
-            console.log('Using Canvas export method');
-            
-            const canvasImages = [];
-            for (let i = 0; i < canvasElements.length; i++) {
-                const canvas = canvasElements[i];
-                try {
-                    // Check if canvas has actual content
-                    const ctx = canvas.getContext('2d');
-                    const imageData = ctx.getImageData(0, 0, Math.min(canvas.width, 10), Math.min(canvas.height, 10));
-                    const hasContent = imageData.data.some(pixel => pixel !== 0);
-                    
-                    if (hasContent && canvas.width > 0 && canvas.height > 0) {
-                        const dataURL = canvas.toDataURL('image/png');
-                        if (dataURL && dataURL !== 'data:,') {
-                            canvasImages.push({
-                                src: dataURL,
-                                width: canvas.width,
-                                height: canvas.height,
-                                index: i
-                            });
-                            console.log(`Successfully captured canvas ${i} (${canvas.width}x${canvas.height})`);
-                        }
-                    } else {
-                        console.warn(`Canvas ${i} appears to be empty`);
-                    }
-                } catch (error) {
-                    console.warn(`Failed to process canvas ${i}:`, error);
-                }
-            }
-            
-            if (canvasImages.length > 0) {
-                htmlContent = canvasImages.map(img => 
-                    `<img src="${img.src}" style="display: block; width: 100%; height: auto; margin-bottom: 10px; max-width: ${img.width}px;" alt="Tab Page ${img.index + 1}" />`
-                ).join('\n');
-            } else {
-                throw new Error('No valid canvas content found - all canvases appear to be empty');
-            }
-            
-        } else if (svgElements.length > 0) {
-            // Handle SVG rendering
-            console.log('Using SVG export method');
-            
-            const validSvgs = [];
-            for (let i = 0; i < svgElements.length; i++) {
-                const svg = svgElements[i];
-                try {
-                    // Check if SVG has content
-                    if (svg.innerHTML.trim().length > 0 && svg.offsetParent !== null) {
-                        // Clone and clean up the SVG
-                        const clonedSvg = svg.cloneNode(true);
-                        
-                        // Ensure proper styling for export
-                        clonedSvg.style.display = 'block';
-                        clonedSvg.style.width = '100%';
-                        clonedSvg.style.height = 'auto';
-                        clonedSvg.style.marginBottom = '10px';
-                        clonedSvg.style.maxWidth = svg.getAttribute('width') || '100%';
-                        
-                        // Remove any AlphaTab-specific attributes that might cause issues
-                        clonedSvg.removeAttribute('data-alphatab');
-                        
-                        validSvgs.push(clonedSvg.outerHTML);
-                        console.log(`Successfully processed SVG ${i}`);
-                    } else {
-                        console.warn(`SVG ${i} is empty or not visible`);
-                    }
-                } catch (error) {
-                    console.warn(`Failed to process SVG ${i}:`, error);
-                }
-            }
-            
-            if (validSvgs.length > 0) {
-                htmlContent = validSvgs.join('\n');
-            } else {
-                throw new Error('No valid SVG content found');
-            }
-            
-        } else {
-            // Try to use AlphaTab's built-in export if available
-            console.log('No canvas or SVG found, trying AlphaTab export API...');
-            
-            if (api && api.renderScore) {
-                // Try to trigger a fresh render and wait
-                console.log('Triggering fresh render...');
-                api.renderScore(api.score);
-                await waitForRenderingComplete();
-                
-                // Check again for rendered content
-                const newCanvases = alphaTabContainer.querySelectorAll('canvas');
-                const newSvgs = alphaTabContainer.querySelectorAll('svg');
-                
-                console.log(`After re-render: ${newCanvases.length} canvas, ${newSvgs.length} SVG elements`);
-                
-                if (newCanvases.length > 0 || newSvgs.length > 0) {
-                    // Recursively call this function to process the newly rendered content
-                    console.log('Found new content after re-render, processing...');
-                    return await performHtmlExport();
-                }
-            }
-            
-            throw new Error('No renderable content found. Please ensure the score is fully loaded and rendered before exporting.');
+        // Apply cropping if visual crop selection exists
+        let finalCanvas = compositeCanvas;
+        if (window.customCropSelection) {
+            console.log('Applying custom crop selection:', window.customCropSelection);
+            finalCanvas = applyCropToCanvas(compositeCanvas, window.customCropSelection, scale);
         }
         
-        if (!htmlContent.trim()) {
-            throw new Error('No content was captured for export');
-        }
+        // Convert to JPEG and download
+        const jpegBlob = await canvasToJpegBlob(finalCanvas, 0.95); // 95% quality
         
-        // Create the complete HTML document
-        const scoreTitle = currentScore?.title || 'Guitar Tab';
-        const barRangeText = startBar === endBar ? `Bar ${startBar + 1}` : `Bars ${startBar + 1}-${endBar + 1}`;
-        
-        const fullHtmlContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${scoreTitle} - ${barRangeText}</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            font-family: Arial, sans-serif;
-            background: white;
-            line-height: 1.6;
-        }
-        .export-header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #8B4513;
-            padding-bottom: 15px;
-        }
-        .export-title {
-            font-size: 28px;
-            font-weight: bold;
-            color: #8B4513;
-            margin: 0 0 10px 0;
-        }
-        .export-info {
-            font-size: 16px;
-            color: #666;
-            margin: 0;
-        }
-        .tab-container {
-            max-width: 100%;
-            margin: 0 auto;
-            text-align: center;
-        }
-        .tab-container img {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            margin: 0 auto 20px auto;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border-radius: 4px;
-            border: 1px solid #ddd;
-        }
-        .tab-container svg {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            margin: 0 auto 20px auto;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            background: white;
-        }
-        .export-footer {
-            text-align: center;
-            margin-top: 30px;
-            padding-top: 15px;
-            border-top: 1px solid #ddd;
-            font-size: 12px;
-            color: #999;
-        }
-        @media print {
-            body { margin: 0; padding: 10px; }
-            .export-header, .export-footer { page-break-inside: avoid; }
-            .tab-container img, .tab-container svg { 
-                page-break-inside: avoid;
-                max-width: 100% !important;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="export-header">
-        <h1 class="export-title">${scoreTitle}</h1>
-        <p class="export-info">${barRangeText} | Quality: ${scale}x | Exported: ${new Date().toLocaleDateString()}</p>
-    </div>
-    
-    <div class="tab-container">
-        ${htmlContent}
-    </div>
-    
-    <div class="export-footer">
-        Generated by Guitar Tab Player | ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
-    </div>
-</body>
-</html>`;
-        
-        // Create and download the HTML file
-        const blob = new Blob([fullHtmlContent], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        
-        // Generate filename
+        // Create filename
+        const scoreTitle = currentScore.title || 'guitar-tab';
         const sanitizedTitle = scoreTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase();
         const barRange = startBar === endBar ? `bar_${startBar + 1}` : `bars_${startBar + 1}-${endBar + 1}`;
-        a.download = `${sanitizedTitle}_${barRange}_${scale}x.html`;
+        const filename = `${sanitizedTitle}_${barRange}.jpg`;
         
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        // Download the file
+        downloadBlob(jpegBlob, filename);
         
-        console.log('HTML export completed successfully');
-        closeModal();
+        console.log('JPEG export completed successfully');
+        
+        // Close modal after successful export
+        setTimeout(() => {
+            closeModal();
+        }, 500);
         
     } catch (error) {
-        console.error('HTML export failed:', error);
-        alert(`HTML Export failed: ${error.message}\n\nPlease check the browser console for more details.`);
-    } finally {
+        console.error('JPEG export failed:', error);
+        alert(`Export failed: ${error.message}`);
+        
         // Reset button state
         confirmExportBtn.classList.remove('loading');
-        updateExportPreview(); // This will set the correct button text
+        confirmExportBtn.textContent = 'Export JPEG';
         confirmExportBtn.disabled = false;
     }
 }
 
-// Perform JPEG export with bar range support
-async function performJpegExport() {
-    console.log('🎵 Starting JPEG export...');
+// Create a composite canvas from multiple canvas elements
+async function createCompositeCanvas(canvases, scale = 1) {
+    console.log('Creating composite canvas...');
     
-    try {
-        // Get selected bar range
-        const startBar = parseInt(document.getElementById('startBar').value);
-        const endBar = parseInt(document.getElementById('endBar').value);
-        const rangeInfo = {
-            totalBars: currentScore ? currentScore.masterBars.length : 0,
-            isFullRange: startBar === 1 && endBar === (currentScore ? currentScore.masterBars.length : 0)
-        };
-        
-        console.log(`📊 Export range: bars ${startBar}-${endBar} (${rangeInfo.isFullRange ? 'full score' : 'partial'})`);
-        
-        // First try to render the specific bar range
-        console.log('🎯 Rendering bar range...');
-        await renderBarRange(startBar, endBar);
-        console.log('✅ Bar range rendering completed');
-        
-        // Find the AlphaTab container
-        const alphaTabContainer = document.querySelector('.alphaTab');
-        if (!alphaTabContainer) {
-            throw new Error('AlphaTab container not found');
+    // Calculate total dimensions using actual canvas dimensions
+    let totalWidth = 0;
+    let totalHeight = 0;
+    let maxWidth = 0;
+    
+    // First pass: calculate dimensions using actual canvas size
+    for (const canvas of canvases) {
+        maxWidth = Math.max(maxWidth, canvas.width);
+        totalHeight += canvas.height;
+    }
+    
+    totalWidth = maxWidth;
+    
+    console.log(`Composite canvas dimensions: ${totalWidth}x${totalHeight} (scale: ${scale})`);
+    
+    // Create the composite canvas
+    const compositeCanvas = document.createElement('canvas');
+    compositeCanvas.width = totalWidth * scale;
+    compositeCanvas.height = totalHeight * scale;
+    
+    const ctx = compositeCanvas.getContext('2d');
+    ctx.scale(scale, scale);
+    
+    // Set white background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, totalWidth, totalHeight);
+    
+    // Second pass: draw all canvases using their actual dimensions
+    let currentY = 0;
+    for (const canvas of canvases) {
+        try {
+            // Draw the canvas content using actual canvas dimensions
+            ctx.drawImage(canvas, 0, currentY, canvas.width, canvas.height);
+            currentY += canvas.height;
+        } catch (error) {
+            console.warn('Failed to draw canvas:', error);
+            // Continue with other canvases
         }
-        
-        // Look for canvas elements
-        const canvasElements = alphaTabContainer.querySelectorAll('canvas');
-        console.log(`🔍 Found ${canvasElements.length} canvas elements`);
-        
-        // Validate canvases and check for content
-        const validCanvases = [];
-        for (let i = 0; i < canvasElements.length; i++) {
-            const canvas = canvasElements[i];
-            try {
-                console.log(`Checking canvas ${i}:`, {
-                    width: canvas.width,
-                    height: canvas.height,
-                    visible: canvas.offsetParent !== null
-                });
-                
-                // Check if canvas has content
-                const ctx = canvas.getContext('2d');
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const hasContent = imageData.data.some(pixel => pixel !== 0);
-                
-                if (hasContent && canvas.width > 0 && canvas.height > 0) {
-                    validCanvases.push(canvas);
-                    console.log(`Canvas ${i} is valid and has content`);
+    }
+    
+    console.log('Composite canvas created successfully');
+    return compositeCanvas;
+}
+
+// Apply crop selection to canvas
+function applyCropToCanvas(sourceCanvas, cropSelection, scale = 1) {
+    console.log('Applying crop to canvas...');
+    
+    const { x, y, width, height } = cropSelection;
+    
+    // Scale the crop coordinates
+    const scaledX = x * scale;
+    const scaledY = y * scale;
+    const scaledWidth = width * scale;
+    const scaledHeight = height * scale;
+    
+    // Create cropped canvas
+    const croppedCanvas = document.createElement('canvas');
+    croppedCanvas.width = scaledWidth;
+    croppedCanvas.height = scaledHeight;
+    
+    const ctx = croppedCanvas.getContext('2d');
+    
+    // Set white background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, scaledWidth, scaledHeight);
+    
+    // Draw the cropped portion
+    ctx.drawImage(
+        sourceCanvas,
+        scaledX, scaledY, scaledWidth, scaledHeight,  // Source rectangle
+        0, 0, scaledWidth, scaledHeight               // Destination rectangle
+    );
+    
+    console.log(`Crop applied: ${scaledWidth}x${scaledHeight} from (${scaledX}, ${scaledY})`);
+    return croppedCanvas;
+}
+
+// Convert canvas to JPEG blob
+async function canvasToJpegBlob(canvas, quality = 0.95) {
+    return new Promise((resolve, reject) => {
+        try {
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    resolve(blob);
                 } else {
-                    console.warn(`Canvas ${i} is empty or has no dimensions`);
+                    reject(new Error('Failed to create JPEG blob'));
                 }
-            } catch (error) {
-                console.warn(`Failed to check canvas ${i}:`, error);
-            }
+            }, 'image/jpeg', quality);
+        } catch (error) {
+            reject(error);
         }
+    });
+}
+
+// Download blob as file
+function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Clean up the URL object
+    setTimeout(() => {
+        URL.revokeObjectURL(url);
+    }, 100);
+    
+    console.log(`File downloaded: ${filename}`);
+}
+
+// Wait for rendering to complete
+function waitForRenderingComplete(timeout = 10000) {
+    return new Promise((resolve, reject) => {
+        const startTime = Date.now();
         
-        if (validCanvases.length === 0) {
-            throw new Error('No valid canvas elements found with content');
-        }
-        
-        let exportResult;
-        
-        if (validCanvases.length > 0) {
-            console.log(`🖼️ Exporting from ${validCanvases.length} canvas elements`);
-            exportResult = await exportFromCanvases(validCanvases, 1.0, startBar, endBar, rangeInfo);
-        } else {
-            // Fallback to SVG or DOM export
-            const svgElements = alphaTabContainer.querySelectorAll('svg');
-            if (svgElements.length > 0) {
-                console.log(`📄 Falling back to SVG export (${svgElements.length} elements)`);
-                exportResult = await exportFromSvg(svgElements);
+        const checkRendering = () => {
+            if (isRenderingComplete) {
+                resolve();
+            } else if (Date.now() - startTime > timeout) {
+                reject(new Error('Rendering timeout'));
             } else {
-                console.log('🌐 Falling back to DOM export');
-                exportResult = await exportFromDom(alphaTabContainer);
+                setTimeout(checkRendering, 100);
             }
-        }
-        
-        // Download the result
-        const link = document.createElement('a');
-        link.download = `guitar-tab-${startBar}-${endBar}.jpg`;
-        link.href = exportResult;
-        link.click();
-        
-        console.log('✅ JPEG export completed successfully');
-        
-    } catch (error) {
-        console.error('❌ JPEG export failed:', error);
-        alert('Export failed: ' + error.message);
-    } finally {
-        // Reset button state
-        const exportBtn = document.getElementById('exportJpeg');
-        if (exportBtn) {
-            exportBtn.textContent = 'Export as JPEG';
-            exportBtn.disabled = false;
-            exportBtn.classList.remove('loading');
-        }
-    }
-}
-
-// Export from canvas elements with optional bar range cropping
-async function exportFromCanvases(validCanvases, scale, startBar = null, endBar = null, rangeInfo = null) {
-    console.log(`🖼️ Exporting from ${validCanvases.length} canvas elements`);
-    console.log(`📊 Canvas validation: ${validCanvases.map(c => `${c.width}x${c.height}`).join(', ')}`);
-    
-    // Determine if cropping is needed
-    const needsCropping = rangeInfo && endBar && startBar && endBar < rangeInfo.totalBars;
-    console.log(`✂️ Cropping needed: ${needsCropping}`);
-    
-    let canvasesToProcess = validCanvases;
-    
-    if (needsCropping) {
-        console.log(`🎯 Cropping to bars ${startBar}-${endBar} of ${rangeInfo.totalBars} total bars`);
-        canvasesToProcess = cropCanvasesToBarRange(validCanvases, startBar, endBar, rangeInfo);
-    } else {
-        console.log('📄 Using full canvas export (no cropping needed)');
-    }
-    
-    // Combine the canvases (cropped or full) into a single image
-    return await combineFullCanvases(canvasesToProcess, scale);
-}
-
-// Helper function to combine full canvases (existing working logic)
-async function combineFullCanvases(validCanvases, scale) {
-    // Calculate total dimensions
-    let totalWidth = 0;
-    let totalHeight = 0;
-    
-    validCanvases.forEach(canvas => {
-        totalWidth = Math.max(totalWidth, canvas.width);
-        totalHeight += canvas.height;
-    });
-    
-    // Apply scale
-    totalWidth *= scale;
-    totalHeight *= scale;
-    
-    console.log(`Creating combined canvas: ${totalWidth}x${totalHeight}`);
-    
-    // Create combined canvas
-    const finalCanvas = document.createElement('canvas');
-    finalCanvas.width = totalWidth;
-    finalCanvas.height = totalHeight;
-    const ctx = finalCanvas.getContext('2d');
-    
-    // Set white background
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, totalWidth, totalHeight);
-    
-    // Draw each canvas
-    let currentY = 0;
-    for (const canvas of validCanvases) {
-        const scaledWidth = canvas.width * scale;
-        const scaledHeight = canvas.height * scale;
-        
-        ctx.drawImage(canvas, 0, currentY, scaledWidth, scaledHeight);
-        currentY += scaledHeight;
-        console.log(`Drew canvas at Y position ${currentY - scaledHeight}`);
-    }
-    
-    // Convert to JPEG data URL with high quality
-    console.log('🖼️ Converting canvas to JPEG...');
-    const jpegDataUrl = finalCanvas.toDataURL('image/jpeg', 0.95);
-    
-    if (!jpegDataUrl || jpegDataUrl === 'data:,') {
-        throw new Error('Failed to generate JPEG data from canvas');
-    }
-    
-    console.log('✅ Successfully created JPEG data URL');
-    return jpegDataUrl;
-}
-
-// Helper function to crop canvases to a specific bar range
-function cropCanvasesToBarRange(canvases, startBar, endBar, rangeInfo) {
-    console.log(`🎯 Cropping canvases to bar range ${startBar}-${endBar}`);
-    
-    if (!api || !api.boundsLookup) {
-        console.warn('⚠️ No bounds lookup available, using full canvas');
-        return canvases;
-    }
-    
-    const boundsLookup = api.boundsLookup;
-    if (!boundsLookup.isFinished) {
-        console.warn('⚠️ Bounds lookup not finished, using full canvas');
-        return canvases;
-    }
-    
-    // Collect all bars in the selected range across all staff systems
-    const barsInRange = [];
-    for (let barIndex = startBar - 1; barIndex <= endBar - 1; barIndex++) {
-        const barBounds = boundsLookup.findMasterBarByIndex(barIndex);
-        if (barBounds) {
-            barsInRange.push({
-                index: barIndex,
-                bounds: barBounds
-            });
-        }
-    }
-    
-    if (barsInRange.length === 0) {
-        console.warn(`⚠️ Could not find any bounds for bars ${startBar}-${endBar}, using full canvas`);
-        return canvases;
-    }
-    
-    console.log(`📊 Found ${barsInRange.length} bars in range across staff systems`);
-    
-    // Group bars by staff system (row)
-    const barsBySystem = new Map();
-    barsInRange.forEach(bar => {
-        const systemIndex = bar.bounds.staffSystemBounds.index;
-        if (!barsBySystem.has(systemIndex)) {
-            barsBySystem.set(systemIndex, []);
-        }
-        barsBySystem.get(systemIndex).push(bar);
-    });
-    
-    console.log(`📋 Bars distributed across ${barsBySystem.size} staff systems`);
-    
-    // Calculate crop regions for each staff system
-    const cropRegions = [];
-    for (const [systemIndex, systemBars] of barsBySystem) {
-        // Sort bars by position within the system
-        systemBars.sort((a, b) => a.bounds.realBounds.x - b.bounds.realBounds.x);
-        
-        const firstBar = systemBars[0];
-        const lastBar = systemBars[systemBars.length - 1];
-        
-        const cropRegion = {
-            systemIndex: systemIndex,
-            systemBounds: firstBar.bounds.staffSystemBounds,
-            x: firstBar.bounds.realBounds.x,
-            y: firstBar.bounds.staffSystemBounds.realBounds.y,
-            width: (lastBar.bounds.realBounds.x + lastBar.bounds.realBounds.w) - firstBar.bounds.realBounds.x,
-            height: firstBar.bounds.staffSystemBounds.realBounds.h,
-            bars: systemBars.map(b => b.index + 1) // Convert back to 1-based for logging
         };
         
-        cropRegions.push(cropRegion);
-        console.log(`📏 System ${systemIndex}: bars ${cropRegion.bars.join(',')} - x:${cropRegion.x}, y:${cropRegion.y}, w:${cropRegion.width}, h:${cropRegion.height}`);
-    }
-    
-    // Sort crop regions by vertical position (top to bottom)
-    cropRegions.sort((a, b) => a.y - b.y);
-    
-    const croppedCanvases = [];
-    
-    for (let i = 0; i < canvases.length; i++) {
-        const canvas = canvases[i];
-        console.log(`✂️ Processing canvas ${i + 1}/${canvases.length} (${canvas.width}x${canvas.height})`);
-        
-        // Calculate total height needed for all crop regions
-        let totalHeight = 0;
-        let maxWidth = 0;
-        
-        cropRegions.forEach(region => {
-            totalHeight += region.height;
-            maxWidth = Math.max(maxWidth, region.width);
-        });
-        
-        // Create a new canvas for the cropped content
-        const croppedCanvas = document.createElement('canvas');
-        croppedCanvas.width = maxWidth;
-        croppedCanvas.height = totalHeight;
-        const ctx = croppedCanvas.getContext('2d');
-        
-        // Set white background
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, croppedCanvas.width, croppedCanvas.height);
-        
-        // Draw each crop region
-        let currentY = 0;
-        for (const region of cropRegions) {
-            // Ensure we don't crop beyond canvas boundaries
-            const actualCropX = Math.max(0, Math.min(region.x, canvas.width));
-            const actualCropY = Math.max(0, Math.min(region.y, canvas.height));
-            const actualCropWidth = Math.min(region.width, canvas.width - actualCropX);
-            const actualCropHeight = Math.min(region.height, canvas.height - actualCropY);
-            
-            if (actualCropWidth > 0 && actualCropHeight > 0) {
-                ctx.drawImage(
-                    canvas,
-                    actualCropX, actualCropY, actualCropWidth, actualCropHeight, // Source rectangle
-                    0, currentY, actualCropWidth, actualCropHeight              // Destination rectangle
-                );
-                
-                console.log(`✅ Drew system ${region.systemIndex} (bars ${region.bars.join(',')}) at Y:${currentY}`);
-            } else {
-                console.warn(`⚠️ Invalid crop dimensions for system ${region.systemIndex}`);
-            }
-            
-            currentY += region.height;
-        }
-        
-        console.log(`✅ Created cropped canvas: ${croppedCanvas.width}x${croppedCanvas.height}`);
-        croppedCanvases.push(croppedCanvas);
-    }
-    
-    console.log(`🎉 Successfully cropped ${croppedCanvases.length} canvases to bar range ${startBar}-${endBar}`);
-    return croppedCanvases;
-}
-
-// Helper function to export from SVG elements
-async function exportFromSvg(svgElements) {
-    const validSvgs = [];
-    
-    for (let i = 0; i < svgElements.length; i++) {
-        const svg = svgElements[i];
-        try {
-            console.log(`Checking SVG ${i}:`, {
-                width: svg.getAttribute('width'),
-                height: svg.getAttribute('height'),
-                visible: svg.offsetParent !== null
-            });
-            
-            if (svg.offsetParent !== null) {
-                validSvgs.push(svg);
-                console.log(`SVG ${i} is valid and visible`);
-            } else {
-                console.warn(`SVG ${i} is not visible`);
-            }
-        } catch (error) {
-            console.warn(`Failed to check SVG ${i}:`, error);
-        }
-    }
-    
-    if (validSvgs.length === 0) {
-        throw new Error('No valid SVG elements found');
-    }
-    
-    // Convert SVGs to canvas
-    const svgCanvases = [];
-    for (const svg of validSvgs) {
-        try {
-            const svgData = new XMLSerializer().serializeToString(svg);
-            const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-            const svgUrl = URL.createObjectURL(svgBlob);
-            
-            const img = new Image();
-            await new Promise((resolve, reject) => {
-                img.onload = resolve;
-                img.onerror = reject;
-                img.src = svgUrl;
-            });
-            
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            
-            svgCanvases.push(canvas);
-            URL.revokeObjectURL(svgUrl);
-            console.log('Successfully converted SVG to canvas');
-        } catch (error) {
-            console.warn('Failed to convert SVG to canvas:', error);
-        }
-    }
-    
-    if (svgCanvases.length === 0) {
-        throw new Error('Failed to convert any SVG elements to canvas');
-    }
-    
-    // Combine SVG canvases
-    let totalWidth = 0;
-    let totalHeight = 0;
-    
-    svgCanvases.forEach(canvas => {
-        totalWidth = Math.max(totalWidth, canvas.width);
-        totalHeight += canvas.height;
+        checkRendering();
     });
-    
-    const finalCanvas = document.createElement('canvas');
-    finalCanvas.width = totalWidth;
-    finalCanvas.height = totalHeight;
-    const ctx = finalCanvas.getContext('2d');
-    
-    // Set white background
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, totalWidth, totalHeight);
-    
-    // Draw each canvas
-    let currentY = 0;
-    for (const canvas of svgCanvases) {
-        ctx.drawImage(canvas, 0, currentY);
-        currentY += canvas.height;
-    }
-    
-    // Convert to JPEG data URL with high quality
-    console.log('🖼️ Converting SVG canvas to JPEG...');
-    const jpegDataUrl = finalCanvas.toDataURL('image/jpeg', 0.95);
-    
-    if (!jpegDataUrl || jpegDataUrl === 'data:,') {
-        throw new Error('Failed to generate JPEG data from SVG canvas');
-    }
-    
-    console.log('✅ Successfully created JPEG data URL from SVG');
-    return jpegDataUrl;
 }
 
-// Helper function to export from DOM using manual canvas drawing
-async function exportFromDom(container) {
-    console.log('Attempting DOM-to-canvas conversion...');
-    
-    // Create a canvas based on the container size
-    const rect = container.getBoundingClientRect();
-    const canvas = document.createElement('canvas');
-    canvas.width = rect.width;
-    canvas.height = rect.height;
-    const ctx = canvas.getContext('2d');
-    
-    // Set white background
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    try {
-        // Try to capture the container content
-        // This is a simplified approach - for better results, you might want to use html2canvas library
-        
-        // Get all images in the container
-        const images = container.querySelectorAll('img');
-        console.log(`Found ${images.length} images in container`);
-        
-        let yOffset = 0;
-        for (const img of images) {
-            if (img.complete && img.naturalWidth > 0) {
-                try {
-                    ctx.drawImage(img, 0, yOffset, img.offsetWidth, img.offsetHeight);
-                    yOffset += img.offsetHeight + 10; // Add some spacing
-                    console.log('Drew image to canvas');
-                } catch (error) {
-                    console.warn('Failed to draw image:', error);
-                }
-            }
-        }
-        
-        // If no images were found or drawn, try a different approach
-        if (yOffset === 0) {
-            // Draw a placeholder message
-            ctx.fillStyle = '#333';
-            ctx.font = '16px Arial';
-            ctx.fillText('Tab content could not be captured', 20, 50);
-            ctx.fillText('Please try using HTML export instead', 20, 80);
-            console.log('Drew placeholder message');
-        }
-        
-        // Convert to JPEG data URL with high quality
-        console.log('🖼️ Converting DOM canvas to JPEG...');
-        const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.95);
-        
-        if (!jpegDataUrl || jpegDataUrl === 'data:,') {
-            throw new Error('Failed to generate JPEG data from DOM canvas');
-        }
-        
-        console.log('✅ Successfully created JPEG data URL from DOM');
-        return jpegDataUrl;
-        
-    } catch (error) {
-        console.error('DOM-to-canvas conversion failed:', error);
-        throw new Error('Failed to convert DOM content to canvas');
-    }
-}
-
-// Update the score loaded event to store current score and enable export button
+// Update score for export functionality
 function updateScoreForExport(score) {
     currentScore = score;
+    
+    // Enable export button
     exportPngBtn.disabled = false;
-    exportPngBtn.title = 'Export HTML';
+    exportPngBtn.title = 'Export Tab (HTML/JPEG)';
+    
+    // Enable visual crop button
+    visualCropBtn.disabled = false;
+    visualCropBtn.title = 'Visual Crop Tool - Click to select crop area';
+    
+    // Enable loop button
+    const loopBtn = document.getElementById('loopBtn');
+    if (loopBtn) {
+        loopBtn.disabled = false;
+        loopBtn.title = 'Loop Selected Bars';
+    }
+    
+    // Initialize loop system
+    loopSystem.initialize();
+    loopSystem.setEnabled(true);
+    loopSystem.reset();
+    
+    console.log('Score updated for export and loop functionality');
 }
 
-// Helper function to render specific bar range
-async function renderBarRange(startBar, endBar) {
-    if (!api || !currentScore) {
-        throw new Error('AlphaTab API or score not available');
+// Initialize visual cropping functionality
+function initializeVisualCropping() {
+    console.log('Visual cropping functionality initialized');
+}
+
+// Toggle visual cropping mode
+function toggleVisualCropping() {
+    console.log('Visual cropping toggle - functionality to be implemented');
+}
+
+// Test function for debugging loop button
+function testLoopButton() {
+    console.log('Testing loop button...');
+    const btn = document.getElementById('loopBtn');
+    console.log('Button found:', btn);
+    if (btn) {
+        btn.classList.add('selection-mode');
+        console.log('Added selection-mode class');
+        setTimeout(() => {
+            btn.classList.remove('selection-mode');
+            btn.classList.add('active');
+            console.log('Switched to active class');
+        }, 2000);
     }
-    
-    console.log(`Rendering bar range: ${startBar + 1} to ${endBar + 1}`);
-    
-    // Check if we need to render a specific range or full score
-    const totalBars = currentScore.masterBars ? currentScore.masterBars.length : 0;
-    const isFullRange = startBar === 0 && endBar === (totalBars - 1);
-    
-    if (isFullRange) {
-        console.log('Rendering full score (no bar range filtering needed)');
-        // Just ensure the full score is rendered
-        api.renderScore(api.score);
-    } else {
-        console.log('Rendering partial bar range - this will require custom implementation');
-        // For now, render the full score and we'll crop during export
-        // TODO: Implement actual bar range rendering
-        api.renderScore(api.score);
-    }
-    
-    // Reset rendering completion flag and wait for new render
-    isRenderingComplete = false;
-    await waitForRenderingComplete();
-    
-    return { isFullRange, totalBars };
-} 
+}
+
+// Make test function globally available
+window.testLoopButton = testLoopButton;
