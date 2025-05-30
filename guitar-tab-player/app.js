@@ -50,6 +50,10 @@ const exportScaleSelect = document.getElementById('exportScale');
 const exportPreview = document.getElementById('exportPreview');
 const formatInfo = document.getElementById('formatInfo');
 
+// Print button
+const printBtn = document.getElementById('printBtn');
+printBtn.addEventListener('click', printTab);
+
 // Initialize AlphaTab
 function initializeAlphaTab() {
     try {
@@ -1953,6 +1957,13 @@ function updateScoreForExport(score) {
     visualCropBtn.disabled = false;
     visualCropBtn.title = 'Visual Crop Tool - Click to select crop area';
     
+    // Enable print button
+    const printBtn = document.getElementById('printBtn');
+    if (printBtn) {
+        printBtn.disabled = false;
+        printBtn.title = 'Print Tab';
+    }
+    
     // Enable loop button
     const loopBtn = document.getElementById('loopBtn');
     if (loopBtn) {
@@ -1965,7 +1976,7 @@ function updateScoreForExport(score) {
     loopSystem.setEnabled(true);
     loopSystem.reset();
     
-    console.log('Score updated for export and loop functionality');
+    console.log('Score updated for export, print and loop functionality');
 }
 
 // Initialize visual cropping functionality
@@ -2133,4 +2144,44 @@ function addGpFile(fileName, filePath, category = 'scale-exercises') {
 function refreshGpFiles() {
     console.log('Refreshing GP files list...');
     loadGpFilesFromDirectory();
+}
+
+// Print functionality
+function printTab() {
+    if (!api || !currentScore) {
+        alert('Please load a tab file first before printing.');
+        return;
+    }
+
+    try {
+        // Add print preparation indicator
+        const printBtn = document.getElementById('printBtn');
+        printBtn.classList.add('print-preparing');
+        
+        // Use AlphaTab's built-in print functionality
+        // This opens a popup window with A4-optimized print layout
+        // It automatically handles:
+        // - Proper scaling (0.8x)
+        // - Disabled lazy loading
+        // - Print-optimized layout
+        // - Song title and artist in document title
+        api.print();
+        
+        // Clean up after a brief delay
+        setTimeout(() => {
+            printBtn.classList.remove('print-preparing');
+        }, 1000);
+        
+    } catch (error) {
+        console.error('Error printing tab:', error);
+        alert('An error occurred while preparing the tab for printing. Please try again.');
+        
+        const printBtn = document.getElementById('printBtn');
+        printBtn.classList.remove('print-preparing');
+    }
+}
+
+// Enable/disable control buttons
+function enableControls() {
+    // Implementation of enableControls function
 }
