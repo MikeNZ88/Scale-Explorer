@@ -953,4 +953,376 @@ body {
     .btn-primary, .btn-secondary {
         width: 100%;
     }
+}
+
+/* GP Files Browser */
+.gp-files-browser {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-bottom: 1px solid #e0e0e0;
+    padding: 25px 30px;
+    border-left: 5px solid #8B4513;
+}
+
+.browser-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 20px;
+}
+
+.browser-header h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: #8B4513;
+    font-weight: 600;
+    margin: 0;
+}
+
+.browser-search {
+    position: relative;
+    max-width: 300px;
+    flex: 1;
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px 40px 12px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 25px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s ease;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #8B4513;
+    box-shadow: 0 4px 12px rgba(139, 69, 19, 0.15);
+    transform: translateY(-1px);
+}
+
+.search-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: #666;
+    pointer-events: none;
+}
+
+.browser-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.filter-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 10px 20px;
+    background: white;
+    color: #666;
+    border: 2px solid #e0e0e0;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.filter-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(139, 69, 19, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+.filter-btn:hover::before {
+    left: 100%;
+}
+
+.filter-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: #8B4513;
+}
+
+.filter-btn.active {
+    background: linear-gradient(135deg, #8B4513 0%, #654321 100%);
+    color: white;
+    border-color: #8B4513;
+    box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+}
+
+.sort-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sort-controls label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #666;
+    font-family: 'Inter', sans-serif;
+}
+
+.sort-select {
+    padding: 8px 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.sort-select:focus {
+    outline: none;
+    border-color: #8B4513;
+    box-shadow: 0 2px 8px rgba(139, 69, 19, 0.15);
+}
+
+.files-container {
+    position: relative;
+    min-height: 200px;
+    max-height: 400px;
+    overflow-y: auto;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    background: white;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.files-list {
+    padding: 0;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.file-item:last-child {
+    margin-bottom: 0;
+}
+
+.file-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    background: #f8f9fa;
+}
+
+.file-item.selected {
+    border: 2px solid #4CAF50;
+    background: #f1f8e9;
+}
+
+.file-icon {
+    font-size: 20px;
+    margin-right: 15px;
+    width: 24px;
+    text-align: center;
+}
+
+.file-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.file-name {
+    font-weight: 600;
+    color: #333;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+}
+
+.file-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    color: #666;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+    color: #666;
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    color: #333;
+}
+
+.empty-state small {
+    font-size: 14px;
+    color: #999;
+    margin: 0;
+}
+
+/* File category styling */
+.file-category {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.file-category.scale-exercises {
+    background: #E3F2FD;
+    color: #1976D2;
+}
+
+.file-category.licks {
+    background: #E8F5E8;
+    color: #388E3C;
+}
+
+.file-category.chord-progressions {
+    background: #FFF3E0;
+    color: #F57C00;
+}
+
+.file-category.songs {
+    background: #F3E5F5;
+    color: #7B1FA2;
+}
+
+.file-category.arpeggios {
+    background: #FCE4EC;
+    color: #C2185B;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .browser-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+    
+    .browser-search {
+        max-width: none;
+    }
+    
+    .browser-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+    
+    .filter-buttons {
+        justify-content: center;
+    }
+    
+    .sort-controls {
+        justify-content: center;
+    }
+    
+    .file-item {
+        padding: 12px 15px;
+    }
+    
+    .file-meta {
+        flex-direction: column;
+        gap: 4px;
+    }
+}
+
+/* Custom scrollbar for files container */
+.files-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.files-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.files-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #8B4513 0%, #654321 100%);
+    border-radius: 4px;
+}
+
+.files-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #A0522D 0%, #8B4513 100%);
+}
+
+/* Refresh button styling */
+.refresh-btn {
+    background: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-left: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+}
+
+.refresh-btn:hover {
+    background: #1976D2;
+    transform: rotate(90deg);
+}
+
+.refresh-btn:active {
+    transform: rotate(180deg) scale(0.95);
+}
+
+/* Update browser-search to accommodate the refresh button */
+.browser-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 } 

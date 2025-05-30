@@ -4,6 +4,13 @@ let trackStates = {}; // Store track states (visible, muted, solo)
 let currentScore = null; // Global score reference
 let isRenderingComplete = false; // Track rendering state
 
+// GP Files Browser State
+let gpFiles = [];
+let filteredFiles = [];
+let currentFilter = 'all';
+let currentSort = 'name';
+let searchQuery = '';
+
 // DOM elements
 const fileInput = document.getElementById('fileInput');
 const fileInputContainer = document.getElementById('fileInputContainer');
@@ -201,6 +208,251 @@ function loadFile(file) {
         
     } catch (error) {
         console.error('Load error:', error);
+    }
+}
+
+// GP Files Browser Functions
+function initializeGpFilesBrowser() {
+    console.log('Initializing GP Files Browser...');
+    
+    // Load files from the GP Files directory
+    loadGpFilesFromDirectory();
+    
+    setupFilesBrowserEventListeners();
+}
+
+function setupFilesBrowserEventListeners() {
+    // Filter buttons
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            // Update active filter button
+            filterButtons.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            
+            currentFilter = e.target.dataset.filter;
+            applyFiltersAndSort();
+        });
+    });
+    
+    // Search input
+    const searchInput = document.getElementById('fileSearch');
+    searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value.toLowerCase();
+        applyFiltersAndSort();
+    });
+    
+    // Sort dropdown
+    const sortSelect = document.getElementById('sortBy');
+    sortSelect.addEventListener('change', (e) => {
+        currentSort = e.target.value;
+        applyFiltersAndSort();
+    });
+    
+    // Refresh button
+    const refreshBtn = document.getElementById('refreshGpFilesBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+            console.log('Refresh button clicked');
+            refreshGpFiles();
+        });
+    }
+}
+
+function applyFiltersAndSort() {
+    // Apply filters
+    filteredFiles = gpFiles.filter(file => {
+        // Category filter
+        const categoryMatch = currentFilter === 'all' || file.category === currentFilter;
+        
+        // Search filter
+        const searchMatch = searchQuery === '' || 
+            file.name.toLowerCase().includes(searchQuery) ||
+            file.category.toLowerCase().includes(searchQuery);
+        
+        return categoryMatch && searchMatch;
+    });
+    
+    // Apply sorting
+    sortFiles();
+    
+    // Update display
+    updateFilesList();
+}
+
+function sortFiles() {
+    filteredFiles.sort((a, b) => {
+        switch (currentSort) {
+            case 'name':
+                return a.name.localeCompare(b.name);
+            case 'name-desc':
+                return b.name.localeCompare(a.name);
+            case 'date':
+                return b.dateModified - a.dateModified;
+            case 'size':
+                return parseFloat(a.size) - parseFloat(b.size);
+            default:
+                return 0;
+        }
+    });
+}
+
+function updateFilesList() {
+    const filesList = document.getElementById('filesList');
+    const emptyState = document.getElementById('filesEmptyState');
+    
+    if (filteredFiles.length === 0) {
+        filesList.style.display = 'none';
+        emptyState.style.display = 'flex';
+        return;
+    }
+    
+    filesList.style.display = 'block';
+    emptyState.style.display = 'none';
+    
+    filesList.innerHTML = filteredFiles.map(file => createFileItemHTML(file)).join('');
+    
+    // Add click event listeners to file items to load files directly
+    const fileItems = filesList.querySelectorAll('.file-item');
+    fileItems.forEach((item, index) => {
+        const file = filteredFiles[index];
+        item.addEventListener('click', () => {
+            // Add visual feedback
+            selectFile(file);
+            // Load the file directly
+            loadGpFile(file.id);
+        });
+        
+        // Add hover effect with cursor pointer
+        item.style.cursor = 'pointer';
+    });
+}
+
+function createFileItemHTML(file) {
+    const icon = getFileIcon(file.category);
+    const categoryLabel = getCategoryLabel(file.category);
+    const formattedDate = formatDate(file.dateModified);
+    
+    return `
+        <div class="file-item" data-file-id="${file.id}">
+            <div class="file-icon">${icon}</div>
+            <div class="file-info">
+                <div class="file-name">${file.name}</div>
+                <div class="file-meta">
+                    <span class="file-category ${file.category}">${categoryLabel}</span>
+                    <span>${file.size}</span>
+                    <span>${formattedDate}</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function getFileIcon(category) {
+    switch (category) {
+        case 'scale-exercises':
+            return '🎯';
+        case 'licks':
+            return '🎸';
+        case 'chord-progressions':
+            return '🎵';
+        case 'songs':
+            return '🎤';
+        case 'arpeggios':
+            return '🎼';
+        default:
+            return '📄';
+    }
+}
+
+function getCategoryLabel(category) {
+    switch (category) {
+        case 'scale-exercises':
+            return 'Scale Exercises';
+        case 'licks':
+            return 'Licks';
+        case 'chord-progressions':
+            return 'Chord Progressions';
+        case 'songs':
+            return 'Songs';
+        case 'arpeggios':
+            return 'Arpeggios';
+        default:
+            return 'Other';
+    }
+}
+
+function formatDate(date) {
+    return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+    });
+}
+
+function selectFile(file) {
+    // Remove previous selection
+    const prevSelected = document.querySelector('.file-item.selected');
+    if (prevSelected) {
+        prevSelected.classList.remove('selected');
+    }
+    
+    // Add selection to current file
+    const currentItem = document.querySelector(`[data-file-id="${file.id}"]`);
+    if (currentItem) {
+        currentItem.classList.add('selected');
+    }
+}
+
+async function loadGpFile(fileId) {
+    try {
+        const file = gpFiles.find(f => f.id === fileId);
+        if (!file) {
+            console.error('File not found:', fileId);
+            return;
+        }
+
+        console.log('Loading GP file:', file.name);
+        
+        // Show loading state
+        const fileItem = document.querySelector(`[data-file-id="${fileId}"]`);
+        if (fileItem) {
+            fileItem.style.opacity = '0.6';
+            fileItem.style.pointerEvents = 'none';
+        }
+
+        // Fetch the actual file
+        const response = await fetch(file.path);
+        if (!response.ok) {
+            throw new Error(`Failed to load file: ${response.status} ${response.statusText}`);
+        }
+        
+        const arrayBuffer = await response.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        
+        // Create a File object for AlphaTab
+        const fileBlob = new File([uint8Array], file.name, {
+            type: 'application/octet-stream'
+        });
+        
+        // Load the file using the existing loadFile function
+        await loadFile(fileBlob);
+        
+        // Update file input display
+        updateFileInputDisplay(file.name);
+        
+        console.log('GP file loaded successfully:', file.name);
+        
+    } catch (error) {
+        console.error('Error loading GP file:', error);
+        alert(`Failed to load file: ${error.message}`);
+    } finally {
+        // Restore file item state
+        const fileItem = document.querySelector(`[data-file-id="${fileId}"]`);
+        if (fileItem) {
+            fileItem.style.opacity = '';
+            fileItem.style.pointerEvents = '';
+        }
     }
 }
 
@@ -647,6 +899,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     initializePngExport();
     initializeVisualCropping();
+    initializeGpFilesBrowser(); // Initialize GP Files Browser
     
     // Initialize loop system
     loopSystem.initialize();
@@ -1743,3 +1996,141 @@ function testLoopButton() {
 
 // Make test function globally available
 window.testLoopButton = testLoopButton;
+
+async function loadGpFilesFromDirectory() {
+    console.log('Loading GP files from subfolders...');
+    
+    try {
+        // Define the subfolders to scan
+        const subfolders = [
+            { name: 'Scale Exercises', path: 'Scale%20Exercises/', category: 'scale-exercises' },
+            { name: 'Licks', path: 'Licks/', category: 'licks' },
+            { name: 'Chord Progressions', path: 'Chord%20Progressions/', category: 'chord-progressions' },
+            { name: 'Songs', path: 'Songs/', category: 'songs' },
+            { name: 'Arpeggios', path: 'Arpeggios/', category: 'arpeggios' }
+        ];
+        
+        // Clear existing files
+        gpFiles = [];
+        filteredFiles = [];
+        
+        let totalFilesFound = 0;
+        
+        // Scan each subfolder
+        for (const subfolder of subfolders) {
+            try {
+                console.log(`Scanning ${subfolder.name} folder...`);
+                const response = await fetch(`./public/GP Files/${subfolder.path}`);
+                
+                if (response.ok) {
+                    const html = await response.text();
+                    const files = parseDirectoryListing(html);
+                    
+                    files.forEach(fileName => {
+                        if (isValidGpFile(fileName)) {
+                            const filePath = `./public/GP Files/${subfolder.name}/${fileName}`;
+                            addGpFileToList(fileName, filePath, subfolder.category);
+                            totalFilesFound++;
+                        }
+                    });
+                    
+                    console.log(`Found ${files.filter(isValidGpFile).length} GP files in ${subfolder.name}`);
+                } else {
+                    console.warn(`Could not access ${subfolder.name} folder:`, response.status);
+                }
+            } catch (error) {
+                console.warn(`Error scanning ${subfolder.name}:`, error);
+            }
+        }
+        
+        updateFilesList();
+        console.log(`Loaded ${totalFilesFound} GP files total from all subfolders`);
+        
+    } catch (error) {
+        console.error('Error loading files from subfolders:', error);
+        console.log('Falling back to known files...');
+        addKnownGpFiles();
+    }
+}
+
+function parseDirectoryListing(html) {
+    // Parse the HTML directory listing to extract filenames
+    const files = [];
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    
+    // Look for links that represent files (not directories)
+    const links = doc.querySelectorAll('a[href]');
+    
+    links.forEach(link => {
+        const href = link.getAttribute('href');
+        // Skip parent directory link and directories
+        if (href && href !== '../' && !href.endsWith('/')) {
+            // Decode URL-encoded filenames
+            const fileName = decodeURIComponent(href);
+            files.push(fileName);
+        }
+    });
+    
+    return files;
+}
+
+function isValidGpFile(fileName) {
+    const fileExtension = fileName.split('.').pop().toLowerCase();
+    return ['gp', 'gp3', 'gp4', 'gp5', 'gpx', 'gp6', 'gp7'].includes(fileExtension);
+}
+
+function addGpFileToList(fileName, filePath, category = 'scale-exercises') {
+    const newFile = {
+        id: gpFiles.length + 1,
+        name: fileName,
+        category: category,
+        size: 'Unknown', // Would need server-side info for actual size
+        dateModified: new Date(),
+        path: filePath
+    };
+    
+    gpFiles.push(newFile);
+    console.log('Added file to GP Browser:', fileName, `(${category})`);
+}
+
+// Make functions globally available for manual file addition and refresh
+window.addGpFile = addGpFile;
+window.refreshGpFiles = refreshGpFiles;
+window.testLoopButton = testLoopButton;
+
+function addKnownGpFiles() {
+    // Fallback for when directory scanning fails
+    console.log('Using fallback file list...');
+    gpFiles = [];
+    filteredFiles = [];
+    updateFilesList();
+    console.log('GP Files Browser ready - add files to ./public/GP Files/ and refresh');
+}
+
+function addGpFile(fileName, filePath, category = 'scale-exercises') {
+    // Function to manually add a GP file (for console use)
+    const fileExtension = fileName.split('.').pop().toLowerCase();
+    if (!['gp', 'gp3', 'gp4', 'gp5', 'gpx', 'gp6', 'gp7'].includes(fileExtension)) {
+        console.warn('Invalid file type:', fileName);
+        return;
+    }
+    
+    // If no category specified, try to determine from file path
+    if (category === 'scale-exercises' && filePath) {
+        if (filePath.includes('/Licks/')) category = 'licks';
+        else if (filePath.includes('/Chord Progressions/')) category = 'chord-progressions';
+        else if (filePath.includes('/Songs/')) category = 'songs';
+        else if (filePath.includes('/Arpeggios/')) category = 'arpeggios';
+        else if (filePath.includes('/Scale Exercises/')) category = 'scale-exercises';
+    }
+    
+    addGpFileToList(fileName, filePath, category);
+    applyFiltersAndSort();
+    console.log('Manually added file to GP Browser:', fileName, `(${category})`);
+}
+
+function refreshGpFiles() {
+    console.log('Refreshing GP files list...');
+    loadGpFilesFromDirectory();
+}
