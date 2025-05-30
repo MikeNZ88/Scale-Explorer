@@ -36,20 +36,6 @@ const hideAllTracks = document.getElementById('hideAllTracks');
 const unmuteAllTracks = document.getElementById('unmuteAllTracks');
 const unsoloAllTracks = document.getElementById('unsoloAllTracks');
 
-// PNG Export elements
-const exportPngBtn = document.getElementById('exportPngBtn');
-const visualCropBtn = document.getElementById('visualCropBtn');
-const pngExportModal = document.getElementById('pngExportModal');
-const closeExportModal = document.getElementById('closeExportModal');
-const cancelExportBtn = document.getElementById('cancelExport');
-const confirmExportBtn = document.getElementById('confirmExport');
-const exportFormatSelect = document.getElementById('exportFormat');
-const startBarSelect = document.getElementById('startBar');
-const endBarSelect = document.getElementById('endBar');
-const exportScaleSelect = document.getElementById('exportScale');
-const exportPreview = document.getElementById('exportPreview');
-const formatInfo = document.getElementById('formatInfo');
-
 // Print button
 const printBtn = document.getElementById('printBtn');
 printBtn.addEventListener('click', printTab);
@@ -118,7 +104,7 @@ function initializeAlphaTab() {
             console.log('Score loaded successfully:', score.title, 'Tracks:', score.tracks.length);
             isRenderingComplete = false; // Reset rendering flag for new score
             updateTrackInfo(score);
-            updateScoreForExport(score);
+            updateScoreForPrint(score);
             enablePlayerControls(true);
             // Don't call track control functions here - let AlphaTab render all tracks by default
         });
@@ -145,11 +131,23 @@ function initializeAlphaTab() {
         api.playerReady.on(() => {
             console.log('Player ready');
             isPlayerReady = true;
+            
+            // Apply any queued instrument changes
+            setTimeout(() => {
+                applyQueuedInstrumentChanges();
+            }, 200); // Longer delay to ensure synthesizer is fully ready
         });
         
         api.playerStateChanged.on((e) => {
             console.log('Player state changed:', e.state);
             updatePlayerButtons(e.state);
+            
+            // Apply queued instrument changes when playback starts
+            if (e.state === 1) { // PlayerState.Playing
+                setTimeout(() => {
+                    applyQueuedInstrumentChanges();
+                }, 100); // Small delay to ensure synthesizer is ready
+            }
         });
         
         // Add playback cursor functionality
@@ -252,15 +250,6 @@ function setupFilesBrowserEventListeners() {
         currentSort = e.target.value;
         applyFiltersAndSort();
     });
-    
-    // Refresh button
-    const refreshBtn = document.getElementById('refreshGpFilesBtn');
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', () => {
-            console.log('Refresh button clicked');
-            refreshGpFiles();
-        });
-    }
 }
 
 function applyFiltersAndSort() {
@@ -590,16 +579,23 @@ function createTrackControls(score) {
             <div class="track-info-details">
                 ${instrumentInfo}
             </div>
-            <div class="track-controls-buttons">
-                <button class="track-btn visibility visible" data-action="visibility" data-track="${index}">
-                    Show
-                </button>
-                <button class="track-btn solo" data-action="solo" data-track="${index}">
-                    Solo
-                </button>
-                <button class="track-btn mute" data-action="mute" data-track="${index}">
-                    Mute
-                </button>
+            <div class="track-controls-section">
+                <div class="instrument-selector">
+                    <select class="instrument-select" data-track="${index}">
+                        ${getInstrumentOptions(track.playbackInfo.program)}
+                    </select>
+                </div>
+                <div class="track-controls-buttons">
+                    <button class="track-btn visibility visible" data-action="visibility" data-track="${index}">
+                        Show
+                    </button>
+                    <button class="track-btn solo" data-action="solo" data-track="${index}">
+                        Solo
+                    </button>
+                    <button class="track-btn mute" data-action="mute" data-track="${index}">
+                        Mute
+                    </button>
+                </div>
             </div>
         `;
         
@@ -608,6 +604,9 @@ function createTrackControls(score) {
     
     // Add event listeners to track buttons
     tracksGrid.addEventListener('click', handleTrackButtonClick);
+    
+    // Add event listeners to instrument selectors
+    tracksGrid.addEventListener('change', handleInstrumentChange);
     
     trackControls.style.display = 'block';
 }
@@ -901,28 +900,11 @@ function setupEventListeners() {
 document.addEventListener('DOMContentLoaded', () => {
     initializeAlphaTab();
     setupEventListeners();
-    initializePngExport();
-    initializeVisualCropping();
     initializeGpFilesBrowser(); // Initialize GP Files Browser
     
     // Initialize loop system
     loopSystem.initialize();
-    
-    // Force hide modal on page load to prevent it from being stuck open
-    forceHideModal();
 });
-
-// Force hide modal function
-function forceHideModal() {
-    const modal = document.getElementById('pngExportModal');
-    if (modal) {
-        modal.style.display = 'none';
-        modal.style.visibility = 'hidden';
-        modal.classList.remove('show');
-        document.body.style.overflow = '';
-        console.log('Modal force hidden on page load');
-    }
-}
 
 // Enhanced track name detection
 function getTrackName(track, index) {
@@ -1538,424 +1520,9 @@ class LoopSystem {
 // Create global loop system instance
 const loopSystem = new LoopSystem();
 
-// Initialize PNG export functionality
-function initializePngExport() {
-    // Add event listeners for export
-    exportPngBtn.addEventListener('click', openExportModal);
-    
-    // Add event listener for visual crop button
-    visualCropBtn.addEventListener('click', toggleVisualCropping);
-    
-    // Multiple ways to close the modal
-    closeExportModal.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        closeModal();
-    });
-    
-    cancelExportBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        closeModal();
-    });
-    
-    confirmExportBtn.addEventListener('click', performExport);
-    
-    // Close modal when clicking outside (on the backdrop)
-    pngExportModal.addEventListener('click', (e) => {
-        if (e.target === pngExportModal) {
-            closeModal();
-        }
-    });
-    
-    // Close modal with Escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && pngExportModal.style.display === 'flex') {
-            closeModal();
-        }
-    });
-    
-    // Update preview when selections change
-    exportFormatSelect.addEventListener('change', updateExportPreview);
-    startBarSelect.addEventListener('change', updateExportPreview);
-    endBarSelect.addEventListener('change', updateExportPreview);
-    
-    // Ensure end bar is always >= start bar
-    startBarSelect.addEventListener('change', () => {
-        const startBar = parseInt(startBarSelect.value);
-        const endBar = parseInt(endBarSelect.value);
-        if (endBar < startBar) {
-            endBarSelect.value = startBar;
-            updateExportPreview();
-        }
-    });
-    
-    endBarSelect.addEventListener('change', () => {
-        const startBar = parseInt(startBarSelect.value);
-        const endBar = parseInt(endBarSelect.value);
-        if (endBar < startBar) {
-            startBarSelect.value = endBar;
-            updateExportPreview();
-        }
-    });
-    
-    console.log('PNG export functionality initialized');
-}
-
-// Open export modal
-function openExportModal() {
-    console.log('Opening export modal...');
-    
-    if (!api || !currentScore) {
-        alert('Please load a score first');
-        return;
-    }
-    
-    populateBarSelections();
-    updateExportPreview();
-    
-    // Show modal with multiple approaches to ensure visibility
-    const modal = document.getElementById('pngExportModal');
-    if (modal) {
-        modal.style.display = 'flex';
-        modal.style.visibility = 'visible';
-        modal.classList.add('show');
-    }
-    
-    document.body.style.overflow = 'hidden'; // Prevent background scrolling
-    
-    console.log('Export modal opened');
-}
-
-// Close export modal
-function closeModal() {
-    console.log('Closing modal...');
-    
-    const modal = document.getElementById('pngExportModal');
-    if (modal) {
-        modal.style.display = 'none';
-        modal.style.visibility = 'hidden';
-        modal.classList.remove('show');
-    }
-    
-    document.body.style.overflow = ''; // Restore scrolling
-    
-    // Reset button state
-    confirmExportBtn.classList.remove('loading');
-    updateExportPreview(); // This will set the correct button text
-    confirmExportBtn.disabled = false;
-    
-    console.log('Modal closed successfully');
-}
-
-// Populate bar selection dropdowns
-function populateBarSelections() {
-    if (!currentScore) return;
-    
-    // Clear existing options
-    startBarSelect.innerHTML = '';
-    endBarSelect.innerHTML = '';
-    
-    // Get total number of bars from the score
-    let totalBars = 0;
-    if (currentScore.masterBars && currentScore.masterBars.length > 0) {
-        totalBars = currentScore.masterBars.length;
-    } else {
-        // Fallback: estimate from first track
-        const firstTrack = currentScore.tracks[0];
-        if (firstTrack && firstTrack.staves && firstTrack.staves[0] && firstTrack.staves[0].bars) {
-            totalBars = firstTrack.staves[0].bars.length;
-        }
-    }
-    
-    // If we still don't have bars, default to 1
-    if (totalBars === 0) {
-        totalBars = 1;
-    }
-    
-    // Populate dropdowns
-    for (let i = 1; i <= totalBars; i++) {
-        const startOption = document.createElement('option');
-        startOption.value = i;
-        startOption.textContent = `Bar ${i}`;
-        startBarSelect.appendChild(startOption);
-        
-        const endOption = document.createElement('option');
-        endOption.value = i;
-        endOption.textContent = `Bar ${i}`;
-        endBarSelect.appendChild(endOption);
-    }
-    
-    // Set default selection (all bars)
-    startBarSelect.value = 1;
-    endBarSelect.value = totalBars;
-}
-
-// Update export preview text
-function updateExportPreview() {
-    const format = exportFormatSelect.value;
-    const startBar = parseInt(startBarSelect.value);
-    const endBar = parseInt(endBarSelect.value);
-    const scale = parseFloat(exportScaleSelect.value);
-    
-    let previewText = `Selected: Bar ${startBar}`;
-    if (startBar !== endBar) {
-        previewText += ` to Bar ${endBar}`;
-    }
-    previewText += ` (${scale}x quality)`;
-    
-    exportPreview.textContent = previewText;
-    
-    // Update button text based on format
-    if (format === 'html') {
-        confirmExportBtn.textContent = 'Export HTML';
-        formatInfo.textContent = '💡 HTML files can be embedded in websites using <iframe> or opened directly in browsers';
-    } else {
-        confirmExportBtn.textContent = 'Export JPEG';
-        formatInfo.textContent = '💡 JPEG images are perfect for sharing, printing, or embedding in documents';
-    }
-}
-
-// Perform export based on selected format
-async function performExport() {
-    const format = exportFormatSelect.value;
-    
-    if (format === 'html') {
-        await performHtmlExport();
-    } else {
-        await performJpegExport();
-    }
-}
-
-// Placeholder functions for export functionality
-async function performHtmlExport() {
-    console.log('HTML export not yet implemented');
-    alert('HTML export functionality will be implemented soon!');
-}
-
-// Perform JPEG export with cropping support
-async function performJpegExport() {
-    try {
-        console.log('Starting JPEG export...');
-        
-        // Update button state
-        confirmExportBtn.classList.add('loading');
-        confirmExportBtn.textContent = 'Exporting...';
-        confirmExportBtn.disabled = true;
-        
-        const startBar = parseInt(startBarSelect.value) - 1; // Convert to 0-based
-        const endBar = parseInt(endBarSelect.value) - 1;     // Convert to 0-based
-        const scale = parseFloat(exportScaleSelect.value);
-        
-        // Ensure rendering is complete
-        if (!isRenderingComplete) {
-            console.log('Waiting for rendering to complete...');
-            await waitForRenderingComplete();
-        }
-        
-        // Get the AlphaTab container and find all canvas elements
-        const alphaTabContainer = document.getElementById('alphaTab');
-        if (!alphaTabContainer) {
-            throw new Error('AlphaTab container not found');
-        }
-        
-        // Find all canvas elements in the container
-        const canvases = alphaTabContainer.querySelectorAll('canvas');
-        console.log(`Found ${canvases.length} canvas elements`);
-        
-        if (canvases.length === 0) {
-            throw new Error('No canvas elements found. Make sure the score is fully rendered.');
-        }
-        
-        // Create a composite canvas from all AlphaTab canvases
-        const compositeCanvas = await createCompositeCanvas(canvases, scale);
-        
-        // Apply cropping if visual crop selection exists
-        let finalCanvas = compositeCanvas;
-        if (window.customCropSelection) {
-            console.log('Applying custom crop selection:', window.customCropSelection);
-            finalCanvas = applyCropToCanvas(compositeCanvas, window.customCropSelection, scale);
-        }
-        
-        // Convert to JPEG and download
-        const jpegBlob = await canvasToJpegBlob(finalCanvas, 0.95); // 95% quality
-        
-        // Create filename
-        const scoreTitle = currentScore.title || 'guitar-tab';
-        const sanitizedTitle = scoreTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-        const barRange = startBar === endBar ? `bar_${startBar + 1}` : `bars_${startBar + 1}-${endBar + 1}`;
-        const filename = `${sanitizedTitle}_${barRange}.jpg`;
-        
-        // Download the file
-        downloadBlob(jpegBlob, filename);
-        
-        console.log('JPEG export completed successfully');
-        
-        // Close modal after successful export
-        setTimeout(() => {
-            closeModal();
-        }, 500);
-        
-    } catch (error) {
-        console.error('JPEG export failed:', error);
-        alert(`Export failed: ${error.message}`);
-        
-        // Reset button state
-        confirmExportBtn.classList.remove('loading');
-        confirmExportBtn.textContent = 'Export JPEG';
-        confirmExportBtn.disabled = false;
-    }
-}
-
-// Create a composite canvas from multiple canvas elements
-async function createCompositeCanvas(canvases, scale = 1) {
-    console.log('Creating composite canvas...');
-    
-    // Calculate total dimensions using actual canvas dimensions
-    let totalWidth = 0;
-    let totalHeight = 0;
-    let maxWidth = 0;
-    
-    // First pass: calculate dimensions using actual canvas size
-    for (const canvas of canvases) {
-        maxWidth = Math.max(maxWidth, canvas.width);
-        totalHeight += canvas.height;
-    }
-    
-    totalWidth = maxWidth;
-    
-    console.log(`Composite canvas dimensions: ${totalWidth}x${totalHeight} (scale: ${scale})`);
-    
-    // Create the composite canvas
-    const compositeCanvas = document.createElement('canvas');
-    compositeCanvas.width = totalWidth * scale;
-    compositeCanvas.height = totalHeight * scale;
-    
-    const ctx = compositeCanvas.getContext('2d');
-    ctx.scale(scale, scale);
-    
-    // Set white background
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, totalWidth, totalHeight);
-    
-    // Second pass: draw all canvases using their actual dimensions
-    let currentY = 0;
-    for (const canvas of canvases) {
-        try {
-            // Draw the canvas content using actual canvas dimensions
-            ctx.drawImage(canvas, 0, currentY, canvas.width, canvas.height);
-            currentY += canvas.height;
-        } catch (error) {
-            console.warn('Failed to draw canvas:', error);
-            // Continue with other canvases
-        }
-    }
-    
-    console.log('Composite canvas created successfully');
-    return compositeCanvas;
-}
-
-// Apply crop selection to canvas
-function applyCropToCanvas(sourceCanvas, cropSelection, scale = 1) {
-    console.log('Applying crop to canvas...');
-    
-    const { x, y, width, height } = cropSelection;
-    
-    // Scale the crop coordinates
-    const scaledX = x * scale;
-    const scaledY = y * scale;
-    const scaledWidth = width * scale;
-    const scaledHeight = height * scale;
-    
-    // Create cropped canvas
-    const croppedCanvas = document.createElement('canvas');
-    croppedCanvas.width = scaledWidth;
-    croppedCanvas.height = scaledHeight;
-    
-    const ctx = croppedCanvas.getContext('2d');
-    
-    // Set white background
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, scaledWidth, scaledHeight);
-    
-    // Draw the cropped portion
-    ctx.drawImage(
-        sourceCanvas,
-        scaledX, scaledY, scaledWidth, scaledHeight,  // Source rectangle
-        0, 0, scaledWidth, scaledHeight               // Destination rectangle
-    );
-    
-    console.log(`Crop applied: ${scaledWidth}x${scaledHeight} from (${scaledX}, ${scaledY})`);
-    return croppedCanvas;
-}
-
-// Convert canvas to JPEG blob
-async function canvasToJpegBlob(canvas, quality = 0.95) {
-    return new Promise((resolve, reject) => {
-        try {
-            canvas.toBlob((blob) => {
-                if (blob) {
-                    resolve(blob);
-                } else {
-                    reject(new Error('Failed to create JPEG blob'));
-                }
-            }, 'image/jpeg', quality);
-        } catch (error) {
-            reject(error);
-        }
-    });
-}
-
-// Download blob as file
-function downloadBlob(blob, filename) {
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.style.display = 'none';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    // Clean up the URL object
-    setTimeout(() => {
-        URL.revokeObjectURL(url);
-    }, 100);
-    
-    console.log(`File downloaded: ${filename}`);
-}
-
-// Wait for rendering to complete
-function waitForRenderingComplete(timeout = 10000) {
-    return new Promise((resolve, reject) => {
-        const startTime = Date.now();
-        
-        const checkRendering = () => {
-            if (isRenderingComplete) {
-                resolve();
-            } else if (Date.now() - startTime > timeout) {
-                reject(new Error('Rendering timeout'));
-            } else {
-                setTimeout(checkRendering, 100);
-            }
-        };
-        
-        checkRendering();
-    });
-}
-
-// Update score for export functionality
-function updateScoreForExport(score) {
+// Update score for print and loop functionality
+function updateScoreForPrint(score) {
     currentScore = score;
-    
-    // Enable export button
-    exportPngBtn.disabled = false;
-    exportPngBtn.title = 'Export Tab (HTML/JPEG)';
-    
-    // Enable visual crop button
-    visualCropBtn.disabled = false;
-    visualCropBtn.title = 'Visual Crop Tool - Click to select crop area';
     
     // Enable print button
     const printBtn = document.getElementById('printBtn');
@@ -1976,17 +1543,7 @@ function updateScoreForExport(score) {
     loopSystem.setEnabled(true);
     loopSystem.reset();
     
-    console.log('Score updated for export, print and loop functionality');
-}
-
-// Initialize visual cropping functionality
-function initializeVisualCropping() {
-    console.log('Visual cropping functionality initialized');
-}
-
-// Toggle visual cropping mode
-function toggleVisualCropping() {
-    console.log('Visual cropping toggle - functionality to be implemented');
+    console.log('Score updated for print and loop functionality');
 }
 
 // Test function for debugging loop button
@@ -2185,3 +1742,558 @@ function printTab() {
 function enableControls() {
     // Implementation of enableControls function
 }
+
+// Get smart categorized instrument options based on current program
+function getInstrumentOptions(currentProgram) {
+    let options = '';
+    
+    // Determine instrument family and create categorized options
+    if (currentProgram >= 24 && currentProgram <= 31) {
+        // Guitar Family
+        options += '<optgroup label="Guitar Family">';
+        const guitarInstruments = [
+            {value: 24, name: "Acoustic Guitar (nylon)"},
+            {value: 25, name: "Acoustic Guitar (steel)"},
+            {value: 26, name: "Electric Guitar (jazz)"},
+            {value: 27, name: "Electric Guitar (clean)"},
+            {value: 28, name: "Electric Guitar (muted)"},
+            {value: 29, name: "Overdriven Guitar"},
+            {value: 30, name: "Distortion Guitar"},
+            {value: 31, name: "Guitar Harmonics"}
+        ];
+        
+        guitarInstruments.forEach(inst => {
+            const selected = inst.value === currentProgram ? ' selected' : '';
+            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
+        });
+        options += '</optgroup>';
+        
+        // Related Stringed Instruments
+        options += '<optgroup label="Related Stringed">';
+        const relatedStringed = [
+            {value: 105, name: "Banjo"},
+            {value: 104, name: "Sitar"},
+            {value: 106, name: "Shamisen"},
+            {value: 110, name: "Fiddle"}
+        ];
+        
+        relatedStringed.forEach(inst => {
+            const selected = inst.value === currentProgram ? ' selected' : '';
+            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
+        });
+        options += '</optgroup>';
+        
+        // Bass Options
+        options += '<optgroup label="Bass">';
+        const bassInstruments = [
+            {value: 32, name: "Acoustic Bass"},
+            {value: 33, name: "Electric Bass (finger)"},
+            {value: 34, name: "Electric Bass (pick)"},
+            {value: 35, name: "Fretless Bass"},
+            {value: 36, name: "Slap Bass 1"},
+            {value: 37, name: "Slap Bass 2"}
+        ];
+        
+        bassInstruments.forEach(inst => {
+            const selected = inst.value === currentProgram ? ' selected' : '';
+            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
+        });
+        options += '</optgroup>';
+        
+    } else if (currentProgram >= 32 && currentProgram <= 39) {
+        // Bass Family
+        options += '<optgroup label="Bass Family">';
+        const bassInstruments = [
+            {value: 32, name: "Acoustic Bass"},
+            {value: 33, name: "Electric Bass (finger)"},
+            {value: 34, name: "Electric Bass (pick)"},
+            {value: 35, name: "Fretless Bass"},
+            {value: 36, name: "Slap Bass 1"},
+            {value: 37, name: "Slap Bass 2"},
+            {value: 38, name: "Synth Bass 1"},
+            {value: 39, name: "Synth Bass 2"}
+        ];
+        
+        bassInstruments.forEach(inst => {
+            const selected = inst.value === currentProgram ? ' selected' : '';
+            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
+        });
+        options += '</optgroup>';
+        
+        // Related Low-End
+        options += '<optgroup label="Related Low-End">';
+        const relatedLow = [
+            {value: 42, name: "Cello"},
+            {value: 43, name: "Contrabass"},
+            {value: 58, name: "Tuba"}
+        ];
+        
+        relatedLow.forEach(inst => {
+            const selected = inst.value === currentProgram ? ' selected' : '';
+            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
+        });
+        options += '</optgroup>';
+        
+    } else if (currentProgram >= 0 && currentProgram <= 7) {
+        // Piano Family
+        options += '<optgroup label="Piano Family">';
+        const pianoInstruments = [
+            {value: 0, name: "Acoustic Grand Piano"},
+            {value: 1, name: "Bright Acoustic Piano"},
+            {value: 2, name: "Electric Grand Piano"},
+            {value: 3, name: "Honky-tonk Piano"},
+            {value: 4, name: "Electric Piano 1"},
+            {value: 5, name: "Electric Piano 2"},
+            {value: 6, name: "Harpsichord"},
+            {value: 7, name: "Clavinet"}
+        ];
+        
+        pianoInstruments.forEach(inst => {
+            const selected = inst.value === currentProgram ? ' selected' : '';
+            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
+        });
+        options += '</optgroup>';
+        
+        // Keyboard Related
+        options += '<optgroup label="Keyboards">';
+        const keyboards = [
+            {value: 16, name: "Drawbar Organ"},
+            {value: 17, name: "Percussive Organ"},
+            {value: 18, name: "Rock Organ"},
+            {value: 21, name: "Accordion"}
+        ];
+        
+        keyboards.forEach(inst => {
+            const selected = inst.value === currentProgram ? ' selected' : '';
+            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
+        });
+        options += '</optgroup>';
+        
+    } else if (currentProgram >= 40 && currentProgram <= 47) {
+        // Orchestral Strings
+        options += '<optgroup label="Orchestral Strings">';
+        const strings = [
+            {value: 40, name: "Violin"},
+            {value: 41, name: "Viola"},
+            {value: 42, name: "Cello"},
+            {value: 43, name: "Contrabass"},
+            {value: 44, name: "Tremolo Strings"},
+            {value: 45, name: "Pizzicato Strings"},
+            {value: 46, name: "Orchestral Harp"},
+            {value: 47, name: "Timpani"}
+        ];
+        
+        strings.forEach(inst => {
+            const selected = inst.value === currentProgram ? ' selected' : '';
+            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
+        });
+        options += '</optgroup>';
+        
+        // String Ensembles
+        options += '<optgroup label="String Ensembles">';
+        const ensembles = [
+            {value: 48, name: "String Ensemble 1"},
+            {value: 49, name: "String Ensemble 2"},
+            {value: 50, name: "Synth Strings 1"},
+            {value: 51, name: "Synth Strings 2"}
+        ];
+        
+        ensembles.forEach(inst => {
+            const selected = inst.value === currentProgram ? ' selected' : '';
+            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
+        });
+        options += '</optgroup>';
+        
+    } else if (currentProgram >= 56 && currentProgram <= 63) {
+        // Brass Family
+        options += '<optgroup label="Brass Family">';
+        const brass = [
+            {value: 56, name: "Trumpet"},
+            {value: 57, name: "Trombone"},
+            {value: 58, name: "Tuba"},
+            {value: 59, name: "Muted Trumpet"},
+            {value: 60, name: "French Horn"},
+            {value: 61, name: "Brass Section"},
+            {value: 62, name: "Synth Brass 1"},
+            {value: 63, name: "Synth Brass 2"}
+        ];
+        
+        brass.forEach(inst => {
+            const selected = inst.value === currentProgram ? ' selected' : '';
+            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
+        });
+        options += '</optgroup>';
+        
+    } else if (currentProgram >= 64 && currentProgram <= 79) {
+        // Wind Instruments
+        options += '<optgroup label="Reed Instruments">';
+        const reeds = [
+            {value: 64, name: "Soprano Sax"},
+            {value: 65, name: "Alto Sax"},
+            {value: 66, name: "Tenor Sax"},
+            {value: 67, name: "Baritone Sax"},
+            {value: 68, name: "Oboe"},
+            {value: 69, name: "English Horn"},
+            {value: 70, name: "Bassoon"},
+            {value: 71, name: "Clarinet"}
+        ];
+        
+        reeds.forEach(inst => {
+            const selected = inst.value === currentProgram ? ' selected' : '';
+            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
+        });
+        options += '</optgroup>';
+        
+        options += '<optgroup label="Flutes">';
+        const flutes = [
+            {value: 72, name: "Piccolo"},
+            {value: 73, name: "Flute"},
+            {value: 74, name: "Recorder"},
+            {value: 75, name: "Pan Flute"}
+        ];
+        
+        flutes.forEach(inst => {
+            const selected = inst.value === currentProgram ? ' selected' : '';
+            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
+        });
+        options += '</optgroup>';
+        
+    } else {
+        // For other instruments, show a general categorized list
+        options += '<optgroup label="Popular Instruments">';
+        const popular = [
+            {value: 0, name: "Piano"},
+            {value: 25, name: "Acoustic Guitar"},
+            {value: 27, name: "Electric Guitar (clean)"},
+            {value: 29, name: "Overdriven Guitar"},
+            {value: 33, name: "Electric Bass"},
+            {value: 40, name: "Violin"},
+            {value: 56, name: "Trumpet"},
+            {value: 65, name: "Alto Sax"},
+            {value: 73, name: "Flute"}
+        ];
+        
+        popular.forEach(inst => {
+            const selected = inst.value === currentProgram ? ' selected' : '';
+            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
+        });
+        options += '</optgroup>';
+        
+        // Current instrument if not in popular list
+        if (!popular.find(inst => inst.value === currentProgram)) {
+            options += '<optgroup label="Current">';
+            const currentName = getGeneralMidiInstrumentName(currentProgram);
+            options += `<option value="${currentProgram}" selected>${currentName}</option>`;
+            options += '</optgroup>';
+        }
+    }
+    
+    // Always add a "More Instruments" option that shows common alternatives
+    options += '<optgroup label="More Options">';
+    const moreOptions = [
+        {value: 0, name: "Piano"},
+        {value: 25, name: "Acoustic Guitar"},
+        {value: 29, name: "Overdriven Guitar"},
+        {value: 33, name: "Electric Bass"},
+        {value: 40, name: "Violin"},
+        {value: 48, name: "String Ensemble"},
+        {value: 56, name: "Trumpet"},
+        {value: 65, name: "Alto Sax"},
+        {value: 73, name: "Flute"},
+        {value: 105, name: "Banjo"}
+    ];
+    
+    moreOptions.forEach(inst => {
+        if (inst.value !== currentProgram) { // Don't duplicate current instrument
+            options += `<option value="${inst.value}">${inst.name}</option>`;
+        }
+    });
+    options += '</optgroup>';
+    
+    return options;
+}
+
+// Handle instrument change
+function handleInstrumentChange(event) {
+    if (!event.target.classList.contains('instrument-select')) return;
+    
+    const trackIndex = parseInt(event.target.getAttribute('data-track'));
+    const newProgram = parseInt(event.target.value);
+    
+    console.log(`Changing track ${trackIndex} instrument to program ${newProgram}`);
+    
+    // Update the track's program in the score
+    if (api && api.score && api.score.tracks[trackIndex]) {
+        const track = api.score.tracks[trackIndex];
+        const oldProgram = track.playbackInfo.program;
+        
+        // Update the track's program number
+        track.playbackInfo.program = newProgram;
+        
+        console.log(`Track ${trackIndex} instrument changed from ${oldProgram} to ${newProgram}`);
+        
+        // Update the track info display
+        updateTrackInstrumentDisplay(trackIndex, newProgram);
+        
+        // Apply the instrument change using score reload
+        applyInstrumentChangeViaScoreReload(trackIndex, newProgram);
+    }
+}
+
+// Apply instrument change by reloading the modified score
+function applyInstrumentChangeViaScoreReload(trackIndex, newProgram) {
+    if (!api || !api.score) {
+        console.log('No API or score available for instrument change');
+        return;
+    }
+    
+    try {
+        console.log(`Applying instrument change for track ${trackIndex} -> program ${newProgram}`);
+        
+        // Remember current playback state
+        const wasPlaying = api.playerState === 1;
+        const currentPosition = api.tickPosition || 0;
+        
+        // Force the player to reload with the new instrument settings
+        // This is the most reliable way to ensure instrument changes work
+        if (isPlayerReady) {
+            // Stop current playback if playing
+            if (wasPlaying) {
+                api.stop();
+            }
+            
+            // Small delay to ensure stop is processed
+            setTimeout(() => {
+                // Trigger a reload of the audio with the updated score
+                // This forces AlphaTab to re-initialize with the new program numbers
+                console.log('Reloading audio with updated instrument settings...');
+                
+                // The score has already been modified, so we just need to trigger
+                // a re-initialization of the player audio system
+                if (api.player && api.player.ready) {
+                    // Try to reload just the MIDI data
+                    try {
+                        // This forces AlphaTab to regenerate the MIDI with new instruments
+                        api.renderScore(api.score);
+                        console.log('✓ Score re-rendered with new instruments');
+                        
+                        // Restore playback position and state after a delay
+                        setTimeout(() => {
+                            if (currentPosition > 0) {
+                                api.tickPosition = currentPosition;
+                            }
+                            if (wasPlaying) {
+                                api.playPause();
+                            }
+                            console.log('✓ Instrument change applied successfully');
+                        }, 500);
+                        
+                    } catch (error) {
+                        console.log('Score re-render failed, trying alternative method');
+                        applyInstrumentChangeFallback(trackIndex, newProgram, wasPlaying, currentPosition);
+                    }
+                } else {
+                    console.log('Player not ready, instrument change will apply on next load');
+                }
+            }, 100);
+        } else {
+            console.log('Player not ready, instrument change queued for when ready');
+            queueInstrumentChange(trackIndex, newProgram);
+        }
+        
+    } catch (error) {
+        console.error('Error applying instrument change:', error);
+        console.log('Falling back to queued approach');
+        queueInstrumentChange(trackIndex, newProgram);
+    }
+}
+
+// Fallback method for instrument changes
+function applyInstrumentChangeFallback(trackIndex, newProgram, wasPlaying, currentPosition) {
+    console.log('Using fallback method for instrument change');
+    
+    try {
+        // As a last resort, queue the change for next playback
+        queueInstrumentChange(trackIndex, newProgram);
+        
+        // Show user feedback
+        const trackItem = document.querySelector(`[data-track-index="${trackIndex}"]`);
+        if (trackItem) {
+            // Add a visual indicator that the change will apply on next play
+            trackItem.style.opacity = '0.8';
+            trackItem.style.background = 'rgba(255, 193, 7, 0.1)';
+            
+            setTimeout(() => {
+                trackItem.style.opacity = '';
+                trackItem.style.background = '';
+            }, 2000);
+        }
+        
+        // Inform the user
+        showInstrumentChangeMessage('Instrument change will apply on next playback');
+        
+        // If was playing, restart to apply immediately
+        if (wasPlaying) {
+            setTimeout(() => {
+                if (currentPosition > 0) {
+                    api.tickPosition = currentPosition;
+                }
+                api.playPause();
+            }, 500);
+        }
+        
+    } catch (error) {
+        console.error('Fallback method also failed:', error);
+    }
+}
+
+// Show instrument change message to user
+function showInstrumentChangeMessage(message) {
+    // Create or update the message display
+    let messageDiv = document.getElementById('instrumentChangeMessage');
+    if (!messageDiv) {
+        messageDiv = document.createElement('div');
+        messageDiv.id = 'instrumentChangeMessage';
+        messageDiv.style.cssText = `
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: #FFC107;
+            color: #000;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            max-width: 300px;
+        `;
+        document.body.appendChild(messageDiv);
+    }
+    
+    messageDiv.textContent = message;
+    messageDiv.style.display = 'block';
+    messageDiv.style.opacity = '1';
+    
+    // Auto-hide after delay
+    setTimeout(() => {
+        if (messageDiv) {
+            messageDiv.style.opacity = '0';
+            setTimeout(() => {
+                if (messageDiv && messageDiv.style.opacity === '0') {
+                    messageDiv.style.display = 'none';
+                }
+            }, 300);
+        }
+    }, 3000);
+}
+
+// Queue instrument changes for later application (simplified)
+function queueInstrumentChange(trackIndex, newProgram) {
+    if (!window.queuedInstrumentChanges) {
+        window.queuedInstrumentChanges = new Map();
+    }
+    window.queuedInstrumentChanges.set(trackIndex, newProgram);
+    console.log(`Queued instrument change: Track ${trackIndex} -> Program ${newProgram}`);
+}
+
+// Apply queued instrument changes when player starts (simplified)
+function applyQueuedInstrumentChanges() {
+    if (!window.queuedInstrumentChanges || window.queuedInstrumentChanges.size === 0) {
+        return;
+    }
+    
+    console.log(`Note: ${window.queuedInstrumentChanges.size} instrument changes queued - they are already applied to the score`);
+    
+    // Clear the queue since the changes are already in the score
+    window.queuedInstrumentChanges.clear();
+}
+
+// Update track instrument display
+function updateTrackInstrumentDisplay(trackIndex, newProgram) {
+    const trackItem = document.querySelector(`[data-track-index="${trackIndex}"]`);
+    if (!trackItem) return;
+    
+    const trackInfoDetails = trackItem.querySelector('.track-info-details');
+    if (!trackInfoDetails) return;
+    
+    // Get the new instrument name
+    const newInstrumentName = getGeneralMidiInstrumentName(newProgram);
+    
+    // Update the displayed instrument info
+    const track = api.score.tracks[trackIndex];
+    const updatedInstrumentInfo = getInstrumentInfo(track, trackIndex);
+    trackInfoDetails.innerHTML = updatedInstrumentInfo;
+    
+    console.log(`Updated display for track ${trackIndex}: ${newInstrumentName}`);
+}
+
+// Debug function to check synthesizer capabilities
+function debugSynthesizer() {
+    console.log('=== SYNTHESIZER DEBUG INFO ===');
+    
+    if (!api) {
+        console.log('❌ No API available');
+        return;
+    }
+    
+    console.log('✓ API available');
+    console.log('Player ready:', isPlayerReady);
+    console.log('Player state:', api.playerState);
+    
+    if (!api.player) {
+        console.log('❌ No player available');
+        return;
+    }
+    
+    console.log('✓ Player available');
+    console.log('Player type:', typeof api.player);
+    console.log('Player methods:', Object.getOwnPropertyNames(api.player).filter(name => typeof api.player[name] === 'function'));
+    
+    if (!api.player.synthesizer) {
+        console.log('❌ No synthesizer available');
+        return;
+    }
+    
+    const synth = api.player.synthesizer;
+    console.log('✓ Synthesizer available');
+    console.log('Synthesizer type:', typeof synth);
+    console.log('Synthesizer constructor:', synth.constructor.name);
+    console.log('Synthesizer methods:', Object.getOwnPropertyNames(synth).filter(name => typeof synth[name] === 'function'));
+    
+    // Check for specific methods
+    const methods = ['programChange', 'sendEvent', 'setChannelProgram', 'midiEvent'];
+    methods.forEach(method => {
+        const available = typeof synth[method] === 'function';
+        console.log(`${available ? '✓' : '❌'} synth.${method}:`, available ? 'available' : 'not available');
+    });
+    
+    // Check API level methods
+    const apiMethods = ['changeTrackProgram', 'changeTrackVolume'];
+    apiMethods.forEach(method => {
+        const available = typeof api[method] === 'function';
+        console.log(`${available ? '✓' : '❌'} api.${method}:`, available ? 'available' : 'not available');
+    });
+    
+    // Check current score and tracks
+    if (api.score && api.score.tracks) {
+        console.log('✓ Score loaded with', api.score.tracks.length, 'tracks');
+        api.score.tracks.forEach((track, index) => {
+            console.log(`Track ${index}:`, {
+                name: track.name,
+                program: track.playbackInfo.program,
+                primaryChannel: track.playbackInfo.primaryChannel,
+                secondaryChannel: track.playbackInfo.secondaryChannel
+            });
+        });
+    } else {
+        console.log('❌ No score loaded');
+    }
+    
+    console.log('=== END DEBUG INFO ===');
+}
+
+// Make debug function globally available
+window.debugSynthesizer = debugSynthesizer;
