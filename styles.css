@@ -1195,4 +1195,218 @@ body {
 /* Track controls styling */
 .track-controls-section {
     margin-top: 12px;
+}
+
+/* Mobile optimizations for horizontal controls */
+@media (max-width: 768px) {
+    /* Compact header for mobile */
+    .header {
+        padding: 15px 15px;
+    }
+
+    .header h1 {
+        font-size: 2rem;
+        margin-bottom: 5px;
+    }
+
+    .header p {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .horizontal-controls {
+        padding: 12px 15px;
+        margin: 10px 15px 5px 15px;
+        gap: 15px;
+        border-radius: 15px;
+        box-shadow: 0 6px 20px rgba(139, 69, 19, 0.3), 
+                    0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    .horizontal-btn {
+        width: 42px;
+        height: 42px;
+        border-width: 1px;
+    }
+
+    .horizontal-btn .btn-icon {
+        font-size: 18px;
+    }
+
+    .horizontal-divider {
+        height: 30px;
+        margin: 0 8px;
+    }
+
+    .horizontal-volume,
+    .horizontal-speed {
+        padding: 8px 12px;
+        gap: 8px;
+        border-radius: 20px;
+        border-width: 1px;
+    }
+
+    .volume-icon,
+    .speed-icon {
+        font-size: 16px;
+        min-width: 18px;
+    }
+
+    .horizontal-slider {
+        width: 80px;
+        height: 4px;
+    }
+
+    .horizontal-slider::-webkit-slider-thumb {
+        width: 16px;
+        height: 16px;
+        border-width: 1px;
+    }
+
+    .horizontal-slider::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        border-width: 1px;
+    }
+
+    .horizontal-slider::-moz-range-track {
+        height: 4px;
+    }
+
+    .horizontal-display {
+        font-size: 11px;
+        min-width: 35px;
+    }
+
+    /* Make controls stick closer to tab content */
+    #alphaTab {
+        margin-top: 5px;
+    }
+
+    /* Reduce spacing in other sections on mobile */
+    .track-info {
+        padding: 20px 15px;
+    }
+
+    .track-controls {
+        padding: 15px;
+        margin: 10px 15px;
+    }
+
+    .file-section {
+        padding: 20px 15px;
+    }
+}
+
+/* Extra mobile optimizations for very small screens */
+@media (max-width: 480px) {
+    /* Ultra-compact header for small phones */
+    .header {
+        padding: 10px 10px;
+    }
+
+    .header h1 {
+        font-size: 1.5rem;
+        margin-bottom: 3px;
+    }
+
+    .header p {
+        font-size: 0.8rem;
+        opacity: 0.85;
+    }
+
+    .horizontal-controls {
+        padding: 8px 10px;
+        margin: 8px 10px 3px 10px;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .horizontal-btn {
+        width: 38px;
+        height: 38px;
+    }
+
+    .horizontal-btn .btn-icon {
+        font-size: 16px;
+    }
+
+    .horizontal-divider {
+        display: none; /* Hide dividers on very small screens */
+    }
+
+    .horizontal-volume,
+    .horizontal-speed {
+        padding: 6px 10px;
+        gap: 6px;
+        min-width: 140px;
+        justify-content: space-between;
+    }
+
+    .horizontal-slider {
+        width: 70px;
+    }
+
+    .volume-icon,
+    .speed-icon {
+        font-size: 14px;
+    }
+
+    .horizontal-display {
+        font-size: 10px;
+        min-width: 30px;
+    }
+
+    /* Stack playback controls and sliders */
+    .horizontal-controls {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    /* Group playback buttons together */
+    .playback-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    /* Group sliders together */
+    .slider-controls {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    /* Compact other sections too */
+    .file-section {
+        padding: 15px 10px;
+    }
+
+    .track-info {
+        padding: 15px 10px;
+    }
+
+    .track-controls {
+        padding: 12px 10px;
+        margin: 8px 10px;
+    }
+
+    .gp-files-browser {
+        padding: 15px 10px;
+    }
+}
+
+/* Desktop layout for grouped controls */
+.playback-buttons {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.slider-controls {
+    display: flex;
+    gap: 30px;
+    align-items: center;
 } 
