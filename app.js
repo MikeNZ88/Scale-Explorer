@@ -1566,58 +1566,49 @@ function testLoopButton() {
 window.testLoopButton = testLoopButton;
 
 async function loadGpFilesFromDirectory() {
-    console.log('Loading GP files from subfolders...');
+    console.log('Loading GP files from predefined list...');
     
     try {
-        // Define the subfolders to scan
-        const subfolders = [
-            { name: 'Scale Exercises', path: 'Scale%20Exercises/', category: 'scale-exercises' },
-            { name: 'Licks', path: 'Licks/', category: 'licks' },
-            { name: 'Chord Progressions', path: 'Chord%20Progressions/', category: 'chord-progressions' },
-            { name: 'Songs', path: 'Songs/', category: 'songs' },
-            { name: 'Arpeggios', path: 'Arpeggios/', category: 'arpeggios' }
-        ];
-        
         // Clear existing files
         gpFiles = [];
         filteredFiles = [];
         
+        // Hardcoded list of GP files (since GitHub Pages doesn't serve directory listings)
+        const gpFilesList = [
+            // Scale Exercises
+            { name: 'C Major Scale and Arpeggio Exercises.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+            { name: 'Pentatonic_Exercises.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+            { name: 'Minor_Pentatonic_Patterns.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+            
+            // Licks
+            { name: '5 Licks To Metal adapted.gp', category: 'licks', folder: 'Licks' },
+            { name: 'Bebop Lines for Jazz Blues in B flat.gp', category: 'licks', folder: 'Licks' },
+            { name: '5 Licks To Metal.gp', category: 'licks', folder: 'Licks' },
+            { name: '5 Licks To - ROCK.gp', category: 'licks', folder: 'Licks' },
+            
+            // Songs
+            { name: 'Achy Breaky Heart (Simple Melody).gp', category: 'songs', folder: 'Songs' },
+            { name: 'Beethoven-Bagatelle_no_25-Fur_Elise.gp', category: 'songs', folder: 'Songs' }
+        ];
+        
         let totalFilesFound = 0;
         
-        // Scan each subfolder
-        for (const subfolder of subfolders) {
-            try {
-                console.log(`Scanning ${subfolder.name} folder...`);
-                const response = await fetch(`./public/GP Files/${subfolder.path}`);
-                
-                if (response.ok) {
-                    const html = await response.text();
-                    const files = parseDirectoryListing(html);
-                    
-                    files.forEach(fileName => {
-                        if (isValidGpFile(fileName)) {
-                            const filePath = `./public/GP Files/${subfolder.name}/${fileName}`;
-                            addGpFileToList(fileName, filePath, subfolder.category);
-                            totalFilesFound++;
-                        }
-                    });
-                    
-                    console.log(`Found ${files.filter(isValidGpFile).length} GP files in ${subfolder.name}`);
-                } else {
-                    console.warn(`Could not access ${subfolder.name} folder:`, response.status);
-                }
-            } catch (error) {
-                console.warn(`Error scanning ${subfolder.name}:`, error);
-            }
-        }
+        // Add each file to the list
+        gpFilesList.forEach(fileInfo => {
+            const filePath = `./public/GP Files/${fileInfo.folder}/${fileInfo.name}`;
+            addGpFileToList(fileInfo.name, filePath, fileInfo.category);
+            totalFilesFound++;
+        });
         
         updateFilesList();
-        console.log(`Loaded ${totalFilesFound} GP files total from all subfolders`);
+        console.log(`Loaded ${totalFilesFound} GP files from predefined list`);
         
     } catch (error) {
-        console.error('Error loading files from subfolders:', error);
-        console.log('Falling back to known files...');
-        addKnownGpFiles();
+        console.error('Error loading files:', error);
+        console.log('Falling back to empty list...');
+        gpFiles = [];
+        filteredFiles = [];
+        updateFilesList();
     }
 }
 
