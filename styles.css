@@ -149,13 +149,15 @@ body {
 }
 
 .file-input-container.has-file .file-input-label {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+    background: linear-gradient(135deg, #8B4513 0%, #654321 100%);
+    box-shadow: 0 6px 20px rgba(139, 69, 19, 0.3);
+    color: white;
 }
 
 .file-input-container.has-file .file-input-label:hover {
-    background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
-    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+    background: linear-gradient(135deg, #A0522D 0%, #8B4513 100%);
+    box-shadow: 0 8px 25px rgba(139, 69, 19, 0.4);
+    color: white;
 }
 
 .file-name-display {
@@ -220,6 +222,33 @@ body {
     text-align: center;
     border-bottom: 2px solid #007bff;
     padding-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
+
+.toggle-controls-btn {
+    margin-left: 10px;
+    padding: 6px 12px;
+    font-size: 16px;
+    border: none;
+    background: #8B4513;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 32px;
+}
+
+.toggle-controls-btn:hover {
+    background: #A0522D;
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(139, 69, 19, 0.3);
 }
 
 .tracks-grid {
@@ -540,17 +569,33 @@ body {
 /* Horizontal Playback Controls */
 .horizontal-controls {
     display: none;
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(40, 40, 40, 0.9) 100%);
+    background: linear-gradient(135deg, #8B4513 0%, #654321 50%, #5D4037 100%);
     backdrop-filter: blur(10px);
-    border-radius: 15px;
-    padding: 20px 30px;
-    margin: 20px 30px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 25px 35px;
+    margin: 25px 30px;
+    box-shadow: 0 12px 40px rgba(139, 69, 19, 0.4), 
+                0 4px 12px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(205, 133, 63, 0.3);
     align-items: center;
     justify-content: center;
-    gap: 25px;
+    gap: 30px;
     flex-wrap: wrap;
+    position: relative;
+    overflow: hidden;
+}
+
+.horizontal-controls::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="wood-grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.05)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.05)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.03)"/></pattern></defs><rect width="100" height="100" fill="url(%23wood-grain)"/></svg>');
+    opacity: 0.4;
+    pointer-events: none;
 }
 
 .horizontal-controls.show {
@@ -558,109 +603,183 @@ body {
 }
 
 .horizontal-btn {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+    border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
-    width: 50px;
-    height: 50px;
+    width: 56px;
+    height: 56px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(8px);
     color: white;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.horizontal-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.horizontal-btn:hover:not(:disabled)::before {
+    left: 100%;
 }
 
 .horizontal-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.25);
-    transform: scale(1.1);
-    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.2) 100%);
+    transform: scale(1.1) translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
 }
 
 .horizontal-btn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
     transform: none;
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .horizontal-btn .btn-icon {
-    font-size: 20px;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+    font-size: 22px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    position: relative;
+    z-index: 1;
 }
 
 .horizontal-divider {
-    width: 1px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.3);
-    margin: 0 10px;
+    width: 2px;
+    height: 45px;
+    background: linear-gradient(to bottom, 
+                rgba(255, 255, 255, 0.1) 0%, 
+                rgba(255, 255, 255, 0.4) 50%, 
+                rgba(255, 255, 255, 0.1) 100%);
+    margin: 0 15px;
+    border-radius: 1px;
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
 }
 
 .horizontal-volume,
 .horizontal-speed {
     display: flex;
     align-items: center;
-    gap: 12px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 25px;
-    padding: 12px 20px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    gap: 15px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+    border-radius: 30px;
+    padding: 15px 25px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.horizontal-volume::before,
+.horizontal-speed::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, 
+                rgba(255, 255, 255, 0.05) 0%, 
+                transparent 50%, 
+                rgba(255, 255, 255, 0.05) 100%);
+    pointer-events: none;
 }
 
 .volume-icon,
 .speed-icon {
-    font-size: 18px;
+    font-size: 20px;
     color: white;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
-    min-width: 20px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    min-width: 24px;
+    position: relative;
+    z-index: 1;
 }
 
 .horizontal-slider {
-    width: 100px;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 2px;
+    width: 120px;
+    height: 6px;
+    background: linear-gradient(to right, 
+                rgba(255, 255, 255, 0.2) 0%, 
+                rgba(255, 255, 255, 0.4) 100%);
+    border-radius: 3px;
     outline: none;
     border: none;
     cursor: pointer;
     -webkit-appearance: none;
     appearance: none;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 1;
 }
 
 .horizontal-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 16px;
-    height: 16px;
-    background: white;
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, #CD853F 0%, #D2691E 100%);
     border-radius: 50%;
     cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s ease;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+    border: 2px solid rgba(255, 255, 255, 0.8);
 }
 
 .horizontal-slider::-webkit-slider-thumb:hover {
     transform: scale(1.2);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
 }
 
 .horizontal-slider::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
-    background: white;
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(135deg, #CD853F 0%, #D2691E 100%);
     border-radius: 50%;
     cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.horizontal-slider::-moz-range-track {
+    height: 6px;
+    background: linear-gradient(to right, 
+                rgba(255, 255, 255, 0.2) 0%, 
+                rgba(255, 255, 255, 0.4) 100%);
+    border-radius: 3px;
     border: none;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .horizontal-display {
     color: white;
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 700;
     text-align: center;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-    min-width: 40px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+    min-width: 45px;
+    font-family: 'Inter', sans-serif;
+    position: relative;
+    z-index: 1;
 }
 
 /* Loop button active state */
@@ -905,8 +1024,9 @@ body {
 }
 
 .file-item.selected {
-    border: 2px solid #4CAF50;
-    background: #f1f8e9;
+    border: 2px solid #8B4513;
+    background: linear-gradient(135deg, #fef9f5 0%, #f5f0e8 100%);
+    box-shadow: 0 4px 20px rgba(139, 69, 19, 0.15);
 }
 
 .file-icon {
@@ -1068,10 +1188,6 @@ body {
     content: " (Preparing...)";
     font-size: 11px;
     opacity: 0.7;
-}
-
-.horizontal-controls {
-    justify-content: center;
 }
 
 /* Track controls styling */

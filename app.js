@@ -452,35 +452,109 @@ async function loadGpFile(fileId) {
 
 // Update track info display
 function updateTrackInfo(score) {
-    // Enhanced metadata extraction
-    const metadata = extractComprehensiveMetadata(score);
+    const trackInfo = document.getElementById('trackInfo');
+    const trackControls = document.getElementById('trackControls');
     
-    songTitle.textContent = metadata.title;
-    songArtist.textContent = metadata.artist;
-    trackCount.textContent = `Tracks: ${score.tracks.length}`;
+    if (!trackInfo || !trackControls) return;
+    
+    // Enhanced metadata extraction
+    const metadata = {
+        title: score.title || 'Unknown Title',
+        artist: score.artist || 'Unknown Artist',
+        album: score.album || '',
+        words: score.words || '',
+        music: score.music || '',
+        copyright: score.copyright || '',
+        tab: score.tab || '',
+        instructions: score.instructions || '',
+        notices: score.notices || '',
+        masterVolume: score.masterVolume || 200,
+        tempo: score.tempo || 120
+    };
     
     // Log all available metadata for debugging
-    console.log('Complete score metadata:', {
-        title: score.title,
-        artist: score.artist,
-        album: score.album,
-        words: score.words,
-        music: score.music,
-        copyright: score.copyright,
-        tab: score.tab,
-        instructions: score.instructions,
-        notices: score.notices,
-        masterVolume: score.masterVolume,
-        tempo: score.tempo
+    console.log('Score metadata:', metadata);
+    
+    let infoHtml = `
+        <h2>${metadata.title}</h2>
+        <p><strong>Artist:</strong> ${metadata.artist}</p>
+        <p><strong>Tracks:</strong> ${score.tracks.length}</p>
+    `;
+    
+    if (metadata.album) infoHtml += `<p><strong>Album:</strong> ${metadata.album}</p>`;
+    if (metadata.copyright) infoHtml += `<p><strong>Copyright:</strong> ${metadata.copyright}</p>`;
+    if (metadata.instructions) infoHtml += `<p><strong>Instructions:</strong> ${metadata.instructions}</p>`;
+    
+    trackInfo.innerHTML = infoHtml;
+    
+    // Initialize track states for all tracks
+    score.tracks.forEach((track, index) => {
+        if (!trackStates[index]) {
+            trackStates[index] = {
+                visible: track.isVisible !== false,
+                muted: track.playbackInfo?.isMute || false,
+                solo: false
+            };
+        }
     });
     
-    // Initialize track controls but don't interfere with initial rendering
-    initializeTrackStates(score);
+    // Create track controls
     createTrackControls(score);
     
-    // Show track info and track controls
+    // Add track controls header with toggle button
+    const trackControlsHeader = trackControls.querySelector('h3');
+    if (trackControlsHeader) {
+        trackControlsHeader.innerHTML = `
+            Track Controls
+            <button id="toggleTrackControls" class="toggle-controls-btn" title="Show/Hide Track Controls">
+                👁️
+            </button>
+        `;
+    }
+    
+    // Set track controls to be hidden by default
+    const tracksGrid = document.getElementById('tracksGrid');
+    const bulkControls = trackControls.querySelector('.bulk-controls');
+    
+    if (tracksGrid) tracksGrid.style.display = 'none';
+    if (bulkControls) bulkControls.style.display = 'none';
+    
+    // Add toggle functionality
+    const toggleButton = document.getElementById('toggleTrackControls');
+    if (toggleButton) {
+        toggleButton.addEventListener('click', toggleTrackControlsVisibility);
+    }
+    
+    // Show both track info and track controls container
     trackInfo.style.display = 'block';
     trackControls.style.display = 'block';
+}
+
+// Toggle track controls visibility
+function toggleTrackControlsVisibility() {
+    const tracksGrid = document.getElementById('tracksGrid');
+    const bulkControls = document.querySelector('.bulk-controls');
+    const toggleButton = document.getElementById('toggleTrackControls');
+    
+    if (!tracksGrid || !toggleButton) return;
+    
+    const isHidden = tracksGrid.style.display === 'none';
+    
+    if (isHidden) {
+        // Show track controls
+        tracksGrid.style.display = 'flex';
+        if (bulkControls) bulkControls.style.display = 'flex';
+        toggleButton.innerHTML = '🙈';
+        toggleButton.title = 'Hide Track Controls';
+        console.log('Track controls shown');
+    } else {
+        // Hide track controls
+        tracksGrid.style.display = 'none';
+        if (bulkControls) bulkControls.style.display = 'none';
+        toggleButton.innerHTML = '👁️';
+        toggleButton.title = 'Show Track Controls';
+        console.log('Track controls hidden');
+    }
 }
 
 // Extract comprehensive metadata from Guitar Pro file
@@ -1775,13 +1849,18 @@ function addGpFileToList(fileName, filePath, category = 'scale-exercises') {
     console.log('Added file to GP Browser:', fileName, `(${category})`);
 }
 
-// Make functions globally available for manual file addition and refresh
+// Global functions for manual file addition and refresh
 window.addGpFile = addGpFile;
 window.refreshGpFiles = refreshGpFiles;
 window.testLoopButton = testLoopButton;
 window.debugSynthesizer = debugSynthesizer;
+window.testInstrumentChange = testInstrumentChange;
+window.explainMidiChannels = explainMidiChannels;
+window.testSoundChange = testSoundChange;
 window.analyzeSoundFont = analyzeSoundFont;
 window.analyzeGpFileSoundSettings = analyzeGpFileSoundSettings;
+window.testAlphaTabVolumeControl = testAlphaTabVolumeControl;
+window.toggleTrackControlsVisibility = toggleTrackControlsVisibility;
 
 function addKnownGpFiles() {
     // Fallback for when directory scanning fails
