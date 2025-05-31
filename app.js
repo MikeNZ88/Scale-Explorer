@@ -110,6 +110,7 @@ function initializeAlphaTab() {
             updateTrackInfo(score);
             updateScoreForPrint(score);
             enablePlayerControls(true);
+            setupScoreTouchControls(); // Enable touch/click play/pause on score
             // Don't call track control functions here - let AlphaTab render all tracks by default
         });
         
@@ -2318,4 +2319,70 @@ const showAllBtn = document.getElementById('showAllTracks');
 const hideAllBtn = document.getElementById('hideAllTracks');
 const unmuteAllBtn = document.getElementById('unmuteAllTracks');
 const unsoloAllBtn = document.getElementById('unsoloAllTracks');
+
+// Add touch/click functionality to score for play/pause
+function setupScoreTouchControls() {
+    const alphaTabContainer = document.getElementById('alphaTab');
+    
+    if (alphaTabContainer) {
+        // Add touch and click event listeners
+        alphaTabContainer.addEventListener('touchend', handleScoreTouch, { passive: true });
+        alphaTabContainer.addEventListener('click', handleScoreClick);
+        
+        // Add visual feedback for touch
+        alphaTabContainer.style.cursor = 'pointer';
+        alphaTabContainer.style.userSelect = 'none';
+        alphaTabContainer.style.webkitUserSelect = 'none';
+        alphaTabContainer.style.webkitTouchCallout = 'none';
+    }
+}
+
+function handleScoreTouch(event) {
+    // Prevent default touch behavior
+    event.preventDefault();
+    
+    // Only handle single touch
+    if (event.changedTouches && event.changedTouches.length === 1) {
+        togglePlayPause();
+    }
+}
+
+function handleScoreClick(event) {
+    // Only handle left clicks and avoid interfering with other interactions
+    if (event.button === 0 && !event.ctrlKey && !event.shiftKey && !event.altKey) {
+        togglePlayPause();
+    }
+}
+
+function togglePlayPause() {
+    if (!api || !currentScore) {
+        console.log('No score loaded - cannot play/pause');
+        return;
+    }
+    
+    try {
+        if (api.isPlaying) {
+            api.pause();
+            console.log('Score touch: Paused playback');
+        } else {
+            api.play();
+            console.log('Score touch: Started playback');
+        }
+    } catch (error) {
+        console.error('Error toggling playback from score touch:', error);
+    }
+}
+
+// Make helper function available globally
+window.addNewGpFileToList = addNewGpFileToList;
+window.debugSynthesizer = debugSynthesizer;
+// Auto-scroll control functions
+window.setScrollMode = setScrollMode;
+window.toggleAutoScroll = toggleAutoScroll;
+window.setScrollSpeed = setScrollSpeed;
+window.setScrollOffset = setScrollOffset;
+window.getScrollInfo = getScrollInfo;
+// Touch control functions
+window.setupScoreTouchControls = setupScoreTouchControls;
+window.togglePlayPause = togglePlayPause;
 
