@@ -1683,23 +1683,8 @@ function testBufferedPlayback() {
 // Global functions for manual file addition and refresh
 window.addGpFile = addGpFile;
 window.refreshGpFiles = refreshGpFiles;
+window.addNewGpFileToList = addNewGpFileToList;
 window.debugSynthesizer = debugSynthesizer;
-window.testInstrumentChange = testInstrumentChange;
-window.explainMidiChannels = explainMidiChannels;
-window.testSoundChange = testSoundChange;
-window.analyzeSoundFont = analyzeSoundFont;
-window.analyzeGpFileSoundSettings = analyzeGpFileSoundSettings;
-window.testAlphaTabVolumeControl = testAlphaTabVolumeControl;
-window.toggleTrackControlsVisibility = toggleTrackControlsVisibility;
-window.analyzePlaybackAccuracy = analyzePlaybackAccuracy;
-window.testPlaybackTiming = testPlaybackTiming;
-window.optimizeAudioForResponsiveness = optimizeAudioForResponsiveness;
-window.preWarmAudioSystem = preWarmAudioSystem;
-window.ensureAudioContextRunning = ensureAudioContextRunning;
-window.testCursorAccuracy = testCursorAccuracy;
-window.initializeCursorTimingManually = initializeCursorTimingManually;
-window.testCursorTimingPerformance = testCursorTimingPerformance;
-window.testBufferedPlayback = testBufferedPlayback;
 
 // Add GP file to the list
 function addGpFileToList(fileName, category, filePath) {
@@ -1719,15 +1704,20 @@ function addGpFileToList(fileName, category, filePath) {
 }
 
 // Load GP files from predefined directory structure
+// NOTE: This uses a hardcoded list because browsers cannot scan directories
+// This approach works perfectly with GitHub Pages and other static hosting
 async function loadGpFilesFromDirectory() {
     console.log('Loading GP files from directory...');
     
     // Actual GP files that exist in the public/GP Files directory
+    // To add new files: 1) Upload to the correct folder, 2) Add entry below
     const gpFilesList = [
         // Scale Exercises
         { name: 'C Major Scale and Arpeggio Exercises.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
         { name: 'Pentatonic_Exercises.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
         { name: 'Minor_Pentatonic_Patterns.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+        { name: 'E Minor and G Major Pentatonic Scale Shapes.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+        { name: 'A Minor & C Major Pentatonic Scale Shapes.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
         
         // Licks
         { name: '5 Licks To Metal adapted.gp', category: 'licks', folder: 'Licks' },
@@ -1863,4 +1853,23 @@ function handlePlayerStateChange(stateEvent) {
         // Playing state reached during buffering
         console.log('🎵 Playback started during buffer period');
     }
+}
+
+// Helper function to easily add new GP files to the list
+// Usage: addNewGpFileToList('My New Song.gp', 'songs', 'Songs')
+function addNewGpFileToList(fileName, category, folder) {
+    console.log(`
+📝 To add "${fileName}" to the app:
+
+1. Upload the file to: public/GP Files/${folder}/${fileName}
+2. Add this line to the gpFilesList array in loadGpFilesFromDirectory():
+
+{ name: '${fileName}', category: '${category}', folder: '${folder}' },
+
+3. Commit and push to GitHub
+4. The file will appear in the app automatically
+
+Available categories: 'scale-exercises', 'licks', 'songs', 'chord-progressions', 'arpeggios'
+Available folders: 'Scale Exercises', 'Licks', 'Songs', 'Chord Progressions', 'Arpeggios'
+    `);
 }
