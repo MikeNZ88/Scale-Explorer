@@ -103,6 +103,7 @@ function initializeAlphaTab() {
         api.scoreLoaded.on((score) => {
             console.log('Score loaded successfully:', score.title, 'Tracks:', score.tracks.length);
             isRenderingComplete = false; // Reset rendering flag for new score
+            
             updateTrackInfo(score);
             updateScoreForPrint(score);
             enablePlayerControls(true);
@@ -477,7 +478,9 @@ function updateTrackInfo(score) {
     initializeTrackStates(score);
     createTrackControls(score);
     
+    // Show track info and track controls
     trackInfo.style.display = 'block';
+    trackControls.style.display = 'block';
 }
 
 // Extract comprehensive metadata from Guitar Pro file
@@ -558,75 +561,174 @@ function initializeTrackStates(score) {
     });
 }
 
+// Create track controls for each track
 function createTrackControls(score) {
+    const tracksGrid = document.getElementById('tracksGrid');
     tracksGrid.innerHTML = '';
     
     score.tracks.forEach((track, index) => {
-        const trackItem = document.createElement('div');
-        trackItem.className = 'track-item';
-        trackItem.setAttribute('data-track-index', index);
+        const trackDiv = document.createElement('div');
+        trackDiv.className = 'track-control';
+        trackDiv.setAttribute('data-track', index);
         
-        // Enhanced track name detection with multiple fallbacks
+        // Enhanced track information
         const trackName = getTrackName(track, index);
+        const instrumentName = getInstrumentName(track);
+        const programNumber = track.playbackInfo?.program || 0;
+        const volume = track.playbackInfo?.volume || 16;
+        const volumePercent = Math.round((volume / 16) * 100);
         
-        // Enhanced instrument detection with multiple fallbacks
-        const instrumentInfo = getInstrumentInfo(track, index);
+        // Effects information
+        const effects = [];
+        if (track.playbackInfo?.chorus > 0) effects.push(`Chorus: ${track.playbackInfo.chorus}`);
+        if (track.playbackInfo?.reverb > 0) effects.push(`Reverb: ${track.playbackInfo.reverb}`);
+        if (track.playbackInfo?.phaser > 0) effects.push(`Phaser: ${track.playbackInfo.phaser}`);
+        if (track.playbackInfo?.tremolo > 0) effects.push(`Tremolo: ${track.playbackInfo.tremolo}`);
         
-        trackItem.innerHTML = `
+        // Channel information
+        const primaryChannel = track.playbackInfo?.primaryChannel;
+        const secondaryChannel = track.playbackInfo?.secondaryChannel;
+        const channelText = primaryChannel !== undefined ? 
+            (secondaryChannel !== undefined && secondaryChannel !== primaryChannel ? 
+                `Ch ${primaryChannel + 1}/${secondaryChannel + 1}` : 
+                `Ch ${primaryChannel + 1}`) : 
+            'Ch Unknown';
+        
+        // Tuning information
+        const tuningInfo = track.staves?.[0]?.tuning;
+        const capo = track.staves?.[0]?.capo || 0;
+        const tuningText = tuningInfo ? 
+            `${tuningInfo.length} strings${capo > 0 ? `, Capo ${capo}` : ''}` : 
+            'Standard';
+        
+        trackDiv.innerHTML = `
             <div class="track-header">
-                <div class="track-name">${trackName}</div>
-            </div>
-            <div class="track-info-details">
-                ${instrumentInfo}
-            </div>
-            <div class="track-controls-section">
-                <div class="instrument-selector">
-                    <select class="instrument-select" data-track="${index}">
-                        ${getInstrumentOptions(track.playbackInfo.program)}
-                    </select>
+                <div class="track-title-section">
+                    <h4 class="track-name">${trackName}</h4>
+                    <div class="track-program-info">
+                        <span class="instrument-name">${instrumentName}</span>
+                    </div>
                 </div>
-                <div class="track-controls-buttons">
-                    <button class="track-btn visibility visible" data-action="visibility" data-track="${index}">
-                        Show
+                <div class="track-buttons">
+                    <button class="visibility-btn ${track.isVisible ? 'active' : ''}" 
+                            data-track="${index}" 
+                            title="Toggle track visibility">
+                        👁️
                     </button>
-                    <button class="track-btn solo" data-action="solo" data-track="${index}">
-                        Solo
+                    <button class="solo-btn" 
+                            data-track="${index}" 
+                            title="Solo this track">
+                        🎯
                     </button>
-                    <button class="track-btn mute" data-action="mute" data-track="${index}">
-                        Mute
+                    <button class="mute-btn ${track.playbackInfo && track.playbackInfo.isMute ? 'active' : ''}" 
+                            data-track="${index}" 
+                            title="Mute/unmute track">
+                        🔇
                     </button>
+                </div>
+            </div>
+            <div class="track-details">
+                <div class="track-sound-info">
+                    <div class="sound-param volume-control">
+                        <span class="param-label">Volume:</span>
+                        <div class="volume-slider-container">
+                            <input type="range" 
+                                   class="volume-slider" 
+                                   min="0" 
+                                   max="16" 
+                                   value="${volume}" 
+                                   data-track="${index}"
+                                   title="Track volume">
+                            <span class="volume-display">${volumePercent}%</span>
+                        </div>
+                    </div>
+                    <div class="sound-param">
+                        <span class="param-label">${channelText}</span>
+                        <span class="param-value">${tuningText}</span>
+                    </div>
+                    ${effects.length > 0 ? `
+                    <div class="sound-param effects">
+                        <span class="param-label">Effects:</span>
+                        <span class="param-value">${effects.join(', ')}</span>
+                    </div>
+                    ` : ''}
                 </div>
             </div>
         `;
         
-        tracksGrid.appendChild(trackItem);
+        tracksGrid.appendChild(trackDiv);
     });
     
-    // Add event listeners to track buttons
+    // Add event listeners for track buttons and volume sliders
     tracksGrid.addEventListener('click', handleTrackButtonClick);
+    tracksGrid.addEventListener('input', handleVolumeChange);
     
-    // Add event listeners to instrument selectors
-    tracksGrid.addEventListener('change', handleInstrumentChange);
-    
-    trackControls.style.display = 'block';
+    console.log(`Created enhanced controls for ${score.tracks.length} tracks`);
 }
 
+// Handle volume slider changes
+function handleVolumeChange(event) {
+    if (event.target.classList.contains('volume-slider')) {
+        const trackIndex = parseInt(event.target.getAttribute('data-track'));
+        const volume = parseInt(event.target.value);
+        const volumePercent = Math.round((volume / 16) * 100);
+        
+        // Update the display
+        const volumeDisplay = event.target.parentElement.querySelector('.volume-display');
+        volumeDisplay.textContent = `${volumePercent}%`;
+        
+        // Use AlphaTab's built-in volume control
+        if (api && api.score && api.score.tracks[trackIndex]) {
+            try {
+                // Convert volume from 0-16 scale to 0-1 scale for AlphaTab
+                const normalizedVolume = volume / 16;
+                
+                // Use AlphaTab's changeTrackVolume method
+                api.changeTrackVolume([trackIndex], normalizedVolume);
+                
+                // Also update the track's playback info for consistency
+                api.score.tracks[trackIndex].playbackInfo.volume = volume;
+                
+                // Log the volume change
+                console.log(`Track ${trackIndex} (${getTrackName(api.score.tracks[trackIndex], trackIndex)}) volume changed to ${volumePercent}% using AlphaTab's changeTrackVolume`);
+                
+            } catch (error) {
+                console.error('Error updating track volume with AlphaTab:', error);
+                
+                // Fallback: try alternative AlphaTab methods
+                try {
+                    if (api.player && api.player.setChannelVolume) {
+                        const track = api.score.tracks[trackIndex];
+                        const primaryChannel = track.playbackInfo?.primaryChannel;
+                        if (primaryChannel !== undefined) {
+                            api.player.setChannelVolume(primaryChannel, volume);
+                            console.log(`Fallback: Set channel ${primaryChannel} volume to ${volume}`);
+                        }
+                    }
+                } catch (fallbackError) {
+                    console.error('Fallback volume control also failed:', fallbackError);
+                }
+            }
+        }
+    }
+}
+
+// Handle track button clicks (visibility, solo, mute)
 function handleTrackButtonClick(event) {
-    if (!event.target.classList.contains('track-btn')) return;
+    if (!event.target.classList.contains('visibility-btn') && 
+        !event.target.classList.contains('solo-btn') && 
+        !event.target.classList.contains('mute-btn')) {
+        return;
+    }
     
-    const action = event.target.getAttribute('data-action');
     const trackIndex = parseInt(event.target.getAttribute('data-track'));
     
-    switch (action) {
-        case 'visibility':
-            toggleTrackVisibility(trackIndex);
-            break;
-        case 'solo':
-            toggleTrackSolo(trackIndex);
-            break;
-        case 'mute':
-            toggleTrackMute(trackIndex);
-            break;
+    if (event.target.classList.contains('visibility-btn')) {
+        toggleTrackVisibility(trackIndex);
+    } else if (event.target.classList.contains('solo-btn')) {
+        toggleTrackSolo(trackIndex);
+    } else if (event.target.classList.contains('mute-btn')) {
+        toggleTrackMute(trackIndex);
     }
 }
 
@@ -692,55 +794,75 @@ function updateAudioPlayback() {
         const trackIndex = parseInt(index);
         const state = trackStates[trackIndex];
         
+        let targetVolume = 1.0; // Default full volume
+        
         if (soloedTracks.length > 0) {
             // If there are soloed tracks, only play soloed tracks
-            api.changeTrackVolume([trackIndex], state.solo ? 1 : 0);
+            targetVolume = state.solo ? 1.0 : 0.0;
         } else {
             // If no tracks are soloed, respect mute settings
-            api.changeTrackVolume([trackIndex], state.muted ? 0 : 1);
+            targetVolume = state.muted ? 0.0 : 1.0;
+        }
+        
+        // Apply volume using AlphaTab's built-in method
+        try {
+            api.changeTrackVolume([trackIndex], targetVolume);
+        } catch (error) {
+            console.error(`Error setting volume for track ${trackIndex}:`, error);
         }
     });
 }
 
 function updateTrackUI(trackIndex) {
-    const trackItem = document.querySelector(`[data-track-index="${trackIndex}"]`);
-    if (!trackItem) return;
+    // Find the track control element using the correct selector
+    const trackControl = document.querySelector(`[data-track="${trackIndex}"]`);
+    if (!trackControl) {
+        console.log(`Track control not found for index ${trackIndex}`);
+        return;
+    }
     
     const state = trackStates[trackIndex];
-    const visibilityBtn = trackItem.querySelector('[data-action="visibility"]');
-    const soloBtn = trackItem.querySelector('[data-action="solo"]');
-    const muteBtn = trackItem.querySelector('[data-action="mute"]');
+    const visibilityBtn = trackControl.querySelector('.visibility-btn');
+    const soloBtn = trackControl.querySelector('.solo-btn');
+    const muteBtn = trackControl.querySelector('.mute-btn');
     
     // Update visibility button
-    if (state.visible) {
-        visibilityBtn.classList.add('visible');
-        visibilityBtn.textContent = 'Hide';
-    } else {
-        visibilityBtn.classList.remove('visible');
-        visibilityBtn.textContent = 'Show';
+    if (visibilityBtn) {
+        if (state.visible) {
+            visibilityBtn.classList.add('active');
+            visibilityBtn.title = 'Hide track';
+        } else {
+            visibilityBtn.classList.remove('active');
+            visibilityBtn.title = 'Show track';
+        }
     }
     
     // Update solo button
-    if (state.solo) {
-        soloBtn.classList.add('active');
-        soloBtn.textContent = 'Solo';
-    } else {
-        soloBtn.classList.remove('active');
-        soloBtn.textContent = 'Solo';
+    if (soloBtn) {
+        if (state.solo) {
+            soloBtn.classList.add('active');
+            soloBtn.title = 'Unsolo track';
+        } else {
+            soloBtn.classList.remove('active');
+            soloBtn.title = 'Solo this track';
+        }
     }
     
     // Update mute button
-    if (state.muted) {
-        muteBtn.classList.add('active');
-        muteBtn.textContent = 'Muted';
-    } else {
-        muteBtn.classList.remove('active');
-        muteBtn.textContent = 'Mute';
+    if (muteBtn) {
+        if (state.muted) {
+            muteBtn.classList.add('active');
+            muteBtn.title = 'Unmute track';
+        } else {
+            muteBtn.classList.remove('active');
+            muteBtn.title = 'Mute track';
+        }
     }
     
-    // Update track item appearance
-    trackItem.classList.toggle('muted', state.muted);
-    trackItem.classList.toggle('solo', state.solo);
+    // Update track control appearance
+    trackControl.classList.toggle('muted', state.muted);
+    trackControl.classList.toggle('solo', state.solo);
+    trackControl.classList.toggle('hidden', !state.visible);
 }
 
 // Bulk track control functions
@@ -1657,6 +1779,9 @@ function addGpFileToList(fileName, filePath, category = 'scale-exercises') {
 window.addGpFile = addGpFile;
 window.refreshGpFiles = refreshGpFiles;
 window.testLoopButton = testLoopButton;
+window.debugSynthesizer = debugSynthesizer;
+window.analyzeSoundFont = analyzeSoundFont;
+window.analyzeGpFileSoundSettings = analyzeGpFileSoundSettings;
 
 function addKnownGpFiles() {
     // Fallback for when directory scanning fails
@@ -1734,491 +1859,56 @@ function enableControls() {
     // Implementation of enableControls function
 }
 
-// Get smart categorized instrument options based on current program
+// Get simplified instrument options - only instruments that actually sound different in SONiVOX
 function getInstrumentOptions(currentProgram) {
-    let options = '';
-    
-    // Determine instrument family and create categorized options
-    if (currentProgram >= 24 && currentProgram <= 31) {
-        // Guitar Family
-        options += '<optgroup label="Guitar Family">';
-        const guitarInstruments = [
-            {value: 24, name: "Acoustic Guitar (nylon)"},
-            {value: 25, name: "Acoustic Guitar (steel)"},
-            {value: 26, name: "Electric Guitar (jazz)"},
-            {value: 27, name: "Electric Guitar (clean)"},
-            {value: 28, name: "Electric Guitar (muted)"},
-            {value: 29, name: "Overdriven Guitar"},
-            {value: 30, name: "Distortion Guitar"},
-            {value: 31, name: "Guitar Harmonics"}
-        ];
-        
-        guitarInstruments.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-        // Related Stringed Instruments
-        options += '<optgroup label="Related Stringed">';
-        const relatedStringed = [
-            {value: 105, name: "Banjo"},
-            {value: 104, name: "Sitar"},
-            {value: 106, name: "Shamisen"},
-            {value: 110, name: "Fiddle"}
-        ];
-        
-        relatedStringed.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-        // Bass Options
-        options += '<optgroup label="Bass">';
-        const bassInstruments = [
-            {value: 32, name: "Acoustic Bass"},
-            {value: 33, name: "Electric Bass (finger)"},
-            {value: 34, name: "Electric Bass (pick)"},
-            {value: 35, name: "Fretless Bass"},
-            {value: 36, name: "Slap Bass 1"},
-            {value: 37, name: "Slap Bass 2"}
-        ];
-        
-        bassInstruments.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-    } else if (currentProgram >= 32 && currentProgram <= 39) {
-        // Bass Family
-        options += '<optgroup label="Bass Family">';
-        const bassInstruments = [
-            {value: 32, name: "Acoustic Bass"},
-            {value: 33, name: "Electric Bass (finger)"},
-            {value: 34, name: "Electric Bass (pick)"},
-            {value: 35, name: "Fretless Bass"},
-            {value: 36, name: "Slap Bass 1"},
-            {value: 37, name: "Slap Bass 2"},
-            {value: 38, name: "Synth Bass 1"},
-            {value: 39, name: "Synth Bass 2"}
-        ];
-        
-        bassInstruments.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-        // Related Low-End
-        options += '<optgroup label="Related Low-End">';
-        const relatedLow = [
-            {value: 42, name: "Cello"},
-            {value: 43, name: "Contrabass"},
-            {value: 58, name: "Tuba"}
-        ];
-        
-        relatedLow.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-    } else if (currentProgram >= 0 && currentProgram <= 7) {
-        // Piano Family
-        options += '<optgroup label="Piano Family">';
-        const pianoInstruments = [
-            {value: 0, name: "Acoustic Grand Piano"},
-            {value: 1, name: "Bright Acoustic Piano"},
-            {value: 2, name: "Electric Grand Piano"},
-            {value: 3, name: "Honky-tonk Piano"},
-            {value: 4, name: "Electric Piano 1"},
-            {value: 5, name: "Electric Piano 2"},
-            {value: 6, name: "Harpsichord"},
-            {value: 7, name: "Clavinet"}
-        ];
-        
-        pianoInstruments.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-        // Keyboard Related
-        options += '<optgroup label="Keyboards">';
-        const keyboards = [
-            {value: 16, name: "Drawbar Organ"},
-            {value: 17, name: "Percussive Organ"},
-            {value: 18, name: "Rock Organ"},
-            {value: 21, name: "Accordion"}
-        ];
-        
-        keyboards.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-    } else if (currentProgram >= 40 && currentProgram <= 47) {
-        // Orchestral Strings
-        options += '<optgroup label="Orchestral Strings">';
-        const strings = [
-            {value: 40, name: "Violin"},
-            {value: 41, name: "Viola"},
-            {value: 42, name: "Cello"},
-            {value: 43, name: "Contrabass"},
-            {value: 44, name: "Tremolo Strings"},
-            {value: 45, name: "Pizzicato Strings"},
-            {value: 46, name: "Orchestral Harp"},
-            {value: 47, name: "Timpani"}
-        ];
-        
-        strings.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-        // String Ensembles
-        options += '<optgroup label="String Ensembles">';
-        const ensembles = [
-            {value: 48, name: "String Ensemble 1"},
-            {value: 49, name: "String Ensemble 2"},
-            {value: 50, name: "Synth Strings 1"},
-            {value: 51, name: "Synth Strings 2"}
-        ];
-        
-        ensembles.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-    } else if (currentProgram >= 56 && currentProgram <= 63) {
-        // Brass Family
-        options += '<optgroup label="Brass Family">';
-        const brass = [
-            {value: 56, name: "Trumpet"},
-            {value: 57, name: "Trombone"},
-            {value: 58, name: "Tuba"},
-            {value: 59, name: "Muted Trumpet"},
-            {value: 60, name: "French Horn"},
-            {value: 61, name: "Brass Section"},
-            {value: 62, name: "Synth Brass 1"},
-            {value: 63, name: "Synth Brass 2"}
-        ];
-        
-        brass.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-    } else if (currentProgram >= 64 && currentProgram <= 79) {
-        // Wind Instruments
-        options += '<optgroup label="Reed Instruments">';
-        const reeds = [
-            {value: 64, name: "Soprano Sax"},
-            {value: 65, name: "Alto Sax"},
-            {value: 66, name: "Tenor Sax"},
-            {value: 67, name: "Baritone Sax"},
-            {value: 68, name: "Oboe"},
-            {value: 69, name: "English Horn"},
-            {value: 70, name: "Bassoon"},
-            {value: 71, name: "Clarinet"}
-        ];
-        
-        reeds.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-        options += '<optgroup label="Flutes">';
-        const flutes = [
-            {value: 72, name: "Piccolo"},
-            {value: 73, name: "Flute"},
-            {value: 74, name: "Recorder"},
-            {value: 75, name: "Pan Flute"}
-        ];
-        
-        flutes.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-    } else {
-        // For other instruments, show a general categorized list
-        options += '<optgroup label="Popular Instruments">';
-        const popular = [
-            {value: 0, name: "Piano"},
-            {value: 25, name: "Acoustic Guitar"},
-            {value: 27, name: "Electric Guitar (clean)"},
-            {value: 29, name: "Overdriven Guitar"},
-            {value: 33, name: "Electric Bass"},
-            {value: 40, name: "Violin"},
-            {value: 56, name: "Trumpet"},
-            {value: 65, name: "Alto Sax"},
-            {value: 73, name: "Flute"}
-        ];
-        
-        popular.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-        // Current instrument if not in popular list
-        if (!popular.find(inst => inst.value === currentProgram)) {
-            options += '<optgroup label="Current">';
-            const currentName = getGeneralMidiInstrumentName(currentProgram);
-            options += `<option value="${currentProgram}" selected>${currentName}</option>`;
-            options += '</optgroup>';
-        }
-    }
-    
-    // Always add a "More Instruments" option that shows common alternatives
-    options += '<optgroup label="More Options">';
-    const moreOptions = [
-        {value: 0, name: "Piano"},
-        {value: 25, name: "Acoustic Guitar"},
-        {value: 29, name: "Overdriven Guitar"},
-        {value: 33, name: "Electric Bass"},
-        {value: 40, name: "Violin"},
-        {value: 48, name: "String Ensemble"},
-        {value: 56, name: "Trumpet"},
-        {value: 65, name: "Alto Sax"},
-        {value: 73, name: "Flute"},
-        {value: 105, name: "Banjo"}
-    ];
-    
-    moreOptions.forEach(inst => {
-        if (inst.value !== currentProgram) { // Don't duplicate current instrument
-            options += `<option value="${inst.value}">${inst.name}</option>`;
-        }
-    });
-    options += '</optgroup>';
-    
-    return options;
+    // This function is no longer needed since we removed instrument dropdowns
+    // Instrument changes don't work in AlphaTab v1.6.0 due to synthesizer limitations
+    return '';
 }
 
 // Handle instrument change
 function handleInstrumentChange(event) {
-    if (!event.target.classList.contains('instrument-select')) return;
-    
-    const trackIndex = parseInt(event.target.getAttribute('data-track'));
-    const newProgram = parseInt(event.target.value);
-    
-    console.log(`Changing track ${trackIndex} instrument to program ${newProgram}`);
-    
-    // Update the track's program in the score
-    if (api && api.score && api.score.tracks[trackIndex]) {
-        const track = api.score.tracks[trackIndex];
-        const oldProgram = track.playbackInfo.program;
-        
-        // Update the track's program number
-        track.playbackInfo.program = newProgram;
-        
-        console.log(`Track ${trackIndex} instrument changed from ${oldProgram} to ${newProgram}`);
-        
-        // Update the track info display
-        updateTrackInstrumentDisplay(trackIndex, newProgram);
-        
-        // Apply the instrument change using score reload
-        applyInstrumentChangeViaScoreReload(trackIndex, newProgram);
-    }
+    // This function is no longer needed since we removed instrument dropdowns
+    // Instrument changes don't work in AlphaTab v1.6.0 due to synthesizer limitations
+    return;
 }
 
-// Apply instrument change by reloading the modified score
+// Apply instrument change via score reload
 function applyInstrumentChangeViaScoreReload(trackIndex, newProgram) {
-    if (!api || !api.score) {
-        console.log('No API or score available for instrument change');
-        return;
-    }
-    
-    try {
-        console.log(`Applying instrument change for track ${trackIndex} -> program ${newProgram}`);
-        
-        // Remember current playback state
-        const wasPlaying = api.playerState === 1;
-        const currentPosition = api.tickPosition || 0;
-        
-        // Force the player to reload with the new instrument settings
-        // This is the most reliable way to ensure instrument changes work
-        if (isPlayerReady) {
-            // Stop current playback if playing
-            if (wasPlaying) {
-                api.stop();
-            }
-            
-            // Small delay to ensure stop is processed
-            setTimeout(() => {
-                // Trigger a reload of the audio with the updated score
-                // This forces AlphaTab to re-initialize with the new program numbers
-                console.log('Reloading audio with updated instrument settings...');
-                
-                // The score has already been modified, so we just need to trigger
-                // a re-initialization of the player audio system
-                if (api.player && api.player.ready) {
-                    // Try to reload just the MIDI data
-                    try {
-                        // This forces AlphaTab to regenerate the MIDI with new instruments
-                        api.renderScore(api.score);
-                        console.log('✓ Score re-rendered with new instruments');
-                        
-                        // Restore playback position and state after a delay
-                        setTimeout(() => {
-                            if (currentPosition > 0) {
-                                api.tickPosition = currentPosition;
-                            }
-                            if (wasPlaying) {
-                                api.playPause();
-                            }
-                            console.log('✓ Instrument change applied successfully');
-                        }, 500);
-                        
-                    } catch (error) {
-                        console.log('Score re-render failed, trying alternative method');
-                        applyInstrumentChangeFallback(trackIndex, newProgram, wasPlaying, currentPosition);
-                    }
-                } else {
-                    console.log('Player not ready, instrument change will apply on next load');
-                }
-            }, 100);
-        } else {
-            console.log('Player not ready, instrument change queued for when ready');
-            queueInstrumentChange(trackIndex, newProgram);
-        }
-        
-    } catch (error) {
-        console.error('Error applying instrument change:', error);
-        console.log('Falling back to queued approach');
-        queueInstrumentChange(trackIndex, newProgram);
-    }
+    // This function is no longer needed since we removed instrument dropdowns
+    // Instrument changes don't work in AlphaTab v1.6.0 due to synthesizer limitations
+    return;
 }
 
-// Fallback method for instrument changes
+// Apply instrument change fallback
 function applyInstrumentChangeFallback(trackIndex, newProgram, wasPlaying, currentPosition) {
-    console.log('Using fallback method for instrument change');
-    
-    try {
-        // As a last resort, queue the change for next playback
-        queueInstrumentChange(trackIndex, newProgram);
-        
-        // Show user feedback
-        const trackItem = document.querySelector(`[data-track-index="${trackIndex}"]`);
-        if (trackItem) {
-            // Add a visual indicator that the change will apply on next play
-            trackItem.style.opacity = '0.8';
-            trackItem.style.background = 'rgba(255, 193, 7, 0.1)';
-            
-            setTimeout(() => {
-                trackItem.style.opacity = '';
-                trackItem.style.background = '';
-            }, 2000);
-        }
-        
-        // Inform the user
-        showInstrumentChangeMessage('Instrument change will apply on next playback');
-        
-        // If was playing, restart to apply immediately
-        if (wasPlaying) {
-            setTimeout(() => {
-                if (currentPosition > 0) {
-                    api.tickPosition = currentPosition;
-                }
-                api.playPause();
-            }, 500);
-        }
-        
-    } catch (error) {
-        console.error('Fallback method also failed:', error);
-    }
+    // This function is no longer needed since we removed instrument dropdowns
+    // Instrument changes don't work in AlphaTab v1.6.0 due to synthesizer limitations
+    return;
 }
 
-// Show instrument change message to user
+// Show instrument change message
 function showInstrumentChangeMessage(message) {
-    // Create or update the message display
-    let messageDiv = document.getElementById('instrumentChangeMessage');
-    if (!messageDiv) {
-        messageDiv = document.createElement('div');
-        messageDiv.id = 'instrumentChangeMessage';
-        messageDiv.style.cssText = `
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            background: #FFC107;
-            color: #000;
-            padding: 12px 18px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            z-index: 1000;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-            font-family: 'Inter', sans-serif;
-            max-width: 300px;
-        `;
-        document.body.appendChild(messageDiv);
-    }
-    
-    messageDiv.textContent = message;
-    messageDiv.style.display = 'block';
-    messageDiv.style.opacity = '1';
-    
-    // Auto-hide after delay
-    setTimeout(() => {
-        if (messageDiv) {
-            messageDiv.style.opacity = '0';
-            setTimeout(() => {
-                if (messageDiv && messageDiv.style.opacity === '0') {
-                    messageDiv.style.display = 'none';
-                }
-            }, 300);
-        }
-    }, 3000);
+    // This function is no longer needed since we removed instrument dropdowns
+    return;
 }
 
-// Queue instrument changes for later application (simplified)
+// Queue instrument change
 function queueInstrumentChange(trackIndex, newProgram) {
-    if (!window.queuedInstrumentChanges) {
-        window.queuedInstrumentChanges = new Map();
-    }
-    window.queuedInstrumentChanges.set(trackIndex, newProgram);
-    console.log(`Queued instrument change: Track ${trackIndex} -> Program ${newProgram}`);
+    // This function is no longer needed since we removed instrument dropdowns
+    return;
 }
 
-// Apply queued instrument changes when player starts (simplified)
+// Apply queued instrument changes
 function applyQueuedInstrumentChanges() {
-    if (!window.queuedInstrumentChanges || window.queuedInstrumentChanges.size === 0) {
-        return;
-    }
-    
-    console.log(`Note: ${window.queuedInstrumentChanges.size} instrument changes queued - they are already applied to the score`);
-    
-    // Clear the queue since the changes are already in the score
-    window.queuedInstrumentChanges.clear();
+    // This function is no longer needed since we removed instrument dropdowns
+    return;
 }
 
 // Update track instrument display
 function updateTrackInstrumentDisplay(trackIndex, newProgram) {
-    const trackItem = document.querySelector(`[data-track-index="${trackIndex}"]`);
-    if (!trackItem) return;
-    
-    const trackInfoDetails = trackItem.querySelector('.track-info-details');
-    if (!trackInfoDetails) return;
-    
-    // Get the new instrument name
-    const newInstrumentName = getGeneralMidiInstrumentName(newProgram);
-    
-    // Update the displayed instrument info
-    const track = api.score.tracks[trackIndex];
-    const updatedInstrumentInfo = getInstrumentInfo(track, trackIndex);
-    trackInfoDetails.innerHTML = updatedInstrumentInfo;
-    
-    console.log(`Updated display for track ${trackIndex}: ${newInstrumentName}`);
+    // This function is no longer needed since we removed instrument dropdowns
+    return;
 }
 
 // Debug function to check synthesizer capabilities
@@ -2233,6 +1923,7 @@ function debugSynthesizer() {
     console.log('✓ API available');
     console.log('Player ready:', isPlayerReady);
     console.log('Player state:', api.playerState);
+    console.log('AlphaTab version:', api.version || 'Unknown');
     
     if (!api.player) {
         console.log('❌ No player available');
@@ -2241,28 +1932,29 @@ function debugSynthesizer() {
     
     console.log('✓ Player available');
     console.log('Player type:', typeof api.player);
+    console.log('Player ready:', api.player.ready);
     console.log('Player methods:', Object.getOwnPropertyNames(api.player).filter(name => typeof api.player[name] === 'function'));
     
-    if (!api.player.synthesizer) {
+    // Check synthesizer
+    if (api.player.synthesizer) {
+        const synth = api.player.synthesizer;
+        console.log('✓ Synthesizer available');
+        console.log('Synthesizer type:', typeof synth);
+        console.log('Synthesizer constructor:', synth.constructor.name);
+        console.log('Synthesizer methods:', Object.getOwnPropertyNames(synth).filter(name => typeof synth[name] === 'function'));
+        
+        // Check for specific methods
+        const methods = ['programChange', 'sendEvent', 'setChannelProgram', 'midiEvent', 'noteOn', 'noteOff'];
+        methods.forEach(method => {
+            const available = typeof synth[method] === 'function';
+            console.log(`${available ? '✓' : '❌'} synth.${method}:`, available ? 'available' : 'not available');
+        });
+    } else {
         console.log('❌ No synthesizer available');
-        return;
     }
     
-    const synth = api.player.synthesizer;
-    console.log('✓ Synthesizer available');
-    console.log('Synthesizer type:', typeof synth);
-    console.log('Synthesizer constructor:', synth.constructor.name);
-    console.log('Synthesizer methods:', Object.getOwnPropertyNames(synth).filter(name => typeof synth[name] === 'function'));
-    
-    // Check for specific methods
-    const methods = ['programChange', 'sendEvent', 'setChannelProgram', 'midiEvent'];
-    methods.forEach(method => {
-        const available = typeof synth[method] === 'function';
-        console.log(`${available ? '✓' : '❌'} synth.${method}:`, available ? 'available' : 'not available');
-    });
-    
     // Check API level methods
-    const apiMethods = ['changeTrackProgram', 'changeTrackVolume'];
+    const apiMethods = ['changeTrackProgram', 'changeTrackVolume', 'load', 'renderScore'];
     apiMethods.forEach(method => {
         const available = typeof api[method] === 'function';
         console.log(`${available ? '✓' : '❌'} api.${method}:`, available ? 'available' : 'not available');
@@ -2276,15 +1968,321 @@ function debugSynthesizer() {
                 name: track.name,
                 program: track.playbackInfo.program,
                 primaryChannel: track.playbackInfo.primaryChannel,
-                secondaryChannel: track.playbackInfo.secondaryChannel
+                secondaryChannel: track.playbackInfo.secondaryChannel,
+                isPercussionTrack: track.playbackInfo.isPercussionTrack
             });
         });
     } else {
         console.log('❌ No score loaded');
     }
     
+    // Check SoundFont info
+    console.log('SoundFont URL:', api.settings?.player?.soundFont || 'Not configured');
+    
     console.log('=== END DEBUG INFO ===');
 }
 
-// Make debug function globally available
-window.debugSynthesizer = debugSynthesizer;
+// Test instrument change functionality
+function testInstrumentChange(trackIndex = 0, newProgram = 29) {
+    // This function is no longer needed since we removed instrument dropdowns
+    // Instrument changes don't work in AlphaTab v1.6.0 due to synthesizer limitations
+    console.log('Instrument changes have been removed due to AlphaTab v1.6.0 limitations');
+}
+
+// Test sound change functionality
+function testSoundChange() {
+    // This function is no longer needed since we removed instrument dropdowns
+    // Instrument changes don't work in AlphaTab v1.6.0 due to synthesizer limitations
+    console.log('Sound changes have been removed due to AlphaTab v1.6.0 limitations');
+}
+
+// Enhanced debugging for instrument changes
+function debugInstrumentChange(trackIndex, newProgram) {
+    // This function is no longer needed since we removed instrument dropdowns
+    // Instrument changes don't work in AlphaTab v1.6.0 due to synthesizer limitations
+    console.log('Instrument change debugging has been removed due to AlphaTab v1.6.0 limitations');
+}
+
+// Test the actual sound difference
+function testActualSoundDifference() {
+    // This function is no longer needed since we removed instrument dropdowns
+    // Instrument changes don't work in AlphaTab v1.6.0 due to synthesizer limitations
+    console.log('Sound difference testing has been removed due to AlphaTab v1.6.0 limitations');
+}
+
+// Simple test function to verify dropdown functionality
+function testDropdownChange() {
+    // This function is no longer needed since we removed instrument dropdowns
+    console.log('Dropdown testing has been removed - instrument dropdowns no longer exist');
+}
+
+// Explain MIDI channels
+function explainMidiChannels() {
+    // This function is no longer needed since we removed instrument dropdowns
+    console.log('MIDI channel explanation has been removed since instrument changes are not supported');
+}
+
+// Comprehensive GP file sound analysis
+function analyzeGpFileSoundSettings() {
+    if (!api || !api.score) {
+        console.log('❌ No score loaded for analysis');
+        return;
+    }
+    
+    const score = api.score;
+    console.log('🎵 === GUITAR PRO FILE SOUND ANALYSIS ===');
+    
+    // Master settings
+    console.log('📊 MASTER SETTINGS:');
+    console.log('  Title:', score.title || 'Unknown');
+    console.log('  Artist:', score.artist || 'Unknown');
+    console.log('  Master Volume:', score.masterVolume || 'Default');
+    console.log('  Tempo:', score.tempo || 'Unknown');
+    console.log('  Total Tracks:', score.tracks.length);
+    
+    // Detailed track analysis
+    console.log('\n🎸 TRACK SOUND SETTINGS:');
+    score.tracks.forEach((track, index) => {
+        console.log(`\n--- TRACK ${index + 1}: ${track.name || 'Unnamed'} ---`);
+        
+        // Basic track info
+        console.log('  Track Name:', track.name || 'Unnamed');
+        console.log('  Short Name:', track.shortName || 'None');
+        console.log('  Color:', track.color || 'Default');
+        console.log('  Percussion Track:', track.percussionTrack || false);
+        
+        // Playback information
+        if (track.playbackInfo) {
+            const pb = track.playbackInfo;
+            console.log('  🔊 PLAYBACK INFO:');
+            console.log('    Program Number:', pb.program);
+            console.log('    Program Name:', getGeneralMidiInstrumentName(pb.program));
+            console.log('    Primary Channel:', pb.primaryChannel);
+            console.log('    Secondary Channel:', pb.secondaryChannel);
+            console.log('    Volume:', pb.volume, '(0-16 scale)');
+            console.log('    Balance:', pb.balance, '(0-16 scale, 8=center)');
+            console.log('    Chorus:', pb.chorus || 0);
+            console.log('    Reverb:', pb.reverb || 0);
+            console.log('    Phaser:', pb.phaser || 0);
+            console.log('    Tremolo:', pb.tremolo || 0);
+            console.log('    Is Mute:', pb.isMute || false);
+            console.log('    Is Solo:', pb.isSolo || false);
+            console.log('    Is Visible:', pb.isVisible !== false);
+            console.log('    Is Percussion:', pb.isPercussionTrack || false);
+        }
+        
+        // Channel information
+        if (track.channel) {
+            console.log('  📡 CHANNEL INFO:');
+            console.log('    Channel 1:', track.channel.channel1);
+            console.log('    Channel 2:', track.channel.channel2);
+            console.log('    Instrument 1:', track.channel.instrument1);
+            console.log('    Instrument 2:', track.channel.instrument2);
+            console.log('    Volume 1:', track.channel.volume1);
+            console.log('    Volume 2:', track.channel.volume2);
+            console.log('    Balance 1:', track.channel.balance1);
+            console.log('    Balance 2:', track.channel.balance2);
+            console.log('    Chorus 1:', track.channel.chorus1);
+            console.log('    Chorus 2:', track.channel.chorus2);
+            console.log('    Reverb 1:', track.channel.reverb1);
+            console.log('    Reverb 2:', track.channel.reverb2);
+            console.log('    Phaser 1:', track.channel.phaser1);
+            console.log('    Phaser 2:', track.channel.phaser2);
+            console.log('    Tremolo 1:', track.channel.tremolo1);
+            console.log('    Tremolo 2:', track.channel.tremolo2);
+        }
+        
+        // Staff/tuning information
+        if (track.staves && track.staves.length > 0) {
+            console.log('  🎼 STAFF INFO:');
+            track.staves.forEach((staff, staffIndex) => {
+                console.log(`    Staff ${staffIndex + 1}:`);
+                console.log('      Tuning:', staff.tuning || 'Standard');
+                console.log('      Capo:', staff.capo || 0);
+                console.log('      String Count:', staff.tuning?.length || 'Unknown');
+                console.log('      Track Channel:', staff.trackChannel || 'Default');
+                console.log('      Display Tablature:', staff.showTablature !== false);
+                console.log('      Display Standard:', staff.showStandardNotation !== false);
+            });
+        }
+        
+        // Additional properties
+        console.log('  🔧 ADDITIONAL PROPERTIES:');
+        const additionalProps = Object.keys(track).filter(key => 
+            !['name', 'shortName', 'color', 'percussionTrack', 'playbackInfo', 'channel', 'staves'].includes(key)
+        );
+        additionalProps.forEach(prop => {
+            if (track[prop] !== null && track[prop] !== undefined) {
+                console.log(`    ${prop}:`, track[prop]);
+            }
+        });
+    });
+    
+    // Master bars analysis for tempo changes
+    console.log('\n🎵 MASTER BARS ANALYSIS:');
+    if (score.masterBars && score.masterBars.length > 0) {
+        console.log('  Total Master Bars:', score.masterBars.length);
+        
+        // Check for tempo changes
+        const tempoChanges = [];
+        score.masterBars.forEach((bar, index) => {
+            if (bar.tempoAutomation && bar.tempoAutomation.value !== score.tempo) {
+                tempoChanges.push({
+                    bar: index + 1,
+                    tempo: bar.tempoAutomation.value
+                });
+            }
+        });
+        
+        if (tempoChanges.length > 0) {
+            console.log('  Tempo Changes Found:');
+            tempoChanges.forEach(change => {
+                console.log(`    Bar ${change.bar}: ${change.tempo} BPM`);
+            });
+        } else {
+            console.log('  No tempo changes detected');
+        }
+    }
+    
+    // Effects analysis
+    console.log('\n🎛️ EFFECTS SUMMARY:');
+    const effectsSummary = {
+        chorus: [],
+        reverb: [],
+        phaser: [],
+        tremolo: []
+    };
+    
+    score.tracks.forEach((track, index) => {
+        if (track.playbackInfo) {
+            const pb = track.playbackInfo;
+            if (pb.chorus > 0) effectsSummary.chorus.push(`Track ${index + 1}: ${pb.chorus}`);
+            if (pb.reverb > 0) effectsSummary.reverb.push(`Track ${index + 1}: ${pb.reverb}`);
+            if (pb.phaser > 0) effectsSummary.phaser.push(`Track ${index + 1}: ${pb.phaser}`);
+            if (pb.tremolo > 0) effectsSummary.tremolo.push(`Track ${index + 1}: ${pb.tremolo}`);
+        }
+    });
+    
+    Object.keys(effectsSummary).forEach(effect => {
+        if (effectsSummary[effect].length > 0) {
+            console.log(`  ${effect.toUpperCase()}:`, effectsSummary[effect].join(', '));
+        } else {
+            console.log(`  ${effect.toUpperCase()}: None`);
+        }
+    });
+    
+    console.log('\n=== END SOUND ANALYSIS ===');
+    
+    // Return structured data for further use
+    return {
+        masterSettings: {
+            title: score.title,
+            artist: score.artist,
+            masterVolume: score.masterVolume,
+            tempo: score.tempo,
+            trackCount: score.tracks.length
+        },
+        tracks: score.tracks.map((track, index) => ({
+            index,
+            name: track.name,
+            program: track.playbackInfo?.program,
+            programName: getGeneralMidiInstrumentName(track.playbackInfo?.program || 0),
+            volume: track.playbackInfo?.volume,
+            balance: track.playbackInfo?.balance,
+            effects: {
+                chorus: track.playbackInfo?.chorus || 0,
+                reverb: track.playbackInfo?.reverb || 0,
+                phaser: track.playbackInfo?.phaser || 0,
+                tremolo: track.playbackInfo?.tremolo || 0
+            },
+            channels: {
+                primary: track.playbackInfo?.primaryChannel,
+                secondary: track.playbackInfo?.secondaryChannel
+            },
+            tuning: track.staves?.[0]?.tuning,
+            capo: track.staves?.[0]?.capo
+        })),
+        effectsSummary
+    };
+}
+
+// Test AlphaTab volume control capabilities
+function testAlphaTabVolumeControl() {
+    console.log('=== ALPHATAB VOLUME CONTROL TEST ===');
+    
+    if (!api) {
+        console.log('❌ No API available');
+        return;
+    }
+    
+    console.log('✓ API available');
+    
+    // Check available volume control methods
+    const volumeMethods = [
+        'changeTrackVolume',
+        'masterVolume',
+        'setTrackVolume',
+        'setChannelVolume'
+    ];
+    
+    console.log('📊 Available volume control methods:');
+    volumeMethods.forEach(method => {
+        const available = typeof api[method] !== 'undefined';
+        console.log(`  ${available ? '✓' : '❌'} api.${method}:`, available ? 'available' : 'not available');
+        
+        if (available && typeof api[method] === 'function') {
+            console.log(`    Type: function`);
+        } else if (available) {
+            console.log(`    Type: ${typeof api[method]}, Value:`, api[method]);
+        }
+    });
+    
+    // Check player volume methods
+    if (api.player) {
+        console.log('\n🎵 Player volume methods:');
+        const playerMethods = [
+            'setChannelVolume',
+            'setTrackVolume',
+            'masterVolume',
+            'volume'
+        ];
+        
+        playerMethods.forEach(method => {
+            const available = typeof api.player[method] !== 'undefined';
+            console.log(`  ${available ? '✓' : '❌'} api.player.${method}:`, available ? 'available' : 'not available');
+            
+            if (available && typeof api.player[method] === 'function') {
+                console.log(`    Type: function`);
+            } else if (available) {
+                console.log(`    Type: ${typeof api.player[method]}, Value:`, api.player[method]);
+            }
+        });
+    }
+    
+    // Test actual volume change if tracks are available
+    if (api.score && api.score.tracks && api.score.tracks.length > 0) {
+        console.log('\n🧪 Testing volume change on first track...');
+        
+        try {
+            // Test changeTrackVolume method
+            if (typeof api.changeTrackVolume === 'function') {
+                console.log('Testing api.changeTrackVolume([0], 0.5)...');
+                api.changeTrackVolume([0], 0.5);
+                console.log('✓ changeTrackVolume executed successfully');
+                
+                // Reset to full volume
+                setTimeout(() => {
+                    api.changeTrackVolume([0], 1.0);
+                    console.log('✓ Volume reset to full');
+                }, 1000);
+            }
+        } catch (error) {
+            console.error('❌ Error testing changeTrackVolume:', error);
+        }
+    }
+    
+    console.log('\n=== END VOLUME CONTROL TEST ===');
+}
+
+// Make the test function globally available
+window.testAlphaTabVolumeControl = testAlphaTabVolumeControl;
