@@ -2361,13 +2361,8 @@ function togglePlayPause() {
     }
     
     try {
-        if (api.isPlaying) {
-            api.pause();
-            console.log('Score touch: Paused playback');
-        } else {
-            api.play();
-            console.log('Score touch: Started playback');
-        }
+        api.playPause();
+        console.log('Score touch: Toggled playback');
     } catch (error) {
         console.error('Error toggling playback from score touch:', error);
     }
