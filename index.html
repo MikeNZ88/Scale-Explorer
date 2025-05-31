@@ -43,8 +43,7 @@
             
             <div class="browser-controls">
                 <div class="filter-buttons">
-                    <button class="filter-btn active" data-filter="all">All</button>
-                    <button class="filter-btn" data-filter="scale-exercises">Scale Exercises</button>
+                    <button class="filter-btn active" data-filter="scale-exercises">Scale Exercises</button>
                     <button class="filter-btn" data-filter="licks">Licks</button>
                     <button class="filter-btn" data-filter="chord-progressions">Chord Progressions</button>
                     <button class="filter-btn" data-filter="songs">Songs</button>
@@ -86,7 +85,11 @@
         <!-- Track Controls -->
         <div id="trackControls" class="track-controls" style="display: none;">
             <div class="track-controls-header">
-                <h3>Track Controls</h3>
+                <h3>Track Controls
+                    <button id="toggleTrackControls" class="toggle-controls-btn" title="Hide/Show Track Controls">
+                        🙈
+                    </button>
+                </h3>
                 <div class="bulk-controls">
                     <button id="showAllTracks" class="bulk-btn">Show All</button>
                     <button id="hideAllTracks" class="bulk-btn">Hide All</button>

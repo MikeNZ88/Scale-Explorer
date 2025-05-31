@@ -205,50 +205,43 @@ body {
 
 /* Track Controls */
 .track-controls {
+    background: #2a2a2a;
+    border-radius: 8px;
     padding: 20px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border: 1px solid #dee2e6;
-    border-radius: 12px;
     margin: 20px 0;
-    display: block;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-.track-controls h3 {
-    margin: 0 0 20px 0;
-    color: #495057;
-    font-size: 1.4em;
-    font-weight: 600;
-    text-align: center;
-    border-bottom: 2px solid #007bff;
-    padding-bottom: 10px;
+.track-controls-header {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.track-controls-header h3 {
+    color: #fff;
+    margin: 0;
+    font-size: 1.2em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .toggle-controls-btn {
-    margin-left: 10px;
-    padding: 6px 12px;
-    font-size: 16px;
+    background: none;
     border: none;
-    background: #8B4513;
-    color: white;
-    border-radius: 6px;
+    font-size: 1.2em;
     cursor: pointer;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 40px;
-    height: 32px;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
 }
 
 .toggle-controls-btn:hover {
-    background: #A0522D;
-    transform: scale(1.05);
-    box-shadow: 0 2px 8px rgba(139, 69, 19, 0.3);
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .tracks-grid {
@@ -257,6 +250,189 @@ body {
     gap: 15px;
 }
 
+/* Track Item Styles */
+.track-item {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    border-left: 4px solid #8B4513;
+}
+
+.track-item:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+    border-left-color: #CD853F;
+}
+
+.track-item.muted {
+    opacity: 0.6;
+    background: #f8f9fa;
+}
+
+.track-item.solo {
+    border-left-color: #ffc107;
+    background: linear-gradient(135deg, #fff9e6 0%, #ffffff 100%);
+}
+
+.track-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    gap: 15px;
+}
+
+.track-name {
+    margin: 0 0 8px 0;
+    color: #2c3e50;
+    font-size: 1.2em;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.track-info-details {
+    color: #6c757d;
+    font-size: 0.9em;
+    line-height: 1.4;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 3px solid #8B4513;
+}
+
+.track-controls-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.instrument-selector {
+    margin-bottom: 10px;
+}
+
+.instrument-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    background: white;
+    font-size: 14px;
+    font-weight: 500;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.instrument-select:focus {
+    outline: none;
+    border-color: #8B4513;
+    box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1);
+}
+
+.instrument-select:hover {
+    border-color: #CD853F;
+}
+
+.track-controls-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+}
+
+.track-btn {
+    padding: 10px 16px;
+    border: 2px solid #e9ecef;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    min-width: 80px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.track-btn:hover {
+    border-color: #8B4513;
+    background: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.track-btn.visible {
+    background: #8B4513;
+    border-color: #8B4513;
+    color: white;
+}
+
+.track-btn.visible:hover {
+    background: #A0522D;
+    border-color: #A0522D;
+}
+
+.track-btn.active {
+    color: white;
+}
+
+.track-btn[data-action="solo"].active {
+    background: #ffc107;
+    border-color: #ffc107;
+    color: #212529;
+}
+
+.track-btn[data-action="solo"].active:hover {
+    background: #ffcd39;
+    border-color: #ffcd39;
+}
+
+.track-btn[data-action="mute"].active {
+    background: #dc3545;
+    border-color: #dc3545;
+    color: white;
+}
+
+.track-btn[data-action="mute"].active:hover {
+    background: #e15361;
+    border-color: #e15361;
+}
+
+.bulk-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.bulk-btn {
+    padding: 8px 16px;
+    border: 2px solid #8B4513;
+    background: white;
+    color: #8B4513;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.bulk-btn:hover {
+    background: #8B4513;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(139, 69, 19, 0.3);
+}
+
+/* Legacy styles for backward compatibility */
 .track-control {
     background: white;
     border: 1px solid #e9ecef;
@@ -271,22 +447,8 @@ body {
     transform: translateY(-1px);
 }
 
-.track-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-}
-
 .track-title-section {
     flex: 1;
-}
-
-.track-name {
-    margin: 0 0 6px 0;
-    color: #2c3e50;
-    font-size: 1.1em;
-    font-weight: 600;
 }
 
 .track-program-info {
@@ -352,113 +514,6 @@ body {
     color: white !important;
 }
 
-.track-details {
-    border-top: 1px solid #f1f3f4;
-    padding-top: 12px;
-}
-
-.track-sound-info {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-
-.sound-param {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.sound-param.effects {
-    grid-column: 1 / -1;
-}
-
-.sound-param.volume-control {
-    grid-column: 1 / -1;
-}
-
-.param-label {
-    font-size: 0.8em;
-    font-weight: 600;
-    color: #6c757d;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.param-value {
-    font-size: 0.9em;
-    color: #495057;
-    font-weight: 500;
-}
-
-.volume-slider-container {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 4px;
-}
-
-.volume-slider {
-    flex: 1;
-    height: 6px;
-    background: #e9ecef;
-    border-radius: 3px;
-    outline: none;
-    cursor: pointer;
-    -webkit-appearance: none;
-    appearance: none;
-}
-
-.volume-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 18px;
-    height: 18px;
-    background: #8B4513;
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    transition: all 0.2s ease;
-}
-
-.volume-slider::-webkit-slider-thumb:hover {
-    background: #654321;
-    transform: scale(1.1);
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-}
-
-.volume-slider::-moz-range-thumb {
-    width: 18px;
-    height: 18px;
-    background: #8B4513;
-    border-radius: 50%;
-    cursor: pointer;
-    border: none;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    transition: all 0.2s ease;
-}
-
-.volume-slider::-moz-range-thumb:hover {
-    background: #654321;
-    transform: scale(1.1);
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-}
-
-.volume-slider::-moz-range-track {
-    height: 6px;
-    background: #e9ecef;
-    border-radius: 3px;
-    border: none;
-}
-
-.volume-display {
-    font-size: 0.9em;
-    font-weight: 600;
-    color: #495057;
-    min-width: 40px;
-    text-align: right;
-}
-
 /* Bulk Controls */
 .bulk-controls {
     display: flex;
@@ -495,23 +550,82 @@ body {
         grid-template-columns: 1fr;
         gap: 8px;
     }
-    
+
     .track-header {
         flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+
+    .track-buttons {
+        justify-content: center;
+    }
+
+    .bulk-controls {
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .bulk-controls button {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    /* New track controls mobile styles */
+    .track-controls-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+
+    .track-controls-header h3 {
+        text-align: center;
+    }
+
+    .track-item {
+        padding: 15px;
+    }
+
+    .track-name {
+        font-size: 1.1em;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    .track-info-details {
+        font-size: 0.85em;
+        padding: 8px;
+        text-align: center;
+    }
+
+    .track-controls-section {
         gap: 12px;
     }
-    
-    .track-buttons {
-        align-self: flex-end;
+
+    .instrument-select {
+        font-size: 13px;
+        padding: 8px 10px;
     }
-    
+
+    .track-controls-buttons {
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .track-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+        min-width: 70px;
+    }
+
     .bulk-controls {
-        flex-direction: column;
-        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
     }
-    
-    .bulk-controls button {
-        width: 200px;
+
+    .bulk-btn {
+        padding: 6px 12px;
+        font-size: 12px;
     }
 }
 
@@ -714,62 +828,51 @@ body {
 }
 
 .horizontal-slider {
-    width: 120px;
-    height: 6px;
-    background: linear-gradient(to right, 
-                rgba(255, 255, 255, 0.2) 0%, 
-                rgba(255, 255, 255, 0.4) 100%);
-    border-radius: 3px;
-    outline: none;
-    border: none;
-    cursor: pointer;
     -webkit-appearance: none;
     appearance: none;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
-    position: relative;
-    z-index: 1;
+    width: 100px;
+    height: 6px;
+    background: #8B4513 !important;
+    border-radius: 3px;
+    outline: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
 }
 
 .horizontal-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 20px;
-    height: 20px;
-    background: linear-gradient(135deg, #CD853F 0%, #D2691E 100%);
+    width: 18px;
+    height: 18px;
+    background: #A0522D !important;
     border-radius: 50%;
     cursor: pointer;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3);
     transition: all 0.3s ease;
-    border: 2px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 2px 6px rgba(139, 69, 19, 0.3);
 }
 
 .horizontal-slider::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5),
-                inset 0 1px 0 rgba(255, 255, 255, 0.4);
-    background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
+    background: #CD853F !important;
+    transform: scale(1.1);
+    box-shadow: 0 3px 8px rgba(139, 69, 19, 0.4);
 }
 
 .horizontal-slider::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    background: linear-gradient(135deg, #CD853F 0%, #D2691E 100%);
+    width: 18px;
+    height: 18px;
+    background: #A0522D !important;
     border-radius: 50%;
     cursor: pointer;
-    border: 2px solid rgba(255, 255, 255, 0.8);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    border: none;
+    transition: all 0.3s ease;
 }
 
 .horizontal-slider::-moz-range-track {
+    width: 100%;
     height: 6px;
-    background: linear-gradient(to right, 
-                rgba(255, 255, 255, 0.2) 0%, 
-                rgba(255, 255, 255, 0.4) 100%);
+    background: #8B4513 !important;
     border-radius: 3px;
     border: none;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .horizontal-display {
@@ -1260,22 +1363,29 @@ body {
     .horizontal-slider::-webkit-slider-thumb {
         width: 16px;
         height: 16px;
+        background: #A0522D;
         border-width: 1px;
     }
 
     .horizontal-slider::-moz-range-thumb {
         width: 16px;
         height: 16px;
+        background: #A0522D;
         border-width: 1px;
     }
 
     .horizontal-slider::-moz-range-track {
-        height: 4px;
+        background: #8B4513;
+    }
+
+    .volume-icon,
+    .speed-icon {
+        font-size: 14px;
     }
 
     .horizontal-display {
-        font-size: 11px;
-        min-width: 35px;
+        font-size: 10px;
+        min-width: 30px;
     }
 
     /* Make controls stick closer to tab content */
@@ -1346,6 +1456,19 @@ body {
 
     .horizontal-slider {
         width: 70px;
+        background: #8B4513;
+    }
+
+    .horizontal-slider::-webkit-slider-thumb {
+        background: #A0522D;
+    }
+
+    .horizontal-slider::-moz-range-thumb {
+        background: #A0522D;
+    }
+
+    .horizontal-slider::-moz-range-track {
+        background: #8B4513;
     }
 
     .volume-icon,
@@ -1393,6 +1516,50 @@ body {
         margin: 8px 10px;
     }
 
+    /* Ultra-compact track controls for small phones */
+    .track-item {
+        padding: 12px;
+        border-radius: 8px;
+    }
+
+    .track-name {
+        font-size: 1em;
+        margin-bottom: 8px;
+    }
+
+    .track-info-details {
+        font-size: 0.8em;
+        padding: 6px;
+        margin-bottom: 10px;
+    }
+
+    .track-controls-section {
+        gap: 10px;
+    }
+
+    .instrument-select {
+        font-size: 12px;
+        padding: 6px 8px;
+    }
+
+    .track-controls-buttons {
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .track-btn {
+        padding: 6px 10px;
+        font-size: 11px;
+        min-width: 60px;
+        border-radius: 6px;
+    }
+
+    .bulk-btn {
+        padding: 5px 10px;
+        font-size: 11px;
+        border-radius: 6px;
+    }
+
     .gp-files-browser {
         padding: 15px 10px;
     }
@@ -1409,4 +1576,65 @@ body {
     display: flex;
     gap: 30px;
     align-items: center;
+}
+
+/* Track volume sliders */
+.volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    background: #8B4513 !important;
+    border-radius: 3px;
+    outline: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: #A0522D !important;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(139, 69, 19, 0.3);
+}
+
+.volume-slider::-webkit-slider-thumb:hover {
+    background: #CD853F !important;
+    transform: scale(1.1);
+    box-shadow: 0 3px 8px rgba(139, 69, 19, 0.4);
+}
+
+.volume-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: #A0522D !important;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.volume-slider::-moz-range-track {
+    width: 100%;
+    height: 6px;
+    background: #8B4513 !important;
+    border-radius: 3px;
+    border: none;
+}
+
+.horizontal-display {
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+    min-width: 45px;
+    font-family: 'Inter', sans-serif;
+    position: relative;
+    z-index: 1;
 } 
