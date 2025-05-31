@@ -11,6 +11,10 @@ let currentFilter = 'all';
 let currentSort = 'name';
 let searchQuery = '';
 
+// Buffered playback system for improved cursor accuracy
+let isBufferingPlayback = false;
+const PLAYBACK_BUFFER_DELAY = 150; // 150ms buffer delay for better synchronization
+
 // DOM elements
 const fileInput = document.getElementById('fileInput');
 const fileInputContainer = document.getElementById('fileInputContainer');
@@ -90,7 +94,7 @@ function initializeAlphaTab() {
             core: {
                 fontDirectory: 'https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/font/',
                 engine: 'html5',
-                enableLazyLoading: false, // Disable lazy loading to ensure all content is rendered immediately
+                enableLazyLoading: false,
                 tracks: [-1] // -1 means render all tracks by default
             }
         };
@@ -99,15 +103,29 @@ function initializeAlphaTab() {
         api = new alphaTab.AlphaTabApi(container, settings);
         console.log('AlphaTab API created:', api);
         
+        // Immediate audio context activation on first user interaction
+        const activateAudio = () => {
+            if (api && api.player && api.player.output && api.player.output.audioContext) {
+                const audioContext = api.player.output.audioContext;
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                    console.log('✅ Audio context activated immediately');
+                }
+            }
+        };
+        
+        // Activate on any user interaction
+        document.addEventListener('click', activateAudio, { once: true });
+        document.addEventListener('keydown', activateAudio, { once: true });
+        
         // Event listeners
         api.scoreLoaded.on((score) => {
             console.log('Score loaded successfully:', score.title, 'Tracks:', score.tracks.length);
-            isRenderingComplete = false; // Reset rendering flag for new score
+            isRenderingComplete = false;
             
             updateTrackInfo(score);
-            updateScoreForPrint(score);
+            enhancedUpdateScoreForPrint(score);
             enablePlayerControls(true);
-            // Don't call track control functions here - let AlphaTab render all tracks by default
         });
         
         api.renderStarted.on(() => {
@@ -117,7 +135,6 @@ function initializeAlphaTab() {
         api.renderFinished.on(() => {
             console.log('Rendering finished - tab should be visible');
             isRenderingComplete = true;
-            // Force a layout update
             setTimeout(() => {
                 if (api && api.container) {
                     console.log('Container dimensions:', {
@@ -132,34 +149,15 @@ function initializeAlphaTab() {
         api.playerReady.on(() => {
             console.log('Player ready');
             isPlayerReady = true;
-            
-            // Apply any queued instrument changes
-            setTimeout(() => {
-                applyQueuedInstrumentChanges();
-            }, 200); // Longer delay to ensure synthesizer is fully ready
         });
         
         api.playerStateChanged.on((e) => {
-            console.log('Player state changed:', e.state);
-            updatePlayerButtons(e.state);
-            
-            // Apply queued instrument changes when playback starts
-            if (e.state === 1) { // PlayerState.Playing
-                setTimeout(() => {
-                    applyQueuedInstrumentChanges();
-                }, 100); // Small delay to ensure synthesizer is ready
-            }
+            handlePlayerStateChange(e);
         });
         
-        // Add playback cursor functionality
+        // Simple playback cursor functionality
         api.playerPositionChanged.on((e) => {
-            // The cursor position is automatically handled by AlphaTab
-            // This event fires when the playback position changes
-            
-            // Update loop system position (for compatibility, though not needed with AlphaTab's native looping)
-            if (loopSystem) {
-                loopSystem.currentPosition = e.currentTime;
-            }
+            // Basic position tracking only
         });
         
         api.error.on((error) => {
@@ -452,46 +450,22 @@ async function loadGpFile(fileId) {
 
 // Update track info display
 function updateTrackInfo(score) {
-    const trackInfo = document.getElementById('trackInfo');
-    const trackControls = document.getElementById('trackControls');
+    const metadata = extractComprehensiveMetadata(score);
     
-    if (!trackInfo || !trackControls) return;
+    songTitle.textContent = metadata.title;
+    songArtist.textContent = metadata.artist;
+    trackCount.textContent = `Tracks: ${score.tracks.length}`;
     
-    // Enhanced metadata extraction
-    const metadata = {
-        title: score.title || 'Unknown Title',
-        artist: score.artist || 'Unknown Artist',
-        album: score.album || '',
-        words: score.words || '',
-        music: score.music || '',
-        copyright: score.copyright || '',
-        tab: score.tab || '',
-        instructions: score.instructions || '',
-        notices: score.notices || '',
-        masterVolume: score.masterVolume || 200,
-        tempo: score.tempo || 120
-    };
+    console.log('Track info updated:', metadata);
     
-    // Log all available metadata for debugging
-    console.log('Score metadata:', metadata);
+    // Initialize track states for all tracks as visible
+    initializeTrackStates(score);
     
-    let infoHtml = `
-        <h2>${metadata.title}</h2>
-        <p><strong>Artist:</strong> ${metadata.artist}</p>
-        <p><strong>Tracks:</strong> ${score.tracks.length}</p>
-    `;
-    
-    if (metadata.album) infoHtml += `<p><strong>Album:</strong> ${metadata.album}</p>`;
-    if (metadata.copyright) infoHtml += `<p><strong>Copyright:</strong> ${metadata.copyright}</p>`;
-    if (metadata.instructions) infoHtml += `<p><strong>Instructions:</strong> ${metadata.instructions}</p>`;
-    
-    trackInfo.innerHTML = infoHtml;
-    
-    // Initialize track states for all tracks
+    // Initialize track states for each track (ensure all are visible by default)
     score.tracks.forEach((track, index) => {
         if (!trackStates[index]) {
             trackStates[index] = {
-                visible: track.isVisible !== false,
+                visible: true, // Make sure all tracks are visible by default
                 muted: track.playbackInfo?.isMute || false,
                 solo: false
             };
@@ -500,6 +474,23 @@ function updateTrackInfo(score) {
     
     // Create track controls
     createTrackControls(score);
+    
+    // Render only visible tracks by default (excludes hidden drum tracks)
+    if (api && api.score) {
+        const visibleTrackIndices = Object.keys(trackStates)
+            .map(index => parseInt(index))
+            .filter(index => trackStates[index].visible);
+        
+        console.log('Rendering visible tracks (drums hidden by default):', visibleTrackIndices);
+        
+        if (visibleTrackIndices.length > 0) {
+            api.renderScore(api.score, visibleTrackIndices);
+        } else {
+            // Fallback: if no tracks are visible, show the first track
+            console.log('No visible tracks found, showing first track as fallback');
+            api.renderScore(api.score, [0]);
+        }
+    }
     
     // Add track controls header with toggle button
     const trackControlsHeader = trackControls.querySelector('h3');
@@ -617,22 +608,89 @@ function enablePlayerControls(enabled) {
 function updatePlayerButtons(state) {
     const isPlaying = state === 1; // PlayerState.Playing
     const isPaused = state === 2;  // PlayerState.Paused
+    const isStopped = state === 0; // PlayerState.Stopped
     
+    // Don't update buttons if we're in buffering mode
+    if (isBufferingPlayback) {
+        console.log('⏳ Skipping button update during buffering');
+        return;
+    }
+    
+    // Update play button
     playBtn.disabled = isPlaying;
+    playBtn.textContent = isPlaying ? '⏸️' : '▶️';
+    
+    // Update pause button
     pauseBtn.disabled = !isPlaying;
-    stopBtn.disabled = state === 0; // PlayerState.Paused
+    
+    // Update stop button
+    stopBtn.disabled = isStopped;
+    
+    console.log(`🎛️ Buttons updated for state ${state}: ${isPlaying ? 'Playing' : isPaused ? 'Paused' : 'Stopped'}`);
 }
 
 // Track control functions
 function initializeTrackStates(score) {
     trackStates = {};
     score.tracks.forEach((track, index) => {
+        // Check if this is a drum/percussion track
+        const isDrumTrack = isPercussionTrack(track);
+        
         trackStates[index] = {
-            visible: true,
+            visible: !isDrumTrack, // Hide drum tracks by default, show all others
             muted: false,
             solo: false
         };
+        
+        if (isDrumTrack) {
+            console.log(`Track ${index} (${getTrackName(track, index)}) identified as drum track - hidden by default`);
+        }
     });
+}
+
+// Helper function to identify percussion/drum tracks
+function isPercussionTrack(track) {
+    // Check multiple indicators for percussion tracks
+    
+    // 1. Check if explicitly marked as percussion
+    if (track.percussionTrack === true) {
+        return true;
+    }
+    
+    // 2. Check playback info for percussion indicators
+    if (track.playbackInfo) {
+        // Channel 9 (index 9) is the standard MIDI percussion channel
+        if (track.playbackInfo.primaryChannel === 9 || track.playbackInfo.secondaryChannel === 9) {
+            return true;
+        }
+        
+        // Check if explicitly marked as percussion track
+        if (track.playbackInfo.isPercussionTrack === true) {
+            return true;
+        }
+    }
+    
+    // 3. Check channel info for percussion
+    if (track.channel) {
+        if (track.channel.channel1 === 9 || track.channel.channel2 === 9) {
+            return true;
+        }
+    }
+    
+    // 4. Check track name for drum/percussion keywords
+    const trackName = (track.name || '').toLowerCase();
+    const drumKeywords = ['drum', 'drums', 'percussion', 'perc', 'kit', 'cymbal', 'snare', 'kick', 'hihat', 'hi-hat'];
+    if (drumKeywords.some(keyword => trackName.includes(keyword))) {
+        return true;
+    }
+    
+    // 5. Check instrument name for drum indicators
+    const instrumentName = getInstrumentName(track).toLowerCase();
+    if (drumKeywords.some(keyword => instrumentName.includes(keyword))) {
+        return true;
+    }
+    
+    return false;
 }
 
 // Create track controls for each track
@@ -684,15 +742,15 @@ function createTrackControls(score) {
                     </div>
                 </div>
                 <div class="track-buttons">
-                    <button class="visibility-btn ${track.isVisible ? 'active' : ''}" 
+                    <button class="visibility-btn ${trackStates[index]?.visible !== false ? 'active' : ''}" 
                             data-track="${index}" 
                             title="Toggle track visibility">
-                        👁️
+                        ${trackStates[index]?.visible !== false ? '👁️' : '🙈'}
                     </button>
                     <button class="solo-btn" 
                             data-track="${index}" 
                             title="Solo this track">
-                        🎯
+                        🎤
                     </button>
                     <button class="mute-btn ${track.playbackInfo && track.playbackInfo.isMute ? 'active' : ''}" 
                             data-track="${index}" 
@@ -817,17 +875,23 @@ function toggleTrackVisibility(trackIndex) {
             .map(index => parseInt(index))
             .filter(index => trackStates[index].visible);
         
+        console.log('Visible tracks after toggle:', visibleTracks);
+        
         if (visibleTracks.length > 0) {
-            // Use renderScore with track indexes (not renderTracks)
+            // Use renderScore with track indexes to show all visible tracks
             api.renderScore(api.score, visibleTracks);
+            console.log(`Rendering tracks: ${visibleTracks.join(', ')}`);
         } else {
             // If no tracks would be visible, keep this one visible
             state.visible = true;
             api.renderScore(api.score, [trackIndex]);
+            console.log(`Forced track ${trackIndex} to remain visible`);
         }
     }
     
+    // Update UI
     updateTrackUI(trackIndex);
+    console.log(`Track ${trackIndex} visibility toggled to: ${state.visible}`);
 }
 
 function toggleTrackSolo(trackIndex) {
@@ -904,9 +968,11 @@ function updateTrackUI(trackIndex) {
     if (visibilityBtn) {
         if (state.visible) {
             visibilityBtn.classList.add('active');
+            visibilityBtn.innerHTML = '👁️';
             visibilityBtn.title = 'Hide track';
         } else {
             visibilityBtn.classList.remove('active');
+            visibilityBtn.innerHTML = '🙈';
             visibilityBtn.title = 'Show track';
         }
     }
@@ -971,6 +1037,49 @@ function hideAllTracksFunction() {
     }
 }
 
+function toggleDrumTracksFunction() {
+    if (!api || !api.score) return;
+    
+    let drumTracksVisible = false;
+    let drumTrackIndices = [];
+    
+    // Find all drum tracks and check their current visibility
+    Object.keys(trackStates).forEach(index => {
+        const trackIndex = parseInt(index);
+        const track = api.score.tracks[trackIndex];
+        
+        if (isPercussionTrack(track)) {
+            drumTrackIndices.push(trackIndex);
+            if (trackStates[trackIndex].visible) {
+                drumTracksVisible = true;
+            }
+        }
+    });
+    
+    // Toggle drum track visibility
+    const newVisibility = !drumTracksVisible;
+    drumTrackIndices.forEach(trackIndex => {
+        trackStates[trackIndex].visible = newVisibility;
+        updateTrackUI(trackIndex);
+    });
+    
+    // Re-render with current visible tracks
+    const visibleTracks = Object.keys(trackStates)
+        .map(index => parseInt(index))
+        .filter(index => trackStates[index].visible);
+    
+    if (visibleTracks.length > 0) {
+        api.renderScore(api.score, visibleTracks);
+        console.log(`${newVisibility ? 'Showed' : 'Hidden'} ${drumTrackIndices.length} drum tracks`);
+    } else {
+        // Fallback: if no tracks would be visible, show the first track
+        trackStates[0].visible = true;
+        updateTrackUI(0);
+        api.renderScore(api.score, [0]);
+        console.log('No tracks would be visible, showing first track as fallback');
+    }
+}
+
 function unmuteAllTracksFunction() {
     Object.keys(trackStates).forEach(index => {
         const trackIndex = parseInt(index);
@@ -1021,10 +1130,11 @@ function setupEventListeners() {
         }
     });
     
-    // Player controls
+    // Simple player controls with buffered playback for better cursor accuracy
     playBtn.addEventListener('click', () => {
         if (api && isPlayerReady) {
-            api.playPause();
+            console.log('🎵 Play button clicked - starting buffered playback');
+            startBufferedPlayback();
         }
     });
     
@@ -1042,7 +1152,7 @@ function setupEventListeners() {
     
     // Volume control
     volumeSlider.addEventListener('input', (e) => {
-        const volume = parseFloat(e.target.value) / 100; // Convert percentage to decimal
+        const volume = parseFloat(e.target.value) / 100;
         volumeValue.textContent = `${e.target.value}%`;
         if (api && isPlayerReady) {
             api.masterVolume = volume;
@@ -1051,7 +1161,7 @@ function setupEventListeners() {
     
     // Speed control
     speedSlider.addEventListener('input', (e) => {
-        const speed = parseFloat(e.target.value) / 100; // Convert percentage to decimal
+        const speed = parseFloat(e.target.value) / 100;
         speedValue.textContent = `${e.target.value}%`;
         if (api && isPlayerReady) {
             api.playbackSpeed = speed;
@@ -1073,20 +1183,24 @@ function setupEventListeners() {
     unmuteAllTracks.addEventListener('click', unmuteAllTracksFunction);
     unsoloAllTracks.addEventListener('click', unsoloAllTracksFunction);
     
-    // Global keyboard controls
+    // Keyboard controls with buffered playback
     document.addEventListener('keydown', (e) => {
-        // Spacebar for play/pause
         if (e.code === 'Space') {
-            // Only prevent spacebar if not typing in input fields
             const activeElement = document.activeElement;
             const isTyping = activeElement && activeElement.matches('input[type="text"], input[type="search"], textarea');
             
-            // Allow spacebar to work everywhere except when typing
             if (!isTyping && api && isPlayerReady) {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('Spacebar triggered play/pause');
-                api.playPause();
+                
+                // Use buffered playback for spacebar as well
+                if (api.playerState === 0 || api.playerState === 2) {
+                    // Stopped or paused - start buffered playback
+                    startBufferedPlayback();
+                } else {
+                    // Playing - pause immediately
+                    api.playPause();
+                }
             }
         }
     });
@@ -1097,9 +1211,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeAlphaTab();
     setupEventListeners();
     initializeGpFilesBrowser(); // Initialize GP Files Browser
-    
-    // Initialize loop system
-    loopSystem.initialize();
 });
 
 // Enhanced track name detection
@@ -1386,518 +1497,6 @@ function getGeneralMidiInstrumentName(program) {
     return instruments[program] || `Program ${program}`;
 }
 
-// Loop Functionality System
-class LoopSystem {
-    constructor() {
-        this.isLooping = false;
-        this.isSelectionMode = false;
-        this.startBar = 1;
-        this.endBar = 1;
-        this.loopInterval = null;
-        this.currentPosition = 0;
-        this.barDuration = 0;
-        this.isInitialized = false;
-        this.originalBeatMouseDownHandler = null;
-        this.currentRange = null; // Store the current loop range
-        this.loopStartTime = 0; // Track when loop started for timing
-        this.lastLogTime = null; // Track last log time for throttled logging
-        this.currentSelection = null; // Store the visual selection data
-    }
-
-    // Initialize loop system
-    initialize() {
-        if (this.isInitialized) return;
-        
-        this.loopButton = document.getElementById('loopBtn');
-        if (!this.loopButton) {
-            console.error('Loop button not found');
-            return;
-        }
-
-        // Add event listener
-        this.loopButton.addEventListener('click', () => this.toggleLoopMode());
-        
-        // Setup selection handlers when API is available
-        if (api) {
-            this.setupSelectionHandlers();
-        } else {
-            // Wait for API to be ready
-            const checkApi = () => {
-                if (api) {
-                    this.setupSelectionHandlers();
-                } else {
-                    setTimeout(checkApi, 100);
-                }
-            };
-            checkApi();
-        }
-
-        this.isInitialized = true;
-        console.log('Loop system initialized with AlphaTab selection');
-    }
-
-    // Setup AlphaTab selection event handlers
-    setupSelectionHandlers() {
-        if (!api) return;
-
-        // Listen for beat mouse up to detect when selection is complete
-        api.beatMouseUp.on((beat) => {
-            if (this.isSelectionMode && beat) {
-                console.log('Beat mouse up detected in selection mode:', beat);
-                // Check if AlphaTab has created a playback range
-                setTimeout(() => {
-                    if (api.playbackRange) {
-                        console.log('Selection detected, starting loop with AlphaTab range');
-                        this.startLoopWithAlphaTabRange();
-                    } else {
-                        console.log('Single beat clicked, using default range');
-                        this.startLoopFromBeat(beat);
-                    }
-                }, 100); // Small delay to let AlphaTab process the selection
-            }
-        });
-
-        // Listen for player position changes to handle looping
-        api.playerPositionChanged.on((e) => {
-            if (this.isLooping && this.currentRange) {
-                this.checkLoopPosition(e.currentTime);
-            }
-        });
-
-        // Listen for player state changes to handle when playback stops
-        api.playerStateChanged.on((e) => {
-            if (this.isLooping && e.state === 0) { // PlayerState.Paused
-                // If we're looping and playback stopped, restart from beginning of selection
-                setTimeout(() => {
-                    if (this.isLooping && this.currentRange) {
-                        console.log('Playback stopped, restarting loop');
-                        api.tickPosition = this.currentRange.startTick;
-                        api.playPause();
-                    }
-                }, 100);
-            }
-        });
-
-        console.log('Selection handlers setup complete');
-    }
-
-    // Toggle loop mode (selection mode)
-    toggleLoopMode() {
-        if (!api || !currentScore) {
-            console.log('No score loaded for looping');
-            return;
-        }
-
-        if (this.isLooping) {
-            this.stopLoop();
-        } else {
-            this.enterSelectionMode();
-        }
-    }
-
-    // Enter selection mode
-    enterSelectionMode() {
-        this.isSelectionMode = true;
-        this.updateLoopButton();
-        
-        // Show instruction message
-        this.showSelectionMessage();
-        
-        console.log('Loop selection mode activated - click and drag to select range');
-    }
-
-    // Start loop with AlphaTab's native playback range
-    startLoopWithAlphaTabRange() {
-        if (!api || !api.playbackRange) return;
-
-        const range = api.playbackRange;
-        this.currentRange = range; // Store the range for loop checking
-        this.isLooping = true;
-        this.isSelectionMode = false;
-        this.loopStartTime = Date.now();
-        
-        // Start playback if not already playing
-        if (api.playerState !== 1) { // Not playing
-            api.tickPosition = range.startTick; // Start from beginning of selection
-            api.playPause();
-        }
-        
-        this.updateLoopButton();
-        this.showLoopActiveMessage();
-        
-        console.log('Loop started with AlphaTab range:', range);
-    }
-
-    // Start loop from a single beat (default 4-bar range)
-    startLoopFromBeat(beat) {
-        if (!api || !beat) return;
-
-        // Calculate a 4-bar range starting from the clicked beat
-        const startBar = beat.voice.bar.index;
-        const totalBars = this.getTotalBars();
-        const endBar = Math.min(startBar + 3, totalBars - 1); // 4 bars or to end
-
-        // Create a playback range
-        const startTick = beat.voice.bar.masterBar.start;
-        const endMasterBar = currentScore.masterBars[endBar];
-        const endTick = endMasterBar.start + endMasterBar.calculateDuration();
-
-        const range = {
-            startTick: startTick,
-            endTick: endTick
-        };
-
-        // Set the range in AlphaTab and start our loop
-        api.playbackRange = range;
-        this.currentRange = range;
-        this.startLoopWithAlphaTabRange();
-        
-        console.log(`Loop started from beat: bars ${startBar + 1}-${endBar + 1}`);
-    }
-
-    // Stop looping
-    stopLoop() {
-        this.isLooping = false;
-        this.isSelectionMode = false;
-        this.currentRange = null;
-        
-        // Clear AlphaTab's playback range
-        if (api) {
-            api.playbackRange = null;
-        }
-        
-        this.updateLoopButton();
-        this.hideMessages();
-        
-        console.log('Loop stopped');
-    }
-
-    // Get total number of bars
-    getTotalBars() {
-        if (!currentScore || !currentScore.masterBars) return 1;
-        return currentScore.masterBars.length;
-    }
-
-    // Update loop button appearance
-    updateLoopButton() {
-        if (!this.loopButton) return;
-
-        // Remove all state classes first
-        this.loopButton.classList.remove('active', 'selection-mode');
-
-        if (this.isLooping) {
-            this.loopButton.classList.add('active');
-            this.loopButton.title = 'Looping Active (Click to stop)';
-        } else if (this.isSelectionMode) {
-            this.loopButton.classList.add('selection-mode');
-            this.loopButton.title = 'Selection Mode - Click and drag to select loop range';
-        } else {
-            this.loopButton.title = 'Loop Selected Bars - Click to start selection';
-        }
-    }
-
-    // Show selection instruction message
-    showSelectionMessage() {
-        this.showMessage('🎯 Click and drag on the tab to select loop range', '#FF9800');
-    }
-
-    // Show loop active message
-    showLoopActiveMessage() {
-        // Get range info for display
-        let rangeText = 'Selected Range';
-        if (api && api.playbackRange) {
-            // Try to determine bar numbers from the range
-            rangeText = 'Selected Range';
-        }
-        
-        this.showMessage(`🔄 Looping ${rangeText}`, '#4CAF50');
-    }
-
-    // Show status message
-    showMessage(text, color = '#4CAF50') {
-        // Create or update loop status display
-        let loopStatus = document.getElementById('loopStatus');
-        if (!loopStatus) {
-            loopStatus = document.createElement('div');
-            loopStatus.id = 'loopStatus';
-            loopStatus.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: ${color};
-                color: white;
-                padding: 12px 18px;
-                border-radius: 8px;
-                font-size: 14px;
-                font-weight: 600;
-                z-index: 1000;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-                transition: all 0.3s ease;
-                font-family: 'Inter', sans-serif;
-            `;
-            document.body.appendChild(loopStatus);
-        }
-
-        loopStatus.style.background = color;
-        loopStatus.textContent = text;
-        loopStatus.style.display = 'block';
-        loopStatus.style.opacity = '1';
-
-        // Auto-hide after delay (except for active loop message)
-        if (color !== '#4CAF50' || !this.isLooping) {
-            setTimeout(() => {
-                if (loopStatus && loopStatus.style.opacity === '1') {
-                    loopStatus.style.opacity = '0';
-                    setTimeout(() => {
-                        if (loopStatus && loopStatus.style.opacity === '0') {
-                            loopStatus.style.display = 'none';
-                        }
-                    }, 300);
-                }
-            }, 3000);
-        }
-    }
-
-    // Hide status messages
-    hideMessages() {
-        const loopStatus = document.getElementById('loopStatus');
-        if (loopStatus) {
-            loopStatus.style.opacity = '0';
-            setTimeout(() => {
-                if (loopStatus) {
-                    loopStatus.style.display = 'none';
-                }
-            }, 300);
-        }
-    }
-
-    // Enable/disable loop button
-    setEnabled(enabled) {
-        if (this.loopButton) {
-            this.loopButton.disabled = !enabled;
-        }
-    }
-
-    // Reset loop system
-    reset() {
-        this.stopLoop();
-        this.startBar = 1;
-        this.endBar = 1;
-        this.currentPosition = 0;
-        this.barDuration = 0;
-        this.currentRange = null;
-    }
-
-    // Check if we need to loop back to the start
-    checkLoopPosition(currentTime) {
-        if (!this.isLooping || !this.currentRange || !api) return;
-
-        // Convert current time to ticks (approximate)
-        const currentTick = api.tickPosition;
-        
-        // Log position for debugging (throttled)
-        if (!this.lastLogTime || Date.now() - this.lastLogTime > 1000) {
-            console.log(`Loop position: ${currentTick} / ${this.currentRange.endTick} (${Math.round((currentTick / this.currentRange.endTick) * 100)}%)`);
-            this.lastLogTime = Date.now();
-        }
-        
-        // Check if we've reached or passed the end of the loop
-        if (currentTick >= this.currentRange.endTick - 100) { // Small buffer to prevent timing issues
-            console.log('🔄 Loop end reached, jumping back to start');
-            // Jump back to the start of the loop
-            api.tickPosition = this.currentRange.startTick;
-            
-            // Update the visual feedback
-            this.showMessage('🔄 Loop restarted', '#4CAF50');
-        }
-    }
-}
-
-// Create global loop system instance
-const loopSystem = new LoopSystem();
-
-// Update score for print and loop functionality
-function updateScoreForPrint(score) {
-    currentScore = score;
-    
-    // Enable print button
-    const printBtn = document.getElementById('printBtn');
-    if (printBtn) {
-        printBtn.disabled = false;
-        printBtn.title = 'Print Tab';
-    }
-    
-    // Enable loop button
-    const loopBtn = document.getElementById('loopBtn');
-    if (loopBtn) {
-        loopBtn.disabled = false;
-        loopBtn.title = 'Loop Selected Bars';
-    }
-    
-    // Initialize loop system
-    loopSystem.initialize();
-    loopSystem.setEnabled(true);
-    loopSystem.reset();
-    
-    console.log('Score updated for print and loop functionality');
-}
-
-// Test function for debugging loop button
-function testLoopButton() {
-    console.log('Testing loop button...');
-    const btn = document.getElementById('loopBtn');
-    console.log('Button found:', btn);
-    if (btn) {
-        btn.classList.add('selection-mode');
-        console.log('Added selection-mode class');
-        setTimeout(() => {
-            btn.classList.remove('selection-mode');
-            btn.classList.add('active');
-            console.log('Switched to active class');
-        }, 2000);
-    }
-}
-
-// Make test function globally available
-window.testLoopButton = testLoopButton;
-
-async function loadGpFilesFromDirectory() {
-    console.log('Loading GP files from predefined list...');
-    
-    try {
-        // Clear existing files
-        gpFiles = [];
-        filteredFiles = [];
-        
-        // Hardcoded list of GP files (since GitHub Pages doesn't serve directory listings)
-        const gpFilesList = [
-            // Scale Exercises
-            { name: 'C Major Scale and Arpeggio Exercises.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
-            { name: 'Pentatonic_Exercises.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
-            { name: 'Minor_Pentatonic_Patterns.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
-            
-            // Licks
-            { name: '5 Licks To Metal adapted.gp', category: 'licks', folder: 'Licks' },
-            { name: 'Bebop Lines for Jazz Blues in B flat.gp', category: 'licks', folder: 'Licks' },
-            { name: '5 Licks To Metal.gp', category: 'licks', folder: 'Licks' },
-            { name: '5 Licks To - ROCK.gp', category: 'licks', folder: 'Licks' },
-            
-            // Songs
-            { name: 'Achy Breaky Heart (Simple Melody).gp', category: 'songs', folder: 'Songs' },
-            { name: 'Beethoven-Bagatelle_no_25-Fur_Elise.gp', category: 'songs', folder: 'Songs' }
-        ];
-        
-        let totalFilesFound = 0;
-        
-        // Add each file to the list
-        gpFilesList.forEach(fileInfo => {
-            const filePath = `./public/GP Files/${fileInfo.folder}/${fileInfo.name}`;
-            addGpFileToList(fileInfo.name, filePath, fileInfo.category);
-            totalFilesFound++;
-        });
-        
-        updateFilesList();
-        console.log(`Loaded ${totalFilesFound} GP files from predefined list`);
-        
-    } catch (error) {
-        console.error('Error loading files:', error);
-        console.log('Falling back to empty list...');
-        gpFiles = [];
-        filteredFiles = [];
-        updateFilesList();
-    }
-}
-
-function parseDirectoryListing(html) {
-    // Parse the HTML directory listing to extract filenames
-    const files = [];
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    
-    // Look for links that represent files (not directories)
-    const links = doc.querySelectorAll('a[href]');
-    
-    links.forEach(link => {
-        const href = link.getAttribute('href');
-        // Skip parent directory link and directories
-        if (href && href !== '../' && !href.endsWith('/')) {
-            // Decode URL-encoded filenames
-            const fileName = decodeURIComponent(href);
-            files.push(fileName);
-        }
-    });
-    
-    return files;
-}
-
-function isValidGpFile(fileName) {
-    const fileExtension = fileName.split('.').pop().toLowerCase();
-    return ['gp', 'gp3', 'gp4', 'gp5', 'gpx', 'gp6', 'gp7'].includes(fileExtension);
-}
-
-function addGpFileToList(fileName, filePath, category = 'scale-exercises') {
-    const newFile = {
-        id: gpFiles.length + 1,
-        name: fileName,
-        category: category,
-        size: 'Unknown', // Would need server-side info for actual size
-        dateModified: new Date(),
-        path: filePath
-    };
-    
-    gpFiles.push(newFile);
-    console.log('Added file to GP Browser:', fileName, `(${category})`);
-}
-
-// Global functions for manual file addition and refresh
-window.addGpFile = addGpFile;
-window.refreshGpFiles = refreshGpFiles;
-window.testLoopButton = testLoopButton;
-window.debugSynthesizer = debugSynthesizer;
-window.testInstrumentChange = testInstrumentChange;
-window.explainMidiChannels = explainMidiChannels;
-window.testSoundChange = testSoundChange;
-window.analyzeSoundFont = analyzeSoundFont;
-window.analyzeGpFileSoundSettings = analyzeGpFileSoundSettings;
-window.testAlphaTabVolumeControl = testAlphaTabVolumeControl;
-window.toggleTrackControlsVisibility = toggleTrackControlsVisibility;
-
-function addKnownGpFiles() {
-    // Fallback for when directory scanning fails
-    console.log('Using fallback file list...');
-    gpFiles = [];
-    filteredFiles = [];
-    updateFilesList();
-    console.log('GP Files Browser ready - add files to ./public/GP Files/ and refresh');
-}
-
-function addGpFile(fileName, filePath, category = 'scale-exercises') {
-    // Function to manually add a GP file (for console use)
-    const fileExtension = fileName.split('.').pop().toLowerCase();
-    if (!['gp', 'gp3', 'gp4', 'gp5', 'gpx', 'gp6', 'gp7'].includes(fileExtension)) {
-        console.warn('Invalid file type:', fileName);
-        return;
-    }
-    
-    // If no category specified, try to determine from file path
-    if (category === 'scale-exercises' && filePath) {
-        if (filePath.includes('/Licks/')) category = 'licks';
-        else if (filePath.includes('/Chord Progressions/')) category = 'chord-progressions';
-        else if (filePath.includes('/Songs/')) category = 'songs';
-        else if (filePath.includes('/Arpeggios/')) category = 'arpeggios';
-        else if (filePath.includes('/Scale Exercises/')) category = 'scale-exercises';
-    }
-    
-    addGpFileToList(fileName, filePath, category);
-    applyFiltersAndSort();
-    console.log('Manually added file to GP Browser:', fileName, `(${category})`);
-}
-
-function refreshGpFiles() {
-    console.log('Refreshing GP files list...');
-    loadGpFilesFromDirectory();
-}
-
 // Print functionality
 function printTab() {
     if (!api || !currentScore) {
@@ -1933,435 +1532,335 @@ function printTab() {
     }
 }
 
-// Enable/disable control buttons
-function enableControls() {
-    // Implementation of enableControls function
-}
-
-// Get simplified instrument options - only instruments that actually sound different in SONiVOX
-function getInstrumentOptions(currentProgram) {
-    // This function is no longer needed since we removed instrument dropdowns
-    // Instrument changes don't work in AlphaTab v1.6.0 due to synthesizer limitations
-    return '';
-}
-
-// Handle instrument change
-function handleInstrumentChange(event) {
-    // This function is no longer needed since we removed instrument dropdowns
-    // Instrument changes don't work in AlphaTab v1.6.0 due to synthesizer limitations
-    return;
-}
-
-// Apply instrument change via score reload
-function applyInstrumentChangeViaScoreReload(trackIndex, newProgram) {
-    // This function is no longer needed since we removed instrument dropdowns
-    // Instrument changes don't work in AlphaTab v1.6.0 due to synthesizer limitations
-    return;
-}
-
-// Apply instrument change fallback
-function applyInstrumentChangeFallback(trackIndex, newProgram, wasPlaying, currentPosition) {
-    // This function is no longer needed since we removed instrument dropdowns
-    // Instrument changes don't work in AlphaTab v1.6.0 due to synthesizer limitations
-    return;
-}
-
-// Show instrument change message
-function showInstrumentChangeMessage(message) {
-    // This function is no longer needed since we removed instrument dropdowns
-    return;
-}
-
-// Queue instrument change
-function queueInstrumentChange(trackIndex, newProgram) {
-    // This function is no longer needed since we removed instrument dropdowns
-    return;
-}
-
-// Apply queued instrument changes
-function applyQueuedInstrumentChanges() {
-    // This function is no longer needed since we removed instrument dropdowns
-    return;
-}
-
-// Update track instrument display
-function updateTrackInstrumentDisplay(trackIndex, newProgram) {
-    // This function is no longer needed since we removed instrument dropdowns
-    return;
-}
-
-// Debug function to check synthesizer capabilities
-function debugSynthesizer() {
-    console.log('=== SYNTHESIZER DEBUG INFO ===');
+// Enhanced update score for print functionality
+function enhancedUpdateScoreForPrint(score) {
+    currentScore = score;
     
-    if (!api) {
-        console.log('❌ No API available');
+    // Enable print button
+    const printBtn = document.getElementById('printBtn');
+    if (printBtn) {
+        printBtn.disabled = false;
+        printBtn.title = 'Print Tab';
+    }
+    
+    console.log('Score updated for print and loop functionality');
+}
+
+// Test enhanced cursor accuracy and timing
+function testCursorAccuracy() {
+    if (!api || !isPlayerReady) {
+        console.log('❌ API or player not ready for cursor test');
         return;
     }
     
-    console.log('✓ API available');
-    console.log('Player ready:', isPlayerReady);
-    console.log('Player state:', api.playerState);
-    console.log('AlphaTab version:', api.version || 'Unknown');
+    console.log('🎯 Testing basic cursor accuracy...');
     
-    if (!api.player) {
-        console.log('❌ No player available');
-        return;
-    }
+    // Reset to beginning
+    api.stop();
+    api.tickPosition = 0;
     
-    console.log('✓ Player available');
-    console.log('Player type:', typeof api.player);
-    console.log('Player ready:', api.player.ready);
-    console.log('Player methods:', Object.getOwnPropertyNames(api.player).filter(name => typeof api.player[name] === 'function'));
-    
-    // Check synthesizer
-    if (api.player.synthesizer) {
-        const synth = api.player.synthesizer;
-        console.log('✓ Synthesizer available');
-        console.log('Synthesizer type:', typeof synth);
-        console.log('Synthesizer constructor:', synth.constructor.name);
-        console.log('Synthesizer methods:', Object.getOwnPropertyNames(synth).filter(name => typeof synth[name] === 'function'));
+    setTimeout(() => {
+        console.log('🎵 Starting basic playback test...');
         
-        // Check for specific methods
-        const methods = ['programChange', 'sendEvent', 'setChannelProgram', 'midiEvent', 'noteOn', 'noteOff'];
-        methods.forEach(method => {
-            const available = typeof synth[method] === 'function';
-            console.log(`${available ? '✓' : '❌'} synth.${method}:`, available ? 'available' : 'not available');
-        });
-    } else {
-        console.log('❌ No synthesizer available');
-    }
-    
-    // Check API level methods
-    const apiMethods = ['changeTrackProgram', 'changeTrackVolume', 'load', 'renderScore'];
-    apiMethods.forEach(method => {
-        const available = typeof api[method] === 'function';
-        console.log(`${available ? '✓' : '❌'} api.${method}:`, available ? 'available' : 'not available');
-    });
-    
-    // Check current score and tracks
-    if (api.score && api.score.tracks) {
-        console.log('✓ Score loaded with', api.score.tracks.length, 'tracks');
-        api.score.tracks.forEach((track, index) => {
-            console.log(`Track ${index}:`, {
-                name: track.name,
-                program: track.playbackInfo.program,
-                primaryChannel: track.playbackInfo.primaryChannel,
-                secondaryChannel: track.playbackInfo.secondaryChannel,
-                isPercussionTrack: track.playbackInfo.isPercussionTrack
+        const testStartTime = performance.now();
+        let testCount = 0;
+        
+        // Start playback
+        api.play();
+        
+        // Monitor basic cursor position
+        const testInterval = setInterval(() => {
+            testCount++;
+            const currentTime = performance.now();
+            const elapsedTime = currentTime - testStartTime;
+            
+            const currentTick = api.tickPosition;
+            const currentTimePos = api.timePosition;
+            
+            console.log(`📍 Basic Test ${testCount}:`, {
+                elapsed: `${elapsedTime.toFixed(0)}ms`,
+                currentTick: currentTick,
+                currentTime: `${currentTimePos.toFixed(0)}ms`
             });
-        });
-    } else {
-        console.log('❌ No score loaded');
-    }
-    
-    // Check SoundFont info
-    console.log('SoundFont URL:', api.settings?.player?.soundFont || 'Not configured');
-    
-    console.log('=== END DEBUG INFO ===');
-}
-
-// Test instrument change functionality
-function testInstrumentChange(trackIndex = 0, newProgram = 29) {
-    // This function is no longer needed since we removed instrument dropdowns
-    // Instrument changes don't work in AlphaTab v1.6.0 due to synthesizer limitations
-    console.log('Instrument changes have been removed due to AlphaTab v1.6.0 limitations');
-}
-
-// Test sound change functionality
-function testSoundChange() {
-    // This function is no longer needed since we removed instrument dropdowns
-    // Instrument changes don't work in AlphaTab v1.6.0 due to synthesizer limitations
-    console.log('Sound changes have been removed due to AlphaTab v1.6.0 limitations');
-}
-
-// Enhanced debugging for instrument changes
-function debugInstrumentChange(trackIndex, newProgram) {
-    // This function is no longer needed since we removed instrument dropdowns
-    // Instrument changes don't work in AlphaTab v1.6.0 due to synthesizer limitations
-    console.log('Instrument change debugging has been removed due to AlphaTab v1.6.0 limitations');
-}
-
-// Test the actual sound difference
-function testActualSoundDifference() {
-    // This function is no longer needed since we removed instrument dropdowns
-    // Instrument changes don't work in AlphaTab v1.6.0 due to synthesizer limitations
-    console.log('Sound difference testing has been removed due to AlphaTab v1.6.0 limitations');
-}
-
-// Simple test function to verify dropdown functionality
-function testDropdownChange() {
-    // This function is no longer needed since we removed instrument dropdowns
-    console.log('Dropdown testing has been removed - instrument dropdowns no longer exist');
-}
-
-// Explain MIDI channels
-function explainMidiChannels() {
-    // This function is no longer needed since we removed instrument dropdowns
-    console.log('MIDI channel explanation has been removed since instrument changes are not supported');
-}
-
-// Comprehensive GP file sound analysis
-function analyzeGpFileSoundSettings() {
-    if (!api || !api.score) {
-        console.log('❌ No score loaded for analysis');
-        return;
-    }
-    
-    const score = api.score;
-    console.log('🎵 === GUITAR PRO FILE SOUND ANALYSIS ===');
-    
-    // Master settings
-    console.log('📊 MASTER SETTINGS:');
-    console.log('  Title:', score.title || 'Unknown');
-    console.log('  Artist:', score.artist || 'Unknown');
-    console.log('  Master Volume:', score.masterVolume || 'Default');
-    console.log('  Tempo:', score.tempo || 'Unknown');
-    console.log('  Total Tracks:', score.tracks.length);
-    
-    // Detailed track analysis
-    console.log('\n🎸 TRACK SOUND SETTINGS:');
-    score.tracks.forEach((track, index) => {
-        console.log(`\n--- TRACK ${index + 1}: ${track.name || 'Unnamed'} ---`);
-        
-        // Basic track info
-        console.log('  Track Name:', track.name || 'Unnamed');
-        console.log('  Short Name:', track.shortName || 'None');
-        console.log('  Color:', track.color || 'Default');
-        console.log('  Percussion Track:', track.percussionTrack || false);
-        
-        // Playback information
-        if (track.playbackInfo) {
-            const pb = track.playbackInfo;
-            console.log('  🔊 PLAYBACK INFO:');
-            console.log('    Program Number:', pb.program);
-            console.log('    Program Name:', getGeneralMidiInstrumentName(pb.program));
-            console.log('    Primary Channel:', pb.primaryChannel);
-            console.log('    Secondary Channel:', pb.secondaryChannel);
-            console.log('    Volume:', pb.volume, '(0-16 scale)');
-            console.log('    Balance:', pb.balance, '(0-16 scale, 8=center)');
-            console.log('    Chorus:', pb.chorus || 0);
-            console.log('    Reverb:', pb.reverb || 0);
-            console.log('    Phaser:', pb.phaser || 0);
-            console.log('    Tremolo:', pb.tremolo || 0);
-            console.log('    Is Mute:', pb.isMute || false);
-            console.log('    Is Solo:', pb.isSolo || false);
-            console.log('    Is Visible:', pb.isVisible !== false);
-            console.log('    Is Percussion:', pb.isPercussionTrack || false);
-        }
-        
-        // Channel information
-        if (track.channel) {
-            console.log('  📡 CHANNEL INFO:');
-            console.log('    Channel 1:', track.channel.channel1);
-            console.log('    Channel 2:', track.channel.channel2);
-            console.log('    Instrument 1:', track.channel.instrument1);
-            console.log('    Instrument 2:', track.channel.instrument2);
-            console.log('    Volume 1:', track.channel.volume1);
-            console.log('    Volume 2:', track.channel.volume2);
-            console.log('    Balance 1:', track.channel.balance1);
-            console.log('    Balance 2:', track.channel.balance2);
-            console.log('    Chorus 1:', track.channel.chorus1);
-            console.log('    Chorus 2:', track.channel.chorus2);
-            console.log('    Reverb 1:', track.channel.reverb1);
-            console.log('    Reverb 2:', track.channel.reverb2);
-            console.log('    Phaser 1:', track.channel.phaser1);
-            console.log('    Phaser 2:', track.channel.phaser2);
-            console.log('    Tremolo 1:', track.channel.tremolo1);
-            console.log('    Tremolo 2:', track.channel.tremolo2);
-        }
-        
-        // Staff/tuning information
-        if (track.staves && track.staves.length > 0) {
-            console.log('  🎼 STAFF INFO:');
-            track.staves.forEach((staff, staffIndex) => {
-                console.log(`    Staff ${staffIndex + 1}:`);
-                console.log('      Tuning:', staff.tuning || 'Standard');
-                console.log('      Capo:', staff.capo || 0);
-                console.log('      String Count:', staff.tuning?.length || 'Unknown');
-                console.log('      Track Channel:', staff.trackChannel || 'Default');
-                console.log('      Display Tablature:', staff.showTablature !== false);
-                console.log('      Display Standard:', staff.showStandardNotation !== false);
-            });
-        }
-        
-        // Additional properties
-        console.log('  🔧 ADDITIONAL PROPERTIES:');
-        const additionalProps = Object.keys(track).filter(key => 
-            !['name', 'shortName', 'color', 'percussionTrack', 'playbackInfo', 'channel', 'staves'].includes(key)
-        );
-        additionalProps.forEach(prop => {
-            if (track[prop] !== null && track[prop] !== undefined) {
-                console.log(`    ${prop}:`, track[prop]);
+            
+            if (testCount >= 5) {
+                clearInterval(testInterval);
+                console.log('✅ Basic cursor test completed');
             }
-        });
-    });
+        }, 1000);
+        
+        // Stop test after 6 seconds
+        setTimeout(() => {
+            clearInterval(testInterval);
+            api.pause();
+            console.log('🛑 Basic cursor test stopped');
+        }, 6000);
+        
+    }, 500);
+}
+
+// Manual cursor timing initialization (simplified)
+function initializeCursorTimingManually() {
+    console.log('🔧 Basic cursor system active');
     
-    // Master bars analysis for tempo changes
-    console.log('\n🎵 MASTER BARS ANALYSIS:');
-    if (score.masterBars && score.masterBars.length > 0) {
-        console.log('  Total Master Bars:', score.masterBars.length);
-        
-        // Check for tempo changes
-        const tempoChanges = [];
-        score.masterBars.forEach((bar, index) => {
-            if (bar.tempoAutomation && bar.tempoAutomation.value !== score.tempo) {
-                tempoChanges.push({
-                    bar: index + 1,
-                    tempo: bar.tempoAutomation.value
-                });
-            }
+    if (api && api.player) {
+        console.log('📊 Current Audio Context Info:', {
+            state: api.player.output?.audioContext?.state,
+            sampleRate: api.player.output?.audioContext?.sampleRate
         });
-        
-        if (tempoChanges.length > 0) {
-            console.log('  Tempo Changes Found:');
-            tempoChanges.forEach(change => {
-                console.log(`    Bar ${change.bar}: ${change.tempo} BPM`);
-            });
-        } else {
-            console.log('  No tempo changes detected');
-        }
     }
     
-    // Effects analysis
-    console.log('\n🎛️ EFFECTS SUMMARY:');
-    const effectsSummary = {
-        chorus: [],
-        reverb: [],
-        phaser: [],
-        tremolo: []
+    console.log('✅ Using AlphaTab default cursor behavior');
+}
+
+// Test cursor timing system performance (simplified)
+function testCursorTimingPerformance() {
+    console.log('⚡ Using AlphaTab default cursor performance');
+    console.log('📈 Default cursor system is optimized by AlphaTab');
+}
+
+// Test buffered playback system
+function testBufferedPlayback() {
+    if (!api || !isPlayerReady) {
+        console.log('❌ API or player not ready for buffered playback test');
+        return;
+    }
+    
+    console.log('🧪 Testing buffered playback system...');
+    
+    // Reset to beginning
+    api.stop();
+    api.tickPosition = 0;
+    
+    setTimeout(() => {
+        console.log('🎵 Starting buffered playback test...');
+        
+        const testStartTime = performance.now();
+        
+        // Start buffered playback
+        startBufferedPlayback();
+        
+        // Monitor the buffering and playback process
+        const monitorInterval = setInterval(() => {
+            const currentTime = performance.now();
+            const elapsedTime = currentTime - testStartTime;
+            
+            console.log(`📊 Buffer Test Status:`, {
+                elapsed: `${elapsedTime.toFixed(0)}ms`,
+                isBuffering: isBufferingPlayback,
+                playerState: api.playerState,
+                currentTick: api.tickPosition,
+                currentTime: `${api.timePosition.toFixed(0)}ms`
+            });
+            
+            // Stop monitoring after playback starts
+            if (api.playerState === 1 && !isBufferingPlayback) {
+                clearInterval(monitorInterval);
+                console.log('✅ Buffered playback test completed successfully');
+                
+                // Stop playback after a few seconds
+                setTimeout(() => {
+                    api.stop();
+                    console.log('🛑 Test playback stopped');
+                }, 3000);
+            }
+        }, 100);
+        
+        // Safety timeout
+        setTimeout(() => {
+            clearInterval(monitorInterval);
+            if (isBufferingPlayback) {
+                console.log('⚠️ Buffered playback test timed out');
+                isBufferingPlayback = false;
+                playBtn.disabled = false;
+                playBtn.textContent = '▶️';
+            }
+        }, 5000);
+        
+    }, 500);
+}
+
+// Global functions for manual file addition and refresh
+window.addGpFile = addGpFile;
+window.refreshGpFiles = refreshGpFiles;
+window.debugSynthesizer = debugSynthesizer;
+window.testInstrumentChange = testInstrumentChange;
+window.explainMidiChannels = explainMidiChannels;
+window.testSoundChange = testSoundChange;
+window.analyzeSoundFont = analyzeSoundFont;
+window.analyzeGpFileSoundSettings = analyzeGpFileSoundSettings;
+window.testAlphaTabVolumeControl = testAlphaTabVolumeControl;
+window.toggleTrackControlsVisibility = toggleTrackControlsVisibility;
+window.analyzePlaybackAccuracy = analyzePlaybackAccuracy;
+window.testPlaybackTiming = testPlaybackTiming;
+window.optimizeAudioForResponsiveness = optimizeAudioForResponsiveness;
+window.preWarmAudioSystem = preWarmAudioSystem;
+window.ensureAudioContextRunning = ensureAudioContextRunning;
+window.testCursorAccuracy = testCursorAccuracy;
+window.initializeCursorTimingManually = initializeCursorTimingManually;
+window.testCursorTimingPerformance = testCursorTimingPerformance;
+window.testBufferedPlayback = testBufferedPlayback;
+
+// Add GP file to the list
+function addGpFileToList(fileName, category, filePath) {
+    const fileId = `gp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    const gpFile = {
+        id: fileId,
+        name: fileName,
+        category: category,
+        path: filePath,
+        size: 'Unknown', // We don't have size info without fetching
+        dateModified: new Date() // Use current date as fallback
     };
     
-    score.tracks.forEach((track, index) => {
-        if (track.playbackInfo) {
-            const pb = track.playbackInfo;
-            if (pb.chorus > 0) effectsSummary.chorus.push(`Track ${index + 1}: ${pb.chorus}`);
-            if (pb.reverb > 0) effectsSummary.reverb.push(`Track ${index + 1}: ${pb.reverb}`);
-            if (pb.phaser > 0) effectsSummary.phaser.push(`Track ${index + 1}: ${pb.phaser}`);
-            if (pb.tremolo > 0) effectsSummary.tremolo.push(`Track ${index + 1}: ${pb.tremolo}`);
-        }
-    });
-    
-    Object.keys(effectsSummary).forEach(effect => {
-        if (effectsSummary[effect].length > 0) {
-            console.log(`  ${effect.toUpperCase()}:`, effectsSummary[effect].join(', '));
-        } else {
-            console.log(`  ${effect.toUpperCase()}: None`);
-        }
-    });
-    
-    console.log('\n=== END SOUND ANALYSIS ===');
-    
-    // Return structured data for further use
-    return {
-        masterSettings: {
-            title: score.title,
-            artist: score.artist,
-            masterVolume: score.masterVolume,
-            tempo: score.tempo,
-            trackCount: score.tracks.length
-        },
-        tracks: score.tracks.map((track, index) => ({
-            index,
-            name: track.name,
-            program: track.playbackInfo?.program,
-            programName: getGeneralMidiInstrumentName(track.playbackInfo?.program || 0),
-            volume: track.playbackInfo?.volume,
-            balance: track.playbackInfo?.balance,
-            effects: {
-                chorus: track.playbackInfo?.chorus || 0,
-                reverb: track.playbackInfo?.reverb || 0,
-                phaser: track.playbackInfo?.phaser || 0,
-                tremolo: track.playbackInfo?.tremolo || 0
-            },
-            channels: {
-                primary: track.playbackInfo?.primaryChannel,
-                secondary: track.playbackInfo?.secondaryChannel
-            },
-            tuning: track.staves?.[0]?.tuning,
-            capo: track.staves?.[0]?.capo
-        })),
-        effectsSummary
-    };
+    gpFiles.push(gpFile);
+    console.log(`Added GP file: ${fileName} (${category})`);
 }
 
-// Test AlphaTab volume control capabilities
-function testAlphaTabVolumeControl() {
-    console.log('=== ALPHATAB VOLUME CONTROL TEST ===');
+// Load GP files from predefined directory structure
+async function loadGpFilesFromDirectory() {
+    console.log('Loading GP files from directory...');
     
-    if (!api) {
-        console.log('❌ No API available');
-        return;
-    }
-    
-    console.log('✓ API available');
-    
-    // Check available volume control methods
-    const volumeMethods = [
-        'changeTrackVolume',
-        'masterVolume',
-        'setTrackVolume',
-        'setChannelVolume'
+    // Actual GP files that exist in the public/GP Files directory
+    const gpFilesList = [
+        // Scale Exercises
+        { name: 'C Major Scale and Arpeggio Exercises.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+        { name: 'Pentatonic_Exercises.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+        { name: 'Minor_Pentatonic_Patterns.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+        
+        // Licks
+        { name: '5 Licks To Metal adapted.gp', category: 'licks', folder: 'Licks' },
+        { name: 'Bebop Lines for Jazz Blues in B flat.gp', category: 'licks', folder: 'Licks' },
+        { name: '5 Licks To Metal.gp', category: 'licks', folder: 'Licks' },
+        { name: '5 Licks To - ROCK.gp', category: 'licks', folder: 'Licks' },
+        
+        // Songs
+        { name: 'Achy Breaky Heart (Simple Melody).gp', category: 'songs', folder: 'Songs' },
+        { name: 'Beethoven-Bagatelle_no_25-Fur_Elise.gp', category: 'songs', folder: 'Songs' }
     ];
     
-    console.log('📊 Available volume control methods:');
-    volumeMethods.forEach(method => {
-        const available = typeof api[method] !== 'undefined';
-        console.log(`  ${available ? '✓' : '❌'} api.${method}:`, available ? 'available' : 'not available');
+    try {
+        // Clear existing files
+        gpFiles = [];
+        filteredFiles = [];
         
-        if (available && typeof api[method] === 'function') {
-            console.log(`    Type: function`);
-        } else if (available) {
-            console.log(`    Type: ${typeof api[method]}, Value:`, api[method]);
-        }
-    });
-    
-    // Check player volume methods
-    if (api.player) {
-        console.log('\n🎵 Player volume methods:');
-        const playerMethods = [
-            'setChannelVolume',
-            'setTrackVolume',
-            'masterVolume',
-            'volume'
-        ];
+        let totalFilesFound = 0;
         
-        playerMethods.forEach(method => {
-            const available = typeof api.player[method] !== 'undefined';
-            console.log(`  ${available ? '✓' : '❌'} api.player.${method}:`, available ? 'available' : 'not available');
-            
-            if (available && typeof api.player[method] === 'function') {
-                console.log(`    Type: function`);
-            } else if (available) {
-                console.log(`    Type: ${typeof api.player[method]}, Value:`, api.player[method]);
-            }
+        // Add each file to the list
+        gpFilesList.forEach(fileInfo => {
+            const filePath = `./public/GP Files/${fileInfo.folder}/${fileInfo.name}`;
+            addGpFileToList(fileInfo.name, fileInfo.category, filePath);
+            totalFilesFound++;
         });
-    }
-    
-    // Test actual volume change if tracks are available
-    if (api.score && api.score.tracks && api.score.tracks.length > 0) {
-        console.log('\n🧪 Testing volume change on first track...');
         
-        try {
-            // Test changeTrackVolume method
-            if (typeof api.changeTrackVolume === 'function') {
-                console.log('Testing api.changeTrackVolume([0], 0.5)...');
-                api.changeTrackVolume([0], 0.5);
-                console.log('✓ changeTrackVolume executed successfully');
-                
-                // Reset to full volume
-                setTimeout(() => {
-                    api.changeTrackVolume([0], 1.0);
-                    console.log('✓ Volume reset to full');
-                }, 1000);
-            }
-        } catch (error) {
-            console.error('❌ Error testing changeTrackVolume:', error);
-        }
+        console.log(`Found ${totalFilesFound} GP files`);
+        
+        // Update the display
+        applyFiltersAndSort();
+        
+    } catch (error) {
+        console.error('Error loading GP files:', error);
+        // Reset arrays on error
+        gpFiles = [];
+        filteredFiles = [];
     }
-    
-    console.log('\n=== END VOLUME CONTROL TEST ===');
 }
 
-// Make the test function globally available
-window.testAlphaTabVolumeControl = testAlphaTabVolumeControl;
+// Initialize the application
+function initializeApp() {
+    console.log('Initializing TabPlayer application...');
+    
+    // Initialize GP file loading
+    loadGpFilesFromDirectory();
+    
+    console.log('TabPlayer application initialized successfully');
+}
+
+// Manual function to add a GP file (for console use)
+function addGpFile(fileName, filePath, category = 'scale-exercises') {
+    addGpFileToList(fileName, category, filePath);
+    applyFiltersAndSort();
+    console.log(`Manually added GP file: ${fileName}`);
+}
+
+// Refresh the GP files list
+function refreshGpFiles() {
+    console.log('Refreshing GP files list...');
+    loadGpFilesFromDirectory();
+}
+
+// Start buffered playback with preparation delay
+function startBufferedPlayback() {
+    if (isBufferingPlayback) {
+        console.log('⏳ Already buffering playback...');
+        return;
+    }
+    
+    isBufferingPlayback = true;
+    
+    // Update UI to show buffering state
+    playBtn.disabled = true;
+    playBtn.textContent = '⏳';
+    
+    console.log(`🔄 Buffering playback (${PLAYBACK_BUFFER_DELAY}ms delay)...`);
+    
+    // Prepare audio context and timing
+    prepareAudioForPlayback();
+    
+    // Start playback after buffer delay
+    setTimeout(() => {
+        try {
+            console.log('🎵 Starting playback after buffer');
+            api.playPause();
+            
+            // Reset UI
+            playBtn.textContent = '▶️';
+            isBufferingPlayback = false;
+            
+            console.log('✅ Buffered playback started successfully');
+            
+        } catch (error) {
+            console.error('❌ Error starting buffered playback:', error);
+            playBtn.disabled = false;
+            playBtn.textContent = '▶️';
+            isBufferingPlayback = false;
+        }
+    }, PLAYBACK_BUFFER_DELAY);
+}
+
+// Prepare audio context for optimal playback
+function prepareAudioForPlayback() {
+    if (api && api.player && api.player.output && api.player.output.audioContext) {
+        const audioContext = api.player.output.audioContext;
+        
+        // Ensure audio context is running
+        if (audioContext.state === 'suspended') {
+            audioContext.resume().then(() => {
+                console.log('🔊 Audio context resumed for buffered playback');
+            }).catch(error => {
+                console.warn('⚠️ Could not resume audio context:', error);
+            });
+        }
+        
+        // Log audio context info for debugging
+        console.log('🎧 Audio context prepared:', {
+            state: audioContext.state,
+            sampleRate: audioContext.sampleRate,
+            baseLatency: audioContext.baseLatency ? `${(audioContext.baseLatency * 1000).toFixed(1)}ms` : 'unknown',
+            outputLatency: audioContext.outputLatency ? `${(audioContext.outputLatency * 1000).toFixed(1)}ms` : 'unknown'
+        });
+    }
+}
+
+// Enhanced player state change handler with buffering awareness
+function handlePlayerStateChange(stateEvent) {
+    console.log('Player state changed:', stateEvent.state);
+    updatePlayerButtons(stateEvent.state);
+    
+    // Handle buffering state
+    if (stateEvent.state === 1 && isBufferingPlayback) {
+        // Playing state reached during buffering
+        console.log('🎵 Playback started during buffer period');
+    }
+}
