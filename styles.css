@@ -666,54 +666,46 @@ body {
 #alphaTab {
     width: 100%;
     height: 500px;
-    border: 2px solid #8B4513;
-    border-radius: 8px;
-    background: #fff;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    overflow: auto;
-    position: relative;
-    transition: all 0.2s ease;
+    border: 2px solid #ddd;
+    background: #fafafa;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
 }
 
+/* Removed touch functionality to prevent audio glitching
 #alphaTab:hover {
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-    border-color: #A0522D;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-color: #007bff;
 }
 
-/* Touch feedback for mobile */
 #alphaTab:active {
-    transform: scale(0.995);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    transform: scale(0.998);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
-/* Add subtle hint for touch functionality */
 #alphaTab::before {
     content: "👆 Tap to play/pause";
     position: absolute;
     top: 10px;
     right: 10px;
-    background: rgba(139, 69, 19, 0.9);
+    background: rgba(0, 123, 255, 0.9);
     color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 1000;
     opacity: 0;
     transition: opacity 0.3s ease;
     pointer-events: none;
-    z-index: 10;
 }
 
-/* Show hint on mobile devices */
 @media (max-width: 768px) {
     #alphaTab::before {
         opacity: 0.8;
     }
-    
-    #alphaTab:active::before {
-        opacity: 1;
-        background: rgba(160, 82, 45, 0.9);
-    }
 }
+*/
 
 /* Horizontal Playback Controls */
 .horizontal-controls {

@@ -110,7 +110,7 @@ function initializeAlphaTab() {
             updateTrackInfo(score);
             updateScoreForPrint(score);
             enablePlayerControls(true);
-            setupScoreTouchControls(); // Enable touch/click play/pause on score
+            // setupScoreTouchControls(); // DISABLED - Enable touch/click play/pause on score (caused audio glitching)
             // Don't call track control functions here - let AlphaTab render all tracks by default
         });
         
@@ -2320,38 +2320,41 @@ const hideAllBtn = document.getElementById('hideAllTracks');
 const unmuteAllBtn = document.getElementById('unmuteAllTracks');
 const unsoloAllBtn = document.getElementById('unsoloAllTracks');
 
-// Add touch/click functionality to score for play/pause
+// Touch control functions (DISABLED - caused audio glitching)
 function setupScoreTouchControls() {
-    const alphaTabContainer = document.getElementById('alphaTab');
+    // Disabled to prevent audio glitching
+    // const scoreElement = document.querySelector('#alphaTab');
+    // if (!scoreElement) {
+    //     console.log('Score element not found for touch controls');
+    //     return;
+    // }
     
-    if (alphaTabContainer) {
-        // Add touch and click event listeners
-        alphaTabContainer.addEventListener('touchend', handleScoreTouch, { passive: true });
-        alphaTabContainer.addEventListener('click', handleScoreClick);
-        
-        // Add visual feedback for touch
-        alphaTabContainer.style.cursor = 'pointer';
-        alphaTabContainer.style.userSelect = 'none';
-        alphaTabContainer.style.webkitUserSelect = 'none';
-        alphaTabContainer.style.webkitTouchCallout = 'none';
-    }
+    // console.log('Setting up score touch controls');
+    
+    // // Touch events for mobile
+    // scoreElement.addEventListener('touchend', handleScoreTouch, { passive: true });
+    
+    // // Click events for desktop
+    // scoreElement.addEventListener('click', handleScoreClick);
+    
+    console.log('Touch controls disabled to prevent audio glitching');
 }
 
 function handleScoreTouch(event) {
-    // Prevent default touch behavior
-    event.preventDefault();
-    
-    // Only handle single touch
-    if (event.changedTouches && event.changedTouches.length === 1) {
-        togglePlayPause();
-    }
+    // Disabled
+    // event.preventDefault();
+    // if (event.touches.length === 0 && event.changedTouches.length === 1) {
+    //     console.log('Score touched - attempting toggle');
+    //     togglePlayPause();
+    // }
 }
 
 function handleScoreClick(event) {
-    // Only handle left clicks and avoid interfering with other interactions
-    if (event.button === 0 && !event.ctrlKey && !event.shiftKey && !event.altKey) {
-        togglePlayPause();
-    }
+    // Disabled
+    // if (event.button === 0) { // Left click only
+    //     console.log('Score clicked - attempting toggle');
+    //     togglePlayPause();
+    // }
 }
 
 function togglePlayPause() {
