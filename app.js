@@ -1602,6 +1602,9 @@ async function loadGpFilesFromDirectory() {
         { name: 'Pentatonic_Exercises.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
         { name: 'Minor_Pentatonic_Patterns.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
         
+        // Chord Progressions
+        { name: '12 Bar Blues in E.gp', category: 'chord-progressions', folder: 'Chord Progressions' },
+        
         // Songs
         { name: 'Achy Breaky.gp', category: 'songs', folder: 'Songs' },
         { name: 'Beethoven-Bagatelle_no_25-Fur_Elise.gp', category: 'songs', folder: 'Songs' }
