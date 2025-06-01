@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Open+Sans:wght@300;400;500;600;700&display=swap');
 
 * {
     margin: 0;
@@ -7,8 +7,8 @@
 }
 
 body {
-    font-family: 'Inter', sans-serif;
-    background: linear-gradient(135deg, #8B4513 0%, #CD853F  50%, #D2691E 100%);
+    font-family: 'Open Sans', sans-serif;
+    background: linear-gradient(135deg, #FF8C00 0%, #D2691E 50%, #FF7F50 100%);
     min-height: 100vh;
     color: #2c2c2c;
 }
@@ -26,7 +26,7 @@ body {
 }
 
 .header {
-    background: linear-gradient(135deg, #8B4513 0%, #CD853F 50%, #D2691E 100%);
+    background: linear-gradient(135deg, #FF8C00 0%, #D2691E 50%, #FF7F50 100%);
     color: white;
     padding: 40px 30px;
     text-align: center;
@@ -63,6 +63,10 @@ body {
     z-index: 1;
 }
 
+.header .brand-text {
+    margin-top: 15px;
+}
+
 /* File Input Section */
 .file-section {
     padding: 30px;
@@ -95,7 +99,7 @@ body {
     align-items: center;
     gap: 12px;
     padding: 16px 28px;
-    background: linear-gradient(135deg, #8B4513 0%, #654321 100%);
+    background: linear-gradient(135deg, #FF8C00 0%, #D2691E 100%);
     color: white;
     border: none;
     border-radius: 15px;
@@ -103,7 +107,7 @@ body {
     font-size: 16px;
     font-weight: 600;
     transition: all 0.3s ease;
-    box-shadow: 0 6px 20px rgba(139, 69, 19, 0.3);
+    box-shadow: 0 6px 20px rgba(255, 140, 0, 0.3);
     position: relative;
     overflow: hidden;
     min-width: 200px;
@@ -128,8 +132,8 @@ body {
 
 .file-input-label:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(139, 69, 19, 0.4);
-    background: linear-gradient(135deg, #A0522D 0%, #8B4513 100%);
+    box-shadow: 0 8px 25px rgba(255, 140, 0, 0.4);
+    background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
 }
 
 .file-input-label:active {
@@ -143,7 +147,7 @@ body {
 }
 
 .file-input-text {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-weight: 600;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
@@ -155,8 +159,8 @@ body {
 }
 
 .file-input-container.has-file .file-input-label:hover {
-    background: linear-gradient(135deg, #A0522D 0%, #8B4513 100%);
-    box-shadow: 0 8px 25px rgba(139, 69, 19, 0.4);
+    background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
+    box-shadow: 0 8px 25px rgba(255, 140, 0, 0.4);
     color: white;
 }
 
@@ -647,7 +651,7 @@ body {
     padding: 20px 25px;
     border-radius: 12px;
     box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
-    font-family: 'Inter', sans-serif;
+    font-family: 'Open Sans', sans-serif;
 }
 
 /* AlphaTab Play Cursor Styling - Subtle */
@@ -917,7 +921,7 @@ body {
     text-align: center;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
     min-width: 45px;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     position: relative;
     z-index: 1;
 }
@@ -1015,7 +1019,7 @@ body {
     border: 2px solid #e0e0e0;
     border-radius: 25px;
     font-size: 14px;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     transition: all 0.3s ease;
     background: white;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -1062,7 +1066,7 @@ body {
     cursor: pointer;
     font-size: 14px;
     font-weight: 600;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
@@ -1106,7 +1110,7 @@ body {
     font-size: 14px;
     font-weight: 600;
     color: #666;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Open Sans', sans-serif;
 }
 
 .sort-select {
@@ -1114,7 +1118,7 @@ body {
     border: 2px solid #e0e0e0;
     border-radius: 8px;
     font-size: 14px;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     background: white;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -1187,7 +1191,7 @@ body {
     font-weight: 600;
     color: #333;
     font-size: 15px;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Open Sans', sans-serif;
 }
 
 .file-meta {
@@ -1669,7 +1673,7 @@ body {
     text-align: center;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
     min-width: 45px;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     position: relative;
     z-index: 1;
 } 

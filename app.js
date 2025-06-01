@@ -2393,17 +2393,18 @@ function showMobileControlPopup(event) {
     popup.id = 'mobileControlPopup';
     popup.style.cssText = `
         position: fixed;
-        left: ${Math.min(touchX - 75, window.innerWidth - 160)}px;
-        top: ${Math.max(touchY - 40, 20)}px;
-        background: rgba(0, 0, 0, 0.9);
-        border-radius: 25px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(135deg, #FF8C00, #D2691E);
+        border-radius: 20px;
         padding: 8px;
         display: flex;
         gap: 8px;
         z-index: 3000;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 12px 40px rgba(255, 140, 0, 0.6);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 140, 0, 0.4);
         animation: popupFadeIn 0.2s ease-out;
     `;
     
@@ -2439,8 +2440,8 @@ function showMobileControlPopup(event) {
                 height: 50px;
                 border: none;
                 border-radius: 50%;
-                background: rgba(139, 69, 19, 0.8);
-                color: white;
+                background: rgba(255, 140, 0, 0.85);
+                color: #FFFFFF;
                 font-size: 20px;
                 display: flex;
                 align-items: center;
@@ -2448,47 +2449,55 @@ function showMobileControlPopup(event) {
                 cursor: pointer;
                 transition: all 0.2s ease;
                 backdrop-filter: blur(5px);
-                border: 1px solid rgba(255, 140, 0, 0.3);
+                border: 1px solid rgba(255, 140, 0, 0.4);
+                box-shadow: 0 4px 15px rgba(255, 140, 0, 0.3);
             }
             
             .mobile-control-btn:hover,
             .mobile-control-btn:active {
-                background: rgba(160, 82, 45, 0.9);
+                background: rgba(255, 140, 0, 0.9);
                 transform: scale(1.1);
-                border: 1px solid rgba(255, 140, 0, 0.5);
+                border: 1px solid rgba(255, 140, 0, 0.6);
+                box-shadow: 0 6px 20px rgba(255, 140, 0, 0.4);
             }
             
             .mobile-control-btn.play {
-                background: rgba(255, 140, 0, 0.8);
-                border: 1px solid rgba(139, 69, 19, 0.3);
+                background: linear-gradient(135deg, #FF8C00, #FF7F50);
+                border: 1px solid rgba(255, 140, 0, 0.4);
+                color: #FFFFFF;
             }
             
             .mobile-control-btn.play:hover,
             .mobile-control-btn.play:active {
-                background: rgba(255, 165, 0, 0.9);
-                border: 1px solid rgba(139, 69, 19, 0.5);
+                background: linear-gradient(135deg, #FFA500, #FF8C00);
+                border: 1px solid rgba(255, 140, 0, 0.6);
+                box-shadow: 0 6px 20px rgba(255, 140, 0, 0.4);
             }
             
             .mobile-control-btn.pause {
-                background: rgba(160, 82, 45, 0.8);
-                border: 1px solid rgba(255, 140, 0, 0.3);
+                background: linear-gradient(135deg, #D2691E, #CD853F);
+                border: 1px solid rgba(255, 140, 0, 0.4);
+                color: #FFFFFF;
             }
             
             .mobile-control-btn.pause:hover,
             .mobile-control-btn.pause:active {
-                background: rgba(139, 69, 19, 0.9);
-                border: 1px solid rgba(255, 140, 0, 0.5);
+                background: linear-gradient(135deg, #FF8C00, #D2691E);
+                border: 1px solid rgba(255, 140, 0, 0.6);
+                box-shadow: 0 6px 20px rgba(255, 140, 0, 0.4);
             }
             
             .mobile-control-btn.stop {
-                background: rgba(101, 67, 33, 0.8);
-                border: 1px solid rgba(160, 82, 45, 0.3);
+                background: linear-gradient(135deg, #B8860B, #DAA520);
+                border: 1px solid rgba(255, 140, 0, 0.4);
+                color: #FFFFFF;
             }
             
             .mobile-control-btn.stop:hover,
             .mobile-control-btn.stop:active {
-                background: rgba(139, 69, 19, 0.9);
-                border: 1px solid rgba(160, 82, 45, 0.5);
+                background: linear-gradient(135deg, #D2691E, #B8860B);
+                border: 1px solid rgba(255, 140, 0, 0.6);
+                box-shadow: 0 6px 20px rgba(255, 140, 0, 0.4);
             }
         `;
         document.head.appendChild(style);
@@ -2586,9 +2595,9 @@ function pauseAtTouchedPosition() {
     if (window.touchedBeatPosition !== undefined) {
         api.tickPosition = window.touchedBeatPosition;
         console.log('Position set to touched beat:', window.touchedBeatPosition);
-        showMobileMessage('⏸️ Paused at touched position', '#A0522D');
+        showMobileMessage('⏸️ Paused at touched position', '#FF8C00');
     } else {
-        showMobileMessage('⏸️ Paused', '#A0522D');
+        showMobileMessage('⏸️ Paused', '#FF8C00');
     }
 }
 
@@ -2614,7 +2623,7 @@ function stopPlayback() {
     
     console.log('Stopping playback');
     api.stop();
-    showMobileMessage('⏹️ Stopped', '#8B4513');
+    showMobileMessage('⏹️ Stopped', '#D2691E');
 }
 
 function handleScoreClick(event) {
