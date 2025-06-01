@@ -585,11 +585,11 @@ function createTrackControls(score) {
         trackItem.innerHTML = `
             <div class="track-header">
                 <div class="track-title-section">
-                    <div class="track-name">${trackName}</div>
+                <div class="track-name">${trackName}</div>
                     <div class="track-program-info">
                         <span class="instrument-name">${instrumentInfo}</span>
-                    </div>
-                </div>
+            </div>
+            </div>
                 <div class="track-buttons">
                     <button class="visibility-btn active" data-action="visibility" data-track="${index}" title="Show/Hide Track">
                         👁️
@@ -1605,12 +1605,12 @@ async function loadGpFilesFromDirectory() {
         // Songs
         { name: 'Achy Breaky.gp', category: 'songs', folder: 'Songs' },
         { name: 'Beethoven-Bagatelle_no_25-Fur_Elise.gp', category: 'songs', folder: 'Songs' }
-    ];
-    
-    // Clear existing files
-    gpFiles = [];
-    filteredFiles = [];
-    
+        ];
+        
+        // Clear existing files
+        gpFiles = [];
+        filteredFiles = [];
+        
     // Add each file to the list
     gpFilesList.forEach((fileInfo, index) => {
         const newFile = {
@@ -2439,7 +2439,7 @@ function showMobileControlPopup(event) {
                 height: 50px;
                 border: none;
                 border-radius: 50%;
-                background: rgba(255, 255, 255, 0.15);
+                background: rgba(139, 69, 19, 0.8);
                 color: white;
                 font-size: 20px;
                 display: flex;
@@ -2448,25 +2448,47 @@ function showMobileControlPopup(event) {
                 cursor: pointer;
                 transition: all 0.2s ease;
                 backdrop-filter: blur(5px);
-                border: 1px solid rgba(255,255,255,0.2);
+                border: 1px solid rgba(255, 140, 0, 0.3);
             }
             
             .mobile-control-btn:hover,
             .mobile-control-btn:active {
-                background: rgba(255, 255, 255, 0.25);
+                background: rgba(160, 82, 45, 0.9);
                 transform: scale(1.1);
+                border: 1px solid rgba(255, 140, 0, 0.5);
             }
             
             .mobile-control-btn.play {
-                background: rgba(76, 175, 80, 0.8);
+                background: rgba(255, 140, 0, 0.8);
+                border: 1px solid rgba(139, 69, 19, 0.3);
+            }
+            
+            .mobile-control-btn.play:hover,
+            .mobile-control-btn.play:active {
+                background: rgba(255, 165, 0, 0.9);
+                border: 1px solid rgba(139, 69, 19, 0.5);
             }
             
             .mobile-control-btn.pause {
-                background: rgba(255, 152, 0, 0.8);
+                background: rgba(160, 82, 45, 0.8);
+                border: 1px solid rgba(255, 140, 0, 0.3);
+            }
+            
+            .mobile-control-btn.pause:hover,
+            .mobile-control-btn.pause:active {
+                background: rgba(139, 69, 19, 0.9);
+                border: 1px solid rgba(255, 140, 0, 0.5);
             }
             
             .mobile-control-btn.stop {
-                background: rgba(244, 67, 54, 0.8);
+                background: rgba(101, 67, 33, 0.8);
+                border: 1px solid rgba(160, 82, 45, 0.3);
+            }
+            
+            .mobile-control-btn.stop:hover,
+            .mobile-control-btn.stop:active {
+                background: rgba(139, 69, 19, 0.9);
+                border: 1px solid rgba(160, 82, 45, 0.5);
             }
         `;
         document.head.appendChild(style);
@@ -2564,9 +2586,9 @@ function pauseAtTouchedPosition() {
     if (window.touchedBeatPosition !== undefined) {
         api.tickPosition = window.touchedBeatPosition;
         console.log('Position set to touched beat:', window.touchedBeatPosition);
-        showMobileMessage('⏸️ Paused at touched position', '#FF9800');
+        showMobileMessage('⏸️ Paused at touched position', '#A0522D');
     } else {
-        showMobileMessage('⏸️ Paused', '#FF9800');
+        showMobileMessage('⏸️ Paused', '#A0522D');
     }
 }
 
@@ -2579,9 +2601,9 @@ function playFromTouchedPosition() {
     if (window.touchedBeatPosition !== undefined) {
         api.tickPosition = window.touchedBeatPosition;
         console.log('Position set to touched beat:', window.touchedBeatPosition);
-        showMobileMessage('▶️ Playing from touched position', '#4CAF50');
+        showMobileMessage('▶️ Playing from touched position', '#FF8C00');
     } else {
-        showMobileMessage('▶️ Playing', '#4CAF50');
+        showMobileMessage('▶️ Playing', '#FF8C00');
     }
     
     api.play();
@@ -2592,7 +2614,7 @@ function stopPlayback() {
     
     console.log('Stopping playback');
     api.stop();
-    showMobileMessage('⏹️ Stopped', '#F44336');
+    showMobileMessage('⏹️ Stopped', '#8B4513');
 }
 
 function handleScoreClick(event) {
