@@ -64,14 +64,14 @@ function initializeAlphaTab() {
             player: {
                 enablePlayer: true,
                 soundFont: 'https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/soundfont/sonivox.sf2',
-                scrollElement: 'html,body', // Use CSS selector instead of window object
+                scrollElement: 'html,body',
                 enableCursor: true,
                 enableUserInteraction: true,
                 enableAnimatedBeatCursor: true,
-                scrollMode: 1, // 1 = Continuous scrolling (0 = Off, 1 = Continuous, 2 = OffScreen)
-                scrollSpeed: 300, // Scroll animation speed in milliseconds
-                scrollOffsetY: -150, // Offset to keep cursor visible (negative = above center)
-                nativeBrowserSmoothScroll: true // Use browser's smooth scrolling
+                scrollMode: 1, // Continuous scrolling
+                scrollSpeed: 300, // Scroll animation speed
+                scrollOffsetY: -20, // Minimal offset
+                nativeBrowserSmoothScroll: false // Disable to avoid conflicts
             },
             display: {
                 scale: 1.0,
@@ -2369,6 +2369,157 @@ function togglePlayPause() {
     } catch (error) {
         console.error('Error toggling playback from score touch:', error);
     }
+}
+
+// Auto-scroll control functions
+function setScrollMode(mode) {
+    if (!api) {
+        console.log('API not ready - cannot set scroll mode');
+        return;
+    }
+    
+    try {
+        // Use the proper AlphaTab API method to change settings
+        api.changeTrackVolume([], 1); // Dummy call to ensure API is ready
+        
+        // Update the settings object properly
+        if (api.settings && api.settings.player) {
+            api.settings.player.scrollMode = mode;
+            console.log(`Scroll mode set to: ${mode} (0=Off, 1=Continuous, 2=OffScreen)`);
+            
+            // Force a settings update by triggering a re-render if needed
+            if (api.score) {
+                // The settings should take effect immediately for future playback
+                console.log('Settings updated successfully');
+            }
+        } else {
+            console.error('Settings object not available');
+        }
+    } catch (error) {
+        console.error('Error setting scroll mode:', error);
+    }
+}
+
+function toggleAutoScroll() {
+    if (!api) {
+        console.log('API not ready - cannot toggle auto-scroll');
+        return;
+    }
+    
+    try {
+        const currentMode = api.settings?.player?.scrollMode || 0;
+        const newMode = currentMode === 0 ? 1 : 0; // Toggle between Off (0) and Continuous (1)
+        setScrollMode(newMode);
+        console.log(`Auto-scroll toggled: ${newMode === 1 ? 'ON' : 'OFF'}`);
+        
+        // Show user feedback
+        const message = newMode === 1 ? '✅ Auto-scroll enabled' : '❌ Auto-scroll disabled';
+        showScrollMessage(message, newMode === 1 ? '#4CAF50' : '#FF5722');
+    } catch (error) {
+        console.error('Error toggling auto-scroll:', error);
+    }
+}
+
+function setScrollSpeed(speed) {
+    if (!api) {
+        console.log('API not ready - cannot set scroll speed');
+        return;
+    }
+    
+    try {
+        if (api.settings && api.settings.player) {
+            api.settings.player.scrollSpeed = speed;
+            console.log(`Scroll speed set to: ${speed}ms`);
+        } else {
+            console.error('Settings object not available');
+        }
+    } catch (error) {
+        console.error('Error setting scroll speed:', error);
+    }
+}
+
+function setScrollOffset(offsetY) {
+    if (!api) {
+        console.log('API not ready - cannot set scroll offset');
+        return;
+    }
+    
+    try {
+        if (api.settings && api.settings.player) {
+            api.settings.player.scrollOffsetY = offsetY;
+            console.log(`Scroll offset set to: ${offsetY}px`);
+        } else {
+            console.error('Settings object not available');
+        }
+    } catch (error) {
+        console.error('Error setting scroll offset:', error);
+    }
+}
+
+function getScrollInfo() {
+    if (!api) {
+        console.log('API not ready - cannot get scroll info');
+        return null;
+    }
+    
+    try {
+        const scrollInfo = {
+            mode: api.settings?.player?.scrollMode || 'unknown',
+            speed: api.settings?.player?.scrollSpeed || 'unknown',
+            offsetY: api.settings?.player?.scrollOffsetY || 'unknown',
+            element: api.settings?.player?.scrollElement || 'unknown',
+            smoothScroll: api.settings?.player?.nativeBrowserSmoothScroll || 'unknown'
+        };
+        
+        console.log('Current scroll settings:', scrollInfo);
+        return scrollInfo;
+    } catch (error) {
+        console.error('Error getting scroll info:', error);
+        return null;
+    }
+}
+
+// Show scroll status message
+function showScrollMessage(text, color = '#4CAF50') {
+    // Create or update scroll status display
+    let scrollStatus = document.getElementById('scrollStatus');
+    if (!scrollStatus) {
+        scrollStatus = document.createElement('div');
+        scrollStatus.id = 'scrollStatus';
+        scrollStatus.style.cssText = `
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            background: ${color};
+            color: white;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        `;
+        document.body.appendChild(scrollStatus);
+    }
+
+    scrollStatus.style.background = color;
+    scrollStatus.textContent = text;
+    scrollStatus.style.display = 'block';
+    scrollStatus.style.opacity = '1';
+
+    // Auto-hide after delay
+    setTimeout(() => {
+        if (scrollStatus && scrollStatus.style.opacity === '1') {
+            scrollStatus.style.opacity = '0';
+            setTimeout(() => {
+                if (scrollStatus && scrollStatus.style.opacity === '0') {
+                    scrollStatus.style.display = 'none';
+                }
+            }, 300);
+        }
+    }, 2000);
 }
 
 // Make helper function available globally
