@@ -110,7 +110,7 @@ function initializeAlphaTab() {
             updateTrackInfo(score);
             updateScoreForPrint(score);
             enablePlayerControls(true);
-            // setupScoreTouchControls(); // DISABLED - Enable touch/click play/pause on score (caused audio glitching)
+            setupScoreTouchControls(); // Enable mobile touch controls for play/pause on score
             // Don't call track control functions here - let AlphaTab render all tracks by default
         });
         
@@ -2320,41 +2320,97 @@ const hideAllBtn = document.getElementById('hideAllTracks');
 const unmuteAllBtn = document.getElementById('unmuteAllTracks');
 const unsoloAllBtn = document.getElementById('unsoloAllTracks');
 
-// Touch control functions (DISABLED - caused audio glitching)
+// Mobile touch control functions for pause/play from touch position
 function setupScoreTouchControls() {
-    // Disabled to prevent audio glitching
-    // const scoreElement = document.querySelector('#alphaTab');
-    // if (!scoreElement) {
-    //     console.log('Score element not found for touch controls');
-    //     return;
-    // }
+    const scoreElement = document.querySelector('#alphaTab');
+    if (!scoreElement) {
+        console.log('Score element not found for touch controls');
+        return;
+    }
     
-    // console.log('Setting up score touch controls');
+    console.log('Setting up mobile score touch controls');
     
-    // // Touch events for mobile
-    // scoreElement.addEventListener('touchend', handleScoreTouch, { passive: true });
+    // Track mobile device detection
+    const isMobile = () => window.innerWidth <= 768 || 'ontouchstart' in window;
     
-    // // Click events for desktop
-    // scoreElement.addEventListener('click', handleScoreClick);
+    // Use AlphaTab's beatMouseDown event for precise position detection
+    if (api) {
+        api.beatMouseDown.on((beat) => {
+            if (isMobile() && beat) {
+                handleMobileBeatTouch(beat);
+            }
+        });
+    }
     
-    console.log('Touch controls disabled to prevent audio glitching');
+    // Fallback touch event for mobile devices
+    scoreElement.addEventListener('touchend', (event) => {
+        if (isMobile()) {
+            event.preventDefault();
+            handleMobileScoreTouch(event);
+        }
+    }, { passive: false });
 }
 
-function handleScoreTouch(event) {
-    // Disabled
-    // event.preventDefault();
-    // if (event.touches.length === 0 && event.changedTouches.length === 1) {
-    //     console.log('Score touched - attempting toggle');
-    //     togglePlayPause();
-    // }
+function handleMobileBeatTouch(beat) {
+    if (!api || !beat) return;
+    
+    console.log('Mobile beat touch detected:', beat);
+    
+    const isCurrentlyPlaying = api.playerState === 1; // PlayerState.Playing
+    
+    if (isCurrentlyPlaying) {
+        // If playing, pause at the touched position
+        console.log('Pausing playback at touched beat');
+        api.pause();
+        
+        // Set position to the touched beat
+        if (beat.absolutePlaybackStart !== undefined) {
+            api.tickPosition = beat.absolutePlaybackStart;
+            console.log('Position set to tick:', beat.absolutePlaybackStart);
+        }
+        
+        showMobileMessage('⏸️ Paused at touched position', '#FF9800');
+    } else {
+        // If not playing, start playing from the touched position
+        console.log('Starting playback from touched beat');
+        
+        // Set position to the touched beat
+        if (beat.absolutePlaybackStart !== undefined) {
+            api.tickPosition = beat.absolutePlaybackStart;
+            console.log('Position set to tick:', beat.absolutePlaybackStart);
+        }
+        
+        // Start playback
+        api.play();
+        showMobileMessage('▶️ Playing from touched position', '#4CAF50');
+    }
+}
+
+function handleMobileScoreTouch(event) {
+    // Fallback for when beat detection doesn't work
+    if (!api) return;
+    
+    const isCurrentlyPlaying = api.playerState === 1; // PlayerState.Playing
+    
+    if (isCurrentlyPlaying) {
+        console.log('Mobile touch: Pausing playback');
+        api.pause();
+        showMobileMessage('⏸️ Paused', '#FF9800');
+    } else {
+        console.log('Mobile touch: Resuming playback');
+        api.play();
+        showMobileMessage('▶️ Playing', '#4CAF50');
+    }
 }
 
 function handleScoreClick(event) {
-    // Disabled
-    // if (event.button === 0) { // Left click only
-    //     console.log('Score clicked - attempting toggle');
-    //     togglePlayPause();
-    // }
+    // Desktop behavior - only respond to double-click to avoid conflicts
+    const isMobile = () => window.innerWidth <= 768 || 'ontouchstart' in window;
+    
+    if (!isMobile() && event.detail === 2) { // Double-click on desktop
+        console.log('Desktop double-click detected - toggling playback');
+        togglePlayPause();
+    }
 }
 
 function togglePlayPause() {
@@ -2365,10 +2421,58 @@ function togglePlayPause() {
     
     try {
         api.playPause();
-        console.log('Score touch: Toggled playback');
+        console.log('Toggled playback');
     } catch (error) {
-        console.error('Error toggling playback from score touch:', error);
+        console.error('Error toggling playback:', error);
     }
+}
+
+// Show mobile-specific messages
+function showMobileMessage(text, color = '#4CAF50') {
+    // Create or update mobile message display
+    let mobileMessage = document.getElementById('mobileMessage');
+    if (!mobileMessage) {
+        mobileMessage = document.createElement('div');
+        mobileMessage.id = 'mobileMessage';
+        mobileMessage.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: ${color};
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            z-index: 2000;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            text-align: center;
+            min-width: 200px;
+        `;
+        document.body.appendChild(mobileMessage);
+    }
+
+    mobileMessage.style.background = color;
+    mobileMessage.textContent = text;
+    mobileMessage.style.display = 'block';
+    mobileMessage.style.opacity = '1';
+    mobileMessage.style.transform = 'translate(-50%, -50%) scale(1)';
+
+    // Auto-hide after delay
+    setTimeout(() => {
+        if (mobileMessage && mobileMessage.style.opacity === '1') {
+            mobileMessage.style.opacity = '0';
+            mobileMessage.style.transform = 'translate(-50%, -50%) scale(0.9)';
+            setTimeout(() => {
+                if (mobileMessage && mobileMessage.style.opacity === '0') {
+                    mobileMessage.style.display = 'none';
+                }
+            }, 300);
+        }
+    }, 2000);
 }
 
 // Auto-scroll control functions
@@ -2398,128 +2502,6 @@ function setScrollMode(mode) {
     } catch (error) {
         console.error('Error setting scroll mode:', error);
     }
-}
-
-function toggleAutoScroll() {
-    if (!api) {
-        console.log('API not ready - cannot toggle auto-scroll');
-        return;
-    }
-    
-    try {
-        const currentMode = api.settings?.player?.scrollMode || 0;
-        const newMode = currentMode === 0 ? 1 : 0; // Toggle between Off (0) and Continuous (1)
-        setScrollMode(newMode);
-        console.log(`Auto-scroll toggled: ${newMode === 1 ? 'ON' : 'OFF'}`);
-        
-        // Show user feedback
-        const message = newMode === 1 ? '✅ Auto-scroll enabled' : '❌ Auto-scroll disabled';
-        showScrollMessage(message, newMode === 1 ? '#4CAF50' : '#FF5722');
-    } catch (error) {
-        console.error('Error toggling auto-scroll:', error);
-    }
-}
-
-function setScrollSpeed(speed) {
-    if (!api) {
-        console.log('API not ready - cannot set scroll speed');
-        return;
-    }
-    
-    try {
-        if (api.settings && api.settings.player) {
-            api.settings.player.scrollSpeed = speed;
-            console.log(`Scroll speed set to: ${speed}ms`);
-        } else {
-            console.error('Settings object not available');
-        }
-    } catch (error) {
-        console.error('Error setting scroll speed:', error);
-    }
-}
-
-function setScrollOffset(offsetY) {
-    if (!api) {
-        console.log('API not ready - cannot set scroll offset');
-        return;
-    }
-    
-    try {
-        if (api.settings && api.settings.player) {
-            api.settings.player.scrollOffsetY = offsetY;
-            console.log(`Scroll offset set to: ${offsetY}px`);
-        } else {
-            console.error('Settings object not available');
-        }
-    } catch (error) {
-        console.error('Error setting scroll offset:', error);
-    }
-}
-
-function getScrollInfo() {
-    if (!api) {
-        console.log('API not ready - cannot get scroll info');
-        return null;
-    }
-    
-    try {
-        const scrollInfo = {
-            mode: api.settings?.player?.scrollMode || 'unknown',
-            speed: api.settings?.player?.scrollSpeed || 'unknown',
-            offsetY: api.settings?.player?.scrollOffsetY || 'unknown',
-            element: api.settings?.player?.scrollElement || 'unknown',
-            smoothScroll: api.settings?.player?.nativeBrowserSmoothScroll || 'unknown'
-        };
-        
-        console.log('Current scroll settings:', scrollInfo);
-        return scrollInfo;
-    } catch (error) {
-        console.error('Error getting scroll info:', error);
-        return null;
-    }
-}
-
-// Show scroll status message
-function showScrollMessage(text, color = '#4CAF50') {
-    // Create or update scroll status display
-    let scrollStatus = document.getElementById('scrollStatus');
-    if (!scrollStatus) {
-        scrollStatus = document.createElement('div');
-        scrollStatus.id = 'scrollStatus';
-        scrollStatus.style.cssText = `
-            position: fixed;
-            top: 60px;
-            right: 20px;
-            background: ${color};
-            color: white;
-            padding: 12px 18px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            z-index: 1000;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-            font-family: 'Inter', sans-serif;
-        `;
-        document.body.appendChild(scrollStatus);
-    }
-
-    scrollStatus.style.background = color;
-    scrollStatus.textContent = text;
-    scrollStatus.style.display = 'block';
-    scrollStatus.style.opacity = '1';
-
-    // Auto-hide after delay
-    setTimeout(() => {
-        if (scrollStatus && scrollStatus.style.opacity === '1') {
-            scrollStatus.style.opacity = '0';
-            setTimeout(() => {
-                if (scrollStatus && scrollStatus.style.opacity === '0') {
-                    scrollStatus.style.display = 'none';
-                }
-            }, 300);
-        }
-    }, 2000);
 }
 
 // Make helper function available globally
