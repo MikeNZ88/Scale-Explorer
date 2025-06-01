@@ -2328,7 +2328,7 @@ function setupScoreTouchControls() {
         return;
     }
     
-    console.log('Setting up mobile score touch controls');
+    console.log('Setting up mobile score touch controls with popup');
     
     // Track mobile device detection
     const isMobile = () => window.innerWidth <= 768 || 'ontouchstart' in window;
@@ -2356,51 +2356,243 @@ function handleMobileBeatTouch(beat) {
     
     console.log('Mobile beat touch detected:', beat);
     
-    const isCurrentlyPlaying = api.playerState === 1; // PlayerState.Playing
+    // Store the touched beat position for later use
+    window.touchedBeatPosition = beat.absolutePlaybackStart;
     
-    if (isCurrentlyPlaying) {
-        // If playing, pause at the touched position
-        console.log('Pausing playback at touched beat');
-        api.pause();
-        
-        // Set position to the touched beat
-        if (beat.absolutePlaybackStart !== undefined) {
-            api.tickPosition = beat.absolutePlaybackStart;
-            console.log('Position set to tick:', beat.absolutePlaybackStart);
-        }
-        
-        showMobileMessage('⏸️ Paused at touched position', '#FF9800');
-    } else {
-        // If not playing, start playing from the touched position
-        console.log('Starting playback from touched beat');
-        
-        // Set position to the touched beat
-        if (beat.absolutePlaybackStart !== undefined) {
-            api.tickPosition = beat.absolutePlaybackStart;
-            console.log('Position set to tick:', beat.absolutePlaybackStart);
-        }
-        
-        // Start playback
-        api.play();
-        showMobileMessage('▶️ Playing from touched position', '#4CAF50');
-    }
+    // Show the mobile control popup at the touch position
+    showMobileControlPopup(event || { touches: [{ clientX: window.innerWidth / 2, clientY: window.innerHeight / 2 }] });
 }
 
 function handleMobileScoreTouch(event) {
     // Fallback for when beat detection doesn't work
     if (!api) return;
     
-    const isCurrentlyPlaying = api.playerState === 1; // PlayerState.Playing
+    console.log('Mobile score touch detected');
     
+    // Store current position as fallback
+    window.touchedBeatPosition = api.tickPosition || 0;
+    
+    // Show the mobile control popup at the touch position
+    showMobileControlPopup(event);
+}
+
+function showMobileControlPopup(event) {
+    // Remove any existing popup
+    const existingPopup = document.getElementById('mobileControlPopup');
+    if (existingPopup) {
+        existingPopup.remove();
+    }
+    
+    // Get touch position
+    const touch = event.touches ? event.touches[0] || event.changedTouches[0] : event;
+    const touchX = touch ? touch.clientX : window.innerWidth / 2;
+    const touchY = touch ? touch.clientY : window.innerHeight / 2;
+    
+    // Create popup container
+    const popup = document.createElement('div');
+    popup.id = 'mobileControlPopup';
+    popup.style.cssText = `
+        position: fixed;
+        left: ${Math.min(touchX - 75, window.innerWidth - 160)}px;
+        top: ${Math.max(touchY - 40, 20)}px;
+        background: rgba(0, 0, 0, 0.9);
+        border-radius: 25px;
+        padding: 8px;
+        display: flex;
+        gap: 8px;
+        z-index: 3000;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.1);
+        animation: popupFadeIn 0.2s ease-out;
+    `;
+    
+    // Add CSS animation
+    if (!document.getElementById('mobilePopupStyles')) {
+        const style = document.createElement('style');
+        style.id = 'mobilePopupStyles';
+        style.textContent = `
+            @keyframes popupFadeIn {
+                from {
+                    opacity: 0;
+                    transform: scale(0.8);
+                }
+                to {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+            }
+            
+            @keyframes popupFadeOut {
+                from {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+                to {
+                    opacity: 0;
+                    transform: scale(0.8);
+                }
+            }
+            
+            .mobile-control-btn {
+                width: 50px;
+                height: 50px;
+                border: none;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.15);
+                color: white;
+                font-size: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                backdrop-filter: blur(5px);
+                border: 1px solid rgba(255,255,255,0.2);
+            }
+            
+            .mobile-control-btn:hover,
+            .mobile-control-btn:active {
+                background: rgba(255, 255, 255, 0.25);
+                transform: scale(1.1);
+            }
+            
+            .mobile-control-btn.play {
+                background: rgba(76, 175, 80, 0.8);
+            }
+            
+            .mobile-control-btn.pause {
+                background: rgba(255, 152, 0, 0.8);
+            }
+            
+            .mobile-control-btn.stop {
+                background: rgba(244, 67, 54, 0.8);
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    // Determine current playback state
+    const isCurrentlyPlaying = api.playerState === 1; // PlayerState.Playing
+    const isPaused = api.playerState === 2; // PlayerState.Paused
+    
+    // Create control buttons based on current state
     if (isCurrentlyPlaying) {
-        console.log('Mobile touch: Pausing playback');
-        api.pause();
-        showMobileMessage('⏸️ Paused', '#FF9800');
+        // Show pause and stop buttons
+        const pauseBtn = createMobileControlButton('⏸️', 'pause', () => {
+            pauseAtTouchedPosition();
+            hideMobileControlPopup();
+        });
+        
+        const stopBtn = createMobileControlButton('⏹️', 'stop', () => {
+            stopPlayback();
+            hideMobileControlPopup();
+        });
+        
+        popup.appendChild(pauseBtn);
+        popup.appendChild(stopBtn);
     } else {
-        console.log('Mobile touch: Resuming playback');
-        api.play();
+        // Show play button (and stop if paused)
+        const playBtn = createMobileControlButton('▶️', 'play', () => {
+            playFromTouchedPosition();
+            hideMobileControlPopup();
+        });
+        
+        popup.appendChild(playBtn);
+        
+        if (isPaused) {
+            const stopBtn = createMobileControlButton('⏹️', 'stop', () => {
+                stopPlayback();
+                hideMobileControlPopup();
+            });
+            popup.appendChild(stopBtn);
+        }
+    }
+    
+    // Add popup to page
+    document.body.appendChild(popup);
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+        hideMobileControlPopup();
+    }, 3000);
+    
+    // Hide on any other touch outside popup
+    const hideOnTouch = (e) => {
+        if (!popup.contains(e.target)) {
+            hideMobileControlPopup();
+            document.removeEventListener('touchstart', hideOnTouch);
+        }
+    };
+    
+    setTimeout(() => {
+        document.addEventListener('touchstart', hideOnTouch);
+    }, 100);
+}
+
+function createMobileControlButton(icon, className, onClick) {
+    const button = document.createElement('button');
+    button.className = `mobile-control-btn ${className}`;
+    button.textContent = icon;
+    button.addEventListener('click', onClick);
+    button.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        onClick();
+    });
+    return button;
+}
+
+function hideMobileControlPopup() {
+    const popup = document.getElementById('mobileControlPopup');
+    if (popup) {
+        popup.style.animation = 'popupFadeOut 0.2s ease-out';
+        setTimeout(() => {
+            if (popup && popup.parentNode) {
+                popup.remove();
+            }
+        }, 200);
+    }
+}
+
+function pauseAtTouchedPosition() {
+    if (!api) return;
+    
+    console.log('Pausing at touched position');
+    api.pause();
+    
+    // Set position to touched beat if available
+    if (window.touchedBeatPosition !== undefined) {
+        api.tickPosition = window.touchedBeatPosition;
+        console.log('Position set to touched beat:', window.touchedBeatPosition);
+        showMobileMessage('⏸️ Paused at touched position', '#FF9800');
+    } else {
+        showMobileMessage('⏸️ Paused', '#FF9800');
+    }
+}
+
+function playFromTouchedPosition() {
+    if (!api) return;
+    
+    console.log('Playing from touched position');
+    
+    // Set position to touched beat if available
+    if (window.touchedBeatPosition !== undefined) {
+        api.tickPosition = window.touchedBeatPosition;
+        console.log('Position set to touched beat:', window.touchedBeatPosition);
+        showMobileMessage('▶️ Playing from touched position', '#4CAF50');
+    } else {
         showMobileMessage('▶️ Playing', '#4CAF50');
     }
+    
+    api.play();
+}
+
+function stopPlayback() {
+    if (!api) return;
+    
+    console.log('Stopping playback');
+    api.stop();
+    showMobileMessage('⏹️ Stopped', '#F44336');
 }
 
 function handleScoreClick(event) {
