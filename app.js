@@ -387,7 +387,7 @@ function getFileIcon(category) {
 function getCategoryLabel(category) {
     switch (category) {
         case 'scale-exercises':
-            return 'Scale Exercises';
+            return 'Scales';
         case 'licks':
             return 'Licks';
         case 'chord-progressions':
@@ -1631,7 +1631,10 @@ async function loadGpFilesFromDirectory() {
     const gpFilesList = [
         // Scale Exercises
         { name: 'C Major Scale and Arpeggio Exercises.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
-        { name: 'A Minor & C Major Pentatonic Scales.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+        { name: 'A Minor & C Major Pentatonic Scale Shapes.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+        { name: 'E Minor and G Major Pentatonic Scale Shapes.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+        { name: 'Pentatonic_Exercises.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+        { name: 'Minor_Pentatonic_Patterns.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
         { name: 'C Ionian Mode.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
         { name: 'C Dorian Mode.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
         { name: 'C Phrygian Mode.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
@@ -1640,18 +1643,15 @@ async function loadGpFilesFromDirectory() {
         { name: 'C Aeolian Mode.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
         { name: 'C Locrian Mode.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
         { name: 'C Harmonic Minor.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
-        { name: 'C Phrygian Dominant.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+        { name: 'C Phrygian Dominant .gp', category: 'scale-exercises', folder: 'Scale Exercises' },
         { name: 'C Half - Whole Diminished Scale.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
         { name: 'C Whole-Half Diminished Scale.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
 
-        // Licks
-        { name: 'Blues Lick in A.gp', category: 'licks', folder: 'Licks' },
-        { name: 'Blues Lick in E.gp', category: 'licks', folder: 'Licks' },
-        { name: 'Blues Lick in G.gp', category: 'licks', folder: 'Licks' },
-        { name: 'Country Lick in A.gp', category: 'licks', folder: 'Licks' },
-        { name: 'Country Lick in E.gp', category: 'licks', folder: 'Licks' },
-        { name: 'Rock Lick in A.gp', category: 'licks', folder: 'Licks' },
-        { name: 'Rock Lick in E.gp', category: 'licks', folder: 'Licks' },
+        // Arpeggios
+        { name: 'C m7b5 Arpeggio.gp', category: 'arpeggios', folder: 'Arpeggios' },
+        { name: 'C 7 Arpeggio.gp', category: 'arpeggios', folder: 'Arpeggios' },
+        { name: 'C maj7 Arpeggio.gp', category: 'arpeggios', folder: 'Arpeggios' },
+        { name: 'C m7 Arpeggio.gp', category: 'arpeggios', folder: 'Arpeggios' },
 
         // Chord Progressions
         { name: '12 Bar Blues in E.gp', category: 'chord-progressions', folder: 'Chord Progressions' },
