@@ -69,18 +69,21 @@ body {
 
 /* File Input Section */
 .file-section {
-    padding: 30px;
+    padding: 20px 30px;
     background: linear-gradient(to bottom, #fafafa, #f5f5f5);
     border-bottom: 1px solid #e0e0e0;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
+    justify-content: center;
     gap: 15px;
 }
 
 .file-input-container {
     position: relative;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 15px;
 }
 
 .file-input {
@@ -97,20 +100,20 @@ body {
 .file-input-label {
     display: inline-flex;
     align-items: center;
-    gap: 12px;
-    padding: 16px 28px;
+    gap: 8px;
+    padding: 12px 20px;
     background: linear-gradient(135deg, #FF8C00 0%, #D2691E 100%);
     color: white;
     border: none;
-    border-radius: 15px;
+    border-radius: 12px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 600;
     transition: all 0.3s ease;
-    box-shadow: 0 6px 20px rgba(255, 140, 0, 0.3);
+    box-shadow: 0 4px 15px rgba(255, 140, 0, 0.3);
     position: relative;
     overflow: hidden;
-    min-width: 200px;
+    min-width: 180px;
     justify-content: center;
     z-index: 1;
 }
@@ -131,18 +134,18 @@ body {
 }
 
 .file-input-label:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(255, 140, 0, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 140, 0, 0.4);
     background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
 }
 
 .file-input-label:active {
     transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
+    box-shadow: 0 3px 12px rgba(139, 69, 19, 0.3);
 }
 
 .file-input-icon {
-    font-size: 20px;
+    font-size: 16px;
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
 
@@ -154,34 +157,36 @@ body {
 
 .file-input-container.has-file .file-input-label {
     background: linear-gradient(135deg, #8B4513 0%, #654321 100%);
-    box-shadow: 0 6px 20px rgba(139, 69, 19, 0.3);
+    box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
     color: white;
 }
 
 .file-input-container.has-file .file-input-label:hover {
     background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
-    box-shadow: 0 8px 25px rgba(255, 140, 0, 0.4);
+    box-shadow: 0 6px 20px rgba(255, 140, 0, 0.4);
     color: white;
 }
 
 .file-name-display {
-    font-size: 14px;
+    font-size: 13px;
     color: #666;
     font-weight: 500;
-    text-align: center;
-    max-width: 300px;
+    text-align: left;
+    max-width: 200px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     background: white;
-    padding: 8px 16px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 6px 12px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
 }
 
 .file-input-container.has-file .file-name-display {
     color: #28a745;
     font-weight: 600;
+    border-color: #28a745;
 }
 
 /* Track Info */
@@ -209,11 +214,12 @@ body {
 
 /* Track Controls */
 .track-controls {
-    background: #2a2a2a;
+    background: linear-gradient(135deg, #8B4513 0%, #654321 50%, #5D4037 100%);
     border-radius: 8px;
     padding: 20px;
     margin: 20px 0;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 8px rgba(139, 69, 19, 0.3);
+    border: 1px solid rgba(205, 133, 63, 0.3);
 }
 
 .track-controls-header {
@@ -232,6 +238,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .toggle-controls-btn {
@@ -242,10 +249,11 @@ body {
     padding: 5px;
     border-radius: 4px;
     transition: background-color 0.2s;
+    color: white;
 }
 
 .toggle-controls-btn:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.15);
 }
 
 .tracks-grid {
@@ -417,9 +425,9 @@ body {
 
 .bulk-btn {
     padding: 8px 16px;
-    border: 2px solid #8B4513;
-    background: white;
-    color: #8B4513;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
     border-radius: 8px;
     cursor: pointer;
     font-size: 14px;
@@ -427,13 +435,14 @@ body {
     transition: all 0.3s ease;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .bulk-btn:hover {
-    background: #8B4513;
-    color: white;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(139, 69, 19, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Legacy styles for backward compatibility */
@@ -726,16 +735,16 @@ body {
     display: none;
     background: linear-gradient(135deg, #8B4513 0%, #654321 50%, #5D4037 100%);
     backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 25px 35px;
-    margin: 25px 30px;
-    box-shadow: 0 12px 40px rgba(139, 69, 19, 0.4), 
-                0 4px 12px rgba(0, 0, 0, 0.2),
+    border-radius: 15px;
+    padding: 15px 25px;
+    margin: 15px 30px;
+    box-shadow: 0 8px 25px rgba(139, 69, 19, 0.4), 
+                0 3px 8px rgba(0, 0, 0, 0.2),
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
     border: 2px solid rgba(205, 133, 63, 0.3);
     align-items: center;
     justify-content: center;
-    gap: 30px;
+    gap: 20px;
     flex-wrap: wrap;
     position: relative;
     overflow: hidden;
@@ -761,8 +770,8 @@ body {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
     border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
-    width: 56px;
-    height: 56px;
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -772,7 +781,7 @@ body {
     color: white;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3),
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3),
                 inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
@@ -793,8 +802,8 @@ body {
 
 .horizontal-btn:hover:not(:disabled) {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.2) 100%);
-    transform: scale(1.1) translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4),
+    transform: scale(1.05) translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4),
                 inset 0 1px 0 rgba(255, 255, 255, 0.3);
     border-color: rgba(255, 255, 255, 0.5);
 }
@@ -807,7 +816,7 @@ body {
 }
 
 .horizontal-btn .btn-icon {
-    font-size: 22px;
+    font-size: 18px;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
     position: relative;
     z-index: 1;
@@ -815,12 +824,12 @@ body {
 
 .horizontal-divider {
     width: 2px;
-    height: 45px;
+    height: 35px;
     background: linear-gradient(to bottom, 
                 rgba(255, 255, 255, 0.1) 0%, 
                 rgba(255, 255, 255, 0.4) 50%, 
                 rgba(255, 255, 255, 0.1) 100%);
-    margin: 0 15px;
+    margin: 0 10px;
     border-radius: 1px;
     box-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
 }
@@ -829,13 +838,13 @@ body {
 .horizontal-speed {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
-    border-radius: 30px;
-    padding: 15px 25px;
+    border-radius: 25px;
+    padding: 10px 18px;
     border: 2px solid rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(8px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2),
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2),
                 inset 0 1px 0 rgba(255, 255, 255, 0.2);
     position: relative;
     overflow: hidden;
@@ -858,10 +867,10 @@ body {
 
 .volume-icon,
 .speed-icon {
-    font-size: 20px;
+    font-size: 16px;
     color: white;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
-    min-width: 24px;
+    min-width: 20px;
     position: relative;
     z-index: 1;
 }
@@ -869,8 +878,8 @@ body {
 .horizontal-slider {
     -webkit-appearance: none;
     appearance: none;
-    width: 100px;
-    height: 6px;
+    width: 80px;
+    height: 5px;
     background: #8B4513 !important;
     border-radius: 3px;
     outline: none;
@@ -881,8 +890,8 @@ body {
 .horizontal-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     background: #A0522D !important;
     border-radius: 50%;
     cursor: pointer;
@@ -897,8 +906,8 @@ body {
 }
 
 .horizontal-slider::-moz-range-thumb {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     background: #A0522D !important;
     border-radius: 50%;
     cursor: pointer;
@@ -908,7 +917,7 @@ body {
 
 .horizontal-slider::-moz-range-track {
     width: 100%;
-    height: 6px;
+    height: 5px;
     background: #8B4513 !important;
     border-radius: 3px;
     border: none;
@@ -916,11 +925,11 @@ body {
 
 .horizontal-display {
     color: white;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     text-align: center;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
-    min-width: 45px;
+    min-width: 40px;
     font-family: 'Open Sans', sans-serif;
     position: relative;
     z-index: 1;
@@ -1003,8 +1012,25 @@ body {
     font-family: 'Playfair Display', serif;
     font-size: 1.5rem;
     color: #8B4513;
-    font-weight: 600;
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.toggle-library-btn {
+    background: none;
+    border: none;
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    margin-left: auto;
+}
+
+.toggle-library-btn:hover {
+    background-color: rgba(139, 69, 19, 0.1);
 }
 
 .browser-search {
@@ -1357,60 +1383,45 @@ body {
     }
 
     .horizontal-controls {
-        padding: 12px 15px;
-        margin: 10px 15px 5px 15px;
-        gap: 15px;
-        border-radius: 15px;
-        box-shadow: 0 6px 20px rgba(139, 69, 19, 0.3), 
-                    0 2px 6px rgba(0, 0, 0, 0.15);
+        padding: 6px 8px;
+        margin: 6px 10px 3px 10px;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
     }
 
     .horizontal-btn {
-        width: 42px;
-        height: 42px;
-        border-width: 1px;
+        width: 32px;
+        height: 32px;
     }
 
     .horizontal-btn .btn-icon {
-        font-size: 18px;
+        font-size: 14px;
     }
 
     .horizontal-divider {
-        height: 30px;
-        margin: 0 8px;
+        display: none; /* Hide dividers on very small screens */
     }
 
     .horizontal-volume,
     .horizontal-speed {
-        padding: 8px 12px;
-        gap: 8px;
-        border-radius: 20px;
-        border-width: 1px;
-    }
-
-    .volume-icon,
-    .speed-icon {
-        font-size: 16px;
-        min-width: 18px;
+        padding: 4px 8px;
+        gap: 4px;
+        min-width: 120px;
+        justify-content: space-between;
     }
 
     .horizontal-slider {
-        width: 80px;
-        height: 4px;
+        width: 60px;
+        background: #8B4513;
     }
 
     .horizontal-slider::-webkit-slider-thumb {
-        width: 16px;
-        height: 16px;
         background: #A0522D;
-        border-width: 1px;
     }
 
     .horizontal-slider::-moz-range-thumb {
-        width: 16px;
-        height: 16px;
         background: #A0522D;
-        border-width: 1px;
     }
 
     .horizontal-slider::-moz-range-track {
@@ -1419,12 +1430,12 @@ body {
 
     .volume-icon,
     .speed-icon {
-        font-size: 14px;
+        font-size: 12px;
     }
 
     .horizontal-display {
-        font-size: 10px;
-        min-width: 30px;
+        font-size: 9px;
+        min-width: 26px;
     }
 
     /* Make controls stick closer to tab content */
@@ -1443,7 +1454,38 @@ body {
     }
 
     .file-section {
-        padding: 20px 15px;
+        padding: 15px 20px;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .file-input-container {
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+        align-items: center;
+    }
+
+    .file-input-label {
+        width: 100%;
+        max-width: 280px;
+        justify-content: center;
+    }
+
+    .file-name-display {
+        max-width: 250px;
+        text-align: center;
+    }
+
+    .browser-header h3 {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+
+    .toggle-library-btn {
+        align-self: flex-end;
+        margin-left: 0;
     }
 }
 
@@ -1465,20 +1507,20 @@ body {
     }
 
     .horizontal-controls {
-        padding: 8px 10px;
-        margin: 8px 10px 3px 10px;
-        gap: 10px;
+        padding: 6px 8px;
+        margin: 6px 10px 3px 10px;
+        gap: 8px;
         flex-wrap: wrap;
         justify-content: center;
     }
 
     .horizontal-btn {
-        width: 38px;
-        height: 38px;
+        width: 32px;
+        height: 32px;
     }
 
     .horizontal-btn .btn-icon {
-        font-size: 16px;
+        font-size: 14px;
     }
 
     .horizontal-divider {
@@ -1487,14 +1529,14 @@ body {
 
     .horizontal-volume,
     .horizontal-speed {
-        padding: 6px 10px;
-        gap: 6px;
-        min-width: 140px;
+        padding: 4px 8px;
+        gap: 4px;
+        min-width: 120px;
         justify-content: space-between;
     }
 
     .horizontal-slider {
-        width: 70px;
+        width: 60px;
         background: #8B4513;
     }
 
@@ -1512,12 +1554,12 @@ body {
 
     .volume-icon,
     .speed-icon {
-        font-size: 14px;
+        font-size: 12px;
     }
 
     .horizontal-display {
-        font-size: 10px;
-        min-width: 30px;
+        font-size: 9px;
+        min-width: 26px;
     }
 
     /* Stack playback controls and sliders */

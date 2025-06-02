@@ -338,11 +338,14 @@ function createFileItemHTML(file) {
     const icon = getFileIcon(file.category);
     const categoryLabel = getCategoryLabel(file.category);
     
+    // Remove file extension for display (.gp, .gp3, .gp4, .gp5, .gpx, .gp6, .gp7)
+    const displayName = file.name.replace(/\.(gp[3-7x]?|GP[3-7X]?)$/i, '');
+    
     return `
         <div class="file-item" data-file-id="${file.id}">
             <div class="file-icon">${icon}</div>
             <div class="file-info">
-                <div class="file-name">${file.name}</div>
+                <div class="file-name">${displayName}</div>
                 <div class="file-meta">
                     <span class="file-category ${file.category}">${categoryLabel}</span>
                 </div>
@@ -1612,10 +1615,15 @@ async function loadGpFilesFromDirectory() {
         { name: 'C Mixolydian Mode.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
         { name: 'C Aeolian Mode.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
         { name: 'C Locrian Mode.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+        { name: 'C Harmonic Minor.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+        { name: 'C Phrygian Dominant .gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+        { name: 'C Half - Whole Diminished Scale.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+        { name: 'C Whole-Half Diminished Scale.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
         
         // Chord Progressions
         { name: '12 Bar Blues in E.gp', category: 'chord-progressions', folder: 'Chord Progressions' },
         { name: 'I - VI - V - IV in C Major.gp', category: 'chord-progressions', folder: 'Chord Progressions' },
+        { name: 'C Dorian Mode.gp', category: 'chord-progressions', folder: 'Chord Progressions' },
         
         // Songs
         { name: 'Achy Breaky.gp', category: 'songs', folder: 'Songs' },
@@ -2329,11 +2337,26 @@ if (toggleTrackControlsBtn) {
     });
 }
 
-// Initialize bulk control buttons
-const showAllBtn = document.getElementById('showAllTracks');
-const hideAllBtn = document.getElementById('hideAllTracks');
-const unmuteAllBtn = document.getElementById('unmuteAllTracks');
-const unsoloAllBtn = document.getElementById('unsoloAllTracks');
+// Initialize library toggle
+const toggleLibraryBtn = document.getElementById('toggleLibrary');
+const browserContent = document.getElementById('browserContent');
+let libraryVisible = true;
+
+if (toggleLibraryBtn && browserContent) {
+    toggleLibraryBtn.addEventListener('click', () => {
+        libraryVisible = !libraryVisible;
+        
+        if (libraryVisible) {
+            browserContent.style.display = 'block';
+            toggleLibraryBtn.textContent = '🙈';
+            toggleLibraryBtn.title = 'Hide Library';
+        } else {
+            browserContent.style.display = 'none';
+            toggleLibraryBtn.textContent = '👁️';
+            toggleLibraryBtn.title = 'Show Library';
+        }
+    });
+}
 
 // Mobile touch control functions for pause/play from touch position
 function setupScoreTouchControls() {
