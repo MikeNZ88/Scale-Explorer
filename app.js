@@ -1604,6 +1604,7 @@ async function loadGpFilesFromDirectory() {
         
         // Chord Progressions
         { name: '12 Bar Blues in E.gp', category: 'chord-progressions', folder: 'Chord Progressions' },
+        { name: 'I - VI - V - IV in C Major.gp', category: 'chord-progressions', folder: 'Chord Progressions' },
         
         // Songs
         { name: 'Achy Breaky.gp', category: 'songs', folder: 'Songs' },
