@@ -1605,6 +1605,13 @@ async function loadGpFilesFromDirectory() {
         { name: 'C Major Scale and Arpeggio Exercises.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
         { name: 'Pentatonic_Exercises.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
         { name: 'Minor_Pentatonic_Patterns.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+        { name: 'C Ionian Mode.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+        { name: 'C Dorian Mode.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+        { name: 'C Phrygian Mode.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+        { name: 'C Lydian Mode.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+        { name: 'C Mixolydian Mode.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+        { name: 'C Aeolian Mode.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+        { name: 'C Locrian Mode.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
         
         // Chord Progressions
         { name: '12 Bar Blues in E.gp', category: 'chord-progressions', folder: 'Chord Progressions' },
