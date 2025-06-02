@@ -1350,14 +1350,23 @@ body {
 
 /* Print button specific styles */
 .print-preparing {
-    opacity: 0.6;
+    opacity: 0.7;
     pointer-events: none;
 }
 
 .print-preparing::after {
-    content: " (Preparing...)";
-    font-size: 11px;
+    content: "🖨️";
+    animation: pulse 1.5s infinite;
+}
+
+.downloading {
     opacity: 0.7;
+    pointer-events: none;
+}
+
+.downloading::after {
+    content: "💾";
+    animation: pulse 1.5s infinite;
 }
 
 /* Track controls styling */

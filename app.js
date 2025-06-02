@@ -36,9 +36,13 @@ const hideAllTracks = document.getElementById('hideAllTracks');
 const unmuteAllTracks = document.getElementById('unmuteAllTracks');
 const unsoloAllTracks = document.getElementById('unsoloAllTracks');
 
-// Print button
+// Print and download buttons
 const printBtn = document.getElementById('printBtn');
-printBtn.addEventListener('click', printTab);
+const downloadBtn = document.getElementById('downloadBtn');
+
+// Current file tracking for download functionality
+let currentFileData = null;
+let currentFileName = null;
 
 // Initialize AlphaTab
 function initializeAlphaTab() {
@@ -199,12 +203,21 @@ function loadFile(file) {
             lastModified: new Date(file.lastModified)
         });
         
+        // Store file info for download functionality
+        currentFileName = file.name;
+        
         // Read file as ArrayBuffer for better debugging
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
                 const arrayBuffer = e.target.result;
                 console.log('File loaded as ArrayBuffer, size:', arrayBuffer.byteLength);
+                
+                // Store the file data for download functionality
+                currentFileData = new Uint8Array(arrayBuffer);
+                
+                // Enable download button
+                downloadBtn.disabled = false;
                 
                 // Check file header for GP files
                 const headerView = new Uint8Array(arrayBuffer, 0, Math.min(50, arrayBuffer.byteLength));
@@ -420,6 +433,9 @@ async function loadGpFile(fileId) {
 
         console.log('Loading GP file:', file.name);
         
+        // Store file info for download functionality
+        currentFileName = file.name;
+        
         // Show loading state
         const fileItem = document.querySelector(`[data-file-id="${fileId}"]`);
         if (fileItem) {
@@ -439,6 +455,12 @@ async function loadGpFile(fileId) {
         
         const arrayBuffer = await response.arrayBuffer();
         const uint8Array = new Uint8Array(arrayBuffer);
+        
+        // Store the file data for download functionality
+        currentFileData = uint8Array;
+        
+        // Enable download button
+        downloadBtn.disabled = false;
         
         // Create a File object for AlphaTab
         const fileBlob = new File([uint8Array], file.name, {
@@ -550,6 +572,7 @@ function enablePlayerControls(enabled) {
     playBtn.disabled = !enabled;
     pauseBtn.disabled = !enabled;
     stopBtn.disabled = !enabled;
+    // Download button is enabled based on file loading, not player state
     horizontalControls.style.display = enabled ? 'flex' : 'none';
 }
 
@@ -905,6 +928,10 @@ function setupEventListeners() {
     hideAllTracks.addEventListener('click', hideAllTracksFunction);
     unmuteAllTracks.addEventListener('click', unmuteAllTracksFunction);
     unsoloAllTracks.addEventListener('click', unsoloAllTracksFunction);
+    
+    // Print and download button event listeners
+    printBtn.addEventListener('click', printTab);
+    downloadBtn.addEventListener('click', downloadCurrentFile);
     
     // Global keyboard controls
     document.addEventListener('keydown', (e) => {
@@ -2782,4 +2809,105 @@ window.getScrollInfo = getScrollInfo;
 // Touch control functions
 window.setupScoreTouchControls = setupScoreTouchControls;
 window.togglePlayPause = togglePlayPause;
+
+// Print and download button event listeners
+printBtn.addEventListener('click', printTab);
+downloadBtn.addEventListener('click', downloadCurrentFile);
+
+// Download functionality
+function downloadCurrentFile() {
+    console.log('🔽 Download button clicked!', {
+        hasFileData: !!currentFileData,
+        hasFileName: !!currentFileName,
+        fileName: currentFileName,
+        fileDataLength: currentFileData ? currentFileData.length : 0
+    });
+    
+    if (!currentFileData || !currentFileName) {
+        alert('No Guitar Pro file is currently loaded. Please load a file first.');
+        return;
+    }
+
+    try {
+        // Create a blob from the current file data
+        const blob = new Blob([currentFileData], { type: 'application/octet-stream' });
+        
+        // Create a temporary download link
+        const downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(blob);
+        downloadLink.download = currentFileName;
+        
+        // Add visual feedback
+        downloadBtn.classList.add('downloading');
+        downloadBtn.title = 'Downloading...';
+        
+        // Trigger the download
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        
+        // Clean up the object URL
+        URL.revokeObjectURL(downloadLink.href);
+        
+        // Show success message
+        showDownloadMessage(`Downloaded: ${currentFileName}`, '#4CAF50');
+        
+        console.log('File downloaded successfully:', currentFileName);
+        
+    } catch (error) {
+        console.error('Error downloading file:', error);
+        alert('Failed to download the file. Please try again.');
+        showDownloadMessage('Download failed', '#f44336');
+    } finally {
+        // Restore button state
+        setTimeout(() => {
+            downloadBtn.classList.remove('downloading');
+            downloadBtn.title = 'Download Guitar Pro File';
+        }, 1000);
+    }
+}
+
+// Show download status message
+function showDownloadMessage(text, color = '#4CAF50') {
+    // Create or update download message display
+    let downloadMessage = document.getElementById('downloadMessage');
+    if (!downloadMessage) {
+        downloadMessage = document.createElement('div');
+        downloadMessage.id = 'downloadMessage';
+        downloadMessage.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: ${color};
+            color: white;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        `;
+        document.body.appendChild(downloadMessage);
+    }
+
+    downloadMessage.style.background = color;
+    downloadMessage.textContent = text;
+    downloadMessage.style.display = 'block';
+    downloadMessage.style.opacity = '1';
+
+    // Auto-hide after delay
+    setTimeout(() => {
+        if (downloadMessage && downloadMessage.style.opacity === '1') {
+            downloadMessage.style.opacity = '0';
+            setTimeout(() => {
+                if (downloadMessage && downloadMessage.style.opacity === '0') {
+                    downloadMessage.style.display = 'none';
+                }
+            }, 300);
+        }
+    }, 3000);
+}
 
