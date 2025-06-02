@@ -424,8 +424,12 @@ async function loadGpFile(fileId) {
             fileItem.style.pointerEvents = 'none';
         }
 
+        // Properly encode the file path for URLs with spaces and special characters
+        const encodedPath = file.path.split('/').map(segment => encodeURIComponent(segment)).join('/');
+        console.log('Encoded path:', encodedPath);
+
         // Fetch the actual file
-        const response = await fetch(file.path);
+        const response = await fetch(encodedPath);
         if (!response.ok) {
             throw new Error(`Failed to load file: ${response.status} ${response.statusText}`);
         }
