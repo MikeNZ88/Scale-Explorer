@@ -35,15 +35,13 @@
         <!-- GP Files Browser -->
         <div class="gp-files-browser" id="gpFilesBrowser">
             <div class="browser-header">
-                <h3>🎵 GP Files Library
-                    <button id="toggleLibrary" class="toggle-library-btn" title="Hide/Show Library">
-                        🙈
-                    </button>
-                </h3>
                 <div class="browser-search">
                     <input type="text" id="fileSearch" placeholder="Search files..." class="search-input">
                     <span class="search-icon">🔍</span>
                 </div>
+                <button id="toggleLibrary" class="toggle-library-btn" title="Hide/Show Library">
+                    🙈
+                </button>
             </div>
             
             <div class="browser-content" id="browserContent">
@@ -57,13 +55,9 @@
                     </div>
                     
                     <div class="sort-controls">
-                        <label for="sortBy">Sort by:</label>
-                        <select id="sortBy" class="sort-select">
-                            <option value="name">Name (A-Z)</option>
-                            <option value="name-desc">Name (Z-A)</option>
-                            <option value="date">Date Modified</option>
-                            <option value="size">File Size</option>
-                        </select>
+                        <button id="sortToggle" class="sort-toggle-btn" title="Toggle A-Z / Z-A">
+                            A-Z
+                        </button>
                     </div>
                 </div>
                 
@@ -93,8 +87,8 @@
         <div id="trackControls" class="track-controls" style="display: none;">
             <div class="track-controls-header">
                 <h3>Track Controls
-                    <button id="toggleTrackControls" class="toggle-controls-btn" title="Hide/Show Track Controls">
-                        🙈
+                    <button id="toggleTrackControls" class="toggle-controls-btn" title="Show Track Controls">
+                        👁️
                     </button>
                 </h3>
                 <div class="bulk-controls">

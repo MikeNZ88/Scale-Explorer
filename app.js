@@ -271,9 +271,13 @@ function setupFilesBrowserEventListeners() {
     });
     
     // Sort dropdown
-    const sortSelect = document.getElementById('sortBy');
-    sortSelect.addEventListener('change', (e) => {
-        currentSort = e.target.value;
+    const sortToggle = document.getElementById('sortToggle');
+    let isAscending = true; // Track current sort direction
+    
+    sortToggle.addEventListener('click', (e) => {
+        isAscending = !isAscending;
+        currentSort = isAscending ? 'name' : 'name-desc';
+        sortToggle.textContent = isAscending ? 'A-Z' : 'Z-A';
         applyFiltersAndSort();
     });
 }
@@ -517,6 +521,14 @@ function updateTrackInfo(score) {
     createTrackControls(score);
     
     trackInfo.style.display = 'block';
+    
+    // Scroll to track info section to show the selected file title at the top
+    setTimeout(() => {
+        trackInfo.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+        });
+    }, 100); // Small delay to ensure the track info is visible before scrolling
 }
 
 // Extract comprehensive metadata from Guitar Pro file
@@ -2351,18 +2363,27 @@ function handleVolumeChange(event) {
 
 // Initialize track controls toggle
 const toggleTrackControlsBtn = document.getElementById('toggleTrackControls');
-let trackControlsVisible = true;
+const bulkControls = document.querySelector('.bulk-controls');
+let trackControlsVisible = false; // Start hidden by default
 
 if (toggleTrackControlsBtn) {
+    // Set initial state - hidden
+    if (tracksGrid) tracksGrid.style.display = 'none';
+    if (bulkControls) bulkControls.style.display = 'none';
+    toggleTrackControlsBtn.textContent = '👁️';
+    toggleTrackControlsBtn.title = 'Show Track Controls';
+    
     toggleTrackControlsBtn.addEventListener('click', () => {
         trackControlsVisible = !trackControlsVisible;
         
         if (trackControlsVisible) {
-            tracksGrid.style.display = 'grid';
+            if (tracksGrid) tracksGrid.style.display = 'flex';
+            if (bulkControls) bulkControls.style.display = 'flex';
             toggleTrackControlsBtn.textContent = '🙈';
             toggleTrackControlsBtn.title = 'Hide Track Controls';
         } else {
-            tracksGrid.style.display = 'none';
+            if (tracksGrid) tracksGrid.style.display = 'none';
+            if (bulkControls) bulkControls.style.display = 'none';
             toggleTrackControlsBtn.textContent = '👁️';
             toggleTrackControlsBtn.title = 'Show Track Controls';
         }
