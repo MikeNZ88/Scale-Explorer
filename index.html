@@ -119,6 +119,9 @@
                 <button id="downloadBtn" class="horizontal-btn" disabled title="Download Guitar Pro File">
                     <span class="btn-icon">💾</span>
                 </button>
+                <button id="scaleDiagramBtn" class="horizontal-btn" disabled title="Show Scale Diagrams">
+                    <span class="btn-icon">🎸</span>
+                </button>
             </div>
             
             <div class="horizontal-divider"></div>
@@ -143,10 +146,25 @@
             <div id="alphaTab">
             </div>
         </div>
+
+        <!-- Scale Diagram Modal -->
+        <div id="scaleDiagramModal" class="modal scale-diagram-modal">
+            <div class="modal-content scale-diagram-content">
+                <div class="modal-header">
+                    <h2>Scale Diagrams</h2>
+                    <button id="closeScaleDiagramModal" class="close-btn">&times;</button>
+                </div>
+                <div id="scaleDiagramContainer" class="scale-diagram-container">
+                    <!-- Scale diagrams will be generated here -->
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- External Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/alphaTab.js"></script>
+    <script src="fretboard.js"></script>
+    <script src="debug.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

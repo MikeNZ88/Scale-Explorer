@@ -39,10 +39,147 @@ const unsoloAllTracks = document.getElementById('unsoloAllTracks');
 // Print and download buttons
 const printBtn = document.getElementById('printBtn');
 const downloadBtn = document.getElementById('downloadBtn');
+const scaleDiagramBtn = document.getElementById('scaleDiagramBtn');
 
 // Current file tracking for download functionality
 let currentFileData = null;
 let currentFileName = null;
+
+// Comprehensive scale patterns database - MOVED TO TOP TO FIX HOISTING ISSUE
+const scalePatterns = {
+    // Major Scale and Modes
+    'C Major Scale and its Modes Using 1 shape': {
+        patterns: [
+            {
+                name: 'C Ionian (Major)',
+                notes: ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
+                frets: [8, 10, 12, 8, 10, 12, 9, 10, 12, 9, 10, 12, 10, 12, 8, 10, 12],
+                strings: [6, 6, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 1, 1, 1],
+                noteLabels: ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'A', 'B', 'C', 'D', 'E']
+            }
+        ]
+    },
+    'C Ionian Mode': {
+        patterns: [{
+            name: 'C Ionian (Major Scale)',
+            notes: ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
+            frets: [8, 10, 12, 8, 10, 12, 9, 10, 12, 9, 10, 12, 10, 12, 8, 10, 12],
+            strings: [6, 6, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 1, 1, 1],
+            noteLabels: ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'A', 'B', 'C', 'D', 'E']
+        }]
+    },
+    'C Dorian Mode': {
+        patterns: [{
+            name: 'C Dorian',
+            notes: ['C', 'D', 'Eb', 'F', 'G', 'A', 'Bb'],
+            frets: [8, 10, 11, 8, 10, 12, 8, 10, 12, 9, 10, 12, 10, 11, 8, 10, 12],
+            strings: [6, 6, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 1, 1, 1],
+            noteLabels: ['C', 'D', 'Eb', 'F', 'G', 'A', 'Bb', 'C', 'D', 'Eb', 'F', 'G', 'A', 'Bb', 'C', 'D', 'Eb']
+        }]
+    },
+    'C Phrygian Mode': {
+        patterns: [{
+            name: 'C Phrygian',
+            notes: ['C', 'Db', 'Eb', 'F', 'G', 'Ab', 'Bb'],
+            frets: [8, 9, 11, 8, 10, 11, 8, 10, 12, 9, 10, 11, 10, 11, 8, 9, 11],
+            strings: [6, 6, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 1, 1, 1],
+            noteLabels: ['C', 'Db', 'Eb', 'F', 'G', 'Ab', 'Bb', 'C', 'Db', 'Eb', 'F', 'G', 'Ab', 'Bb', 'C', 'Db', 'Eb']
+        }]
+    },
+    'C Lydian Mode': {
+        patterns: [{
+            name: 'C Lydian',
+            notes: ['C', 'D', 'E', 'F#', 'G', 'A', 'B'],
+            frets: [8, 10, 12, 9, 10, 12, 9, 10, 12, 9, 10, 12, 10, 12, 8, 10, 12],
+            strings: [6, 6, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 1, 1, 1],
+            noteLabels: ['C', 'D', 'E', 'F#', 'G', 'A', 'B', 'C', 'D', 'E', 'F#', 'G', 'A', 'B', 'C', 'D', 'E']
+        }]
+    },
+    'C Mixolydian Mode': {
+        patterns: [{
+            name: 'C Mixolydian',
+            notes: ['C', 'D', 'E', 'F', 'G', 'A', 'Bb'],
+            frets: [8, 10, 12, 8, 10, 12, 9, 10, 12, 9, 10, 12, 10, 11, 8, 10, 12],
+            strings: [6, 6, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 1, 1, 1],
+            noteLabels: ['C', 'D', 'E', 'F', 'G', 'A', 'Bb', 'C', 'D', 'E', 'F', 'G', 'A', 'Bb', 'C', 'D', 'E']
+        }]
+    },
+    'C Aeolian Mode': {
+        patterns: [{
+            name: 'C Aeolian (Natural Minor)',
+            notes: ['C', 'D', 'Eb', 'F', 'G', 'Ab', 'Bb'],
+            frets: [8, 10, 11, 8, 10, 11, 8, 10, 12, 9, 10, 11, 10, 11, 8, 10, 11],
+            strings: [6, 6, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 1, 1, 1],
+            noteLabels: ['C', 'D', 'Eb', 'F', 'G', 'Ab', 'Bb', 'C', 'D', 'Eb', 'F', 'G', 'Ab', 'Bb', 'C', 'D', 'Eb']
+        }]
+    },
+    'C Locrian Mode': {
+        patterns: [{
+            name: 'C Locrian',
+            notes: ['C', 'Db', 'Eb', 'F', 'Gb', 'Ab', 'Bb'],
+            frets: [8, 9, 11, 8, 9, 11, 8, 10, 11, 9, 10, 11, 10, 11, 8, 9, 11],
+            strings: [6, 6, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 1, 1, 1],
+            noteLabels: ['C', 'Db', 'Eb', 'F', 'Gb', 'Ab', 'Bb', 'C', 'Db', 'Eb', 'F', 'Gb', 'Ab', 'Bb', 'C', 'Db', 'Eb']
+        }]
+    },
+    // Harmonic Minor and related
+    'C Harmonic Minor': {
+        patterns: [{
+            name: 'C Harmonic Minor',
+            notes: ['C', 'D', 'Eb', 'F', 'G', 'Ab', 'B'],
+            frets: [8, 10, 11, 8, 10, 11, 8, 10, 12, 9, 10, 11, 10, 12, 8, 10, 12],
+            strings: [6, 6, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 1, 1, 1],
+            noteLabels: ['C', 'D', 'Eb', 'F', 'G', 'Ab', 'B', 'C', 'D', 'Eb', 'F', 'G', 'Ab', 'B', 'C', 'D', 'Eb']
+        }]
+    },
+    'C Phrygian Dominant ': {  // Note: includes space to match file
+        patterns: [{
+            name: 'C Phrygian Dominant',
+            notes: ['C', 'Db', 'E', 'F', 'G', 'Ab', 'Bb'],
+            frets: [8, 9, 12, 8, 10, 11, 8, 10, 12, 9, 12, 11, 10, 11, 8, 9, 12],
+            strings: [6, 6, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 1, 1, 1],
+            noteLabels: ['C', 'Db', 'E', 'F', 'G', 'Ab', 'Bb', 'C', 'Db', 'E', 'F', 'G', 'Ab', 'Bb', 'C', 'Db', 'E']
+        }]
+    },
+    // Diminished Scales
+    'C Diminished Scale': {  // NEW - matches the actual file name
+        patterns: [{
+            name: 'C Half-Whole Diminished',
+            notes: ['C', 'Db', 'Eb', 'E', 'F#', 'G', 'A', 'Bb'],
+            frets: [8, 9, 11, 12, 9, 10, 12, 11, 8, 9, 11, 12, 10, 11, 8, 9],
+            strings: [6, 6, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 2, 2, 1, 1],
+            noteLabels: ['C', 'Db', 'Eb', 'E', 'F#', 'G', 'A', 'Bb', 'C', 'Db', 'Eb', 'E', 'A', 'Bb', 'C', 'Db']
+        }]
+    },
+    'C Half - Whole Diminished Scale': {
+        patterns: [{
+            name: 'C Half-Whole Diminished',
+            notes: ['C', 'Db', 'Eb', 'E', 'F#', 'G', 'A', 'Bb'],
+            frets: [8, 9, 11, 12, 9, 10, 12, 11, 8, 9, 11, 12, 10, 11, 8, 9],
+            strings: [6, 6, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 2, 2, 1, 1],
+            noteLabels: ['C', 'Db', 'Eb', 'E', 'F#', 'G', 'A', 'Bb', 'C', 'Db', 'Eb', 'E', 'A', 'Bb', 'C', 'Db']
+        }]
+    },
+    'C Whole-Half Diminished Scale': {
+        patterns: [{
+            name: 'C Whole-Half Diminished',
+            notes: ['C', 'D', 'Eb', 'F', 'F#', 'Ab', 'A', 'B'],
+            frets: [8, 10, 11, 8, 9, 11, 12, 9, 8, 10, 11, 8, 10, 12, 8, 10],
+            strings: [6, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 3, 2, 2, 1, 1],
+            noteLabels: ['C', 'D', 'Eb', 'F', 'F#', 'Ab', 'A', 'B', 'C', 'D', 'Eb', 'F', 'A', 'B', 'C', 'D']
+        }]
+    },
+    // Chromatic
+    'Chromatic Scale': {
+        patterns: [{
+            name: 'Chromatic Scale',
+            notes: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
+            frets: [8, 9, 10, 11, 12, 8, 9, 10, 11, 12, 8, 9, 10, 11, 12, 8, 9, 10, 11, 12],
+            strings: [6, 6, 6, 6, 6, 5, 5, 5, 5, 5, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3],
+            noteLabels: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'E', 'F', 'F#', 'G', 'G#']
+        }]
+    }
+};
 
 // Initialize AlphaTab
 function initializeAlphaTab() {
@@ -670,7 +807,12 @@ function createTrackControls(score) {
 }
 
 function handleTrackButtonClick(event) {
-    if (!event.target.classList.contains('track-btn')) return;
+    // Check if the clicked element is one of the track control buttons
+    const isTrackButton = event.target.classList.contains('visibility-btn') ||
+                         event.target.classList.contains('solo-btn') ||
+                         event.target.classList.contains('mute-btn');
+    
+    if (!isTrackButton) return;
     
     const action = event.target.getAttribute('data-action');
     const trackIndex = parseInt(event.target.getAttribute('data-track'));
@@ -966,9 +1108,17 @@ function setupEventListeners() {
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
+    // Ensure scale diagram modal is closed on page load
+    const modal = document.getElementById('scaleDiagramModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+    
     initializeAlphaTab();
     setupEventListeners();
     initializeGpFilesBrowser(); // Initialize GP Files Browser
+    initializeScaleDiagrams(); // Initialize Scale Diagrams
     
     // Initialize loop system
     loopSystem.initialize();
@@ -1590,28 +1740,20 @@ const loopSystem = new LoopSystem();
 
 // Update score for print and loop functionality
 function updateScoreForPrint(score) {
-    currentScore = score;
+    const hasScore = score !== null;
     
-    // Enable print button
-    const printBtn = document.getElementById('printBtn');
     if (printBtn) {
-        printBtn.disabled = false;
-        printBtn.title = 'Print Tab';
+        printBtn.disabled = !hasScore;
     }
     
-    // Enable loop button
-    const loopBtn = document.getElementById('loopBtn');
-    if (loopBtn) {
-        loopBtn.disabled = false;
-        loopBtn.title = 'Loop Selected Bars';
+    if (downloadBtn) {
+        downloadBtn.disabled = !hasScore;
     }
     
-    // Initialize loop system
-    loopSystem.initialize();
-    loopSystem.setEnabled(true);
-    loopSystem.reset();
+    // Enable scale diagrams when score is loaded
+    enableScaleDiagrams(hasScore);
     
-    console.log('Score updated for print and loop functionality');
+    currentScore = score; // Store for print functionality
 }
 
 // Test function for debugging loop button
@@ -1735,17 +1877,7 @@ function addGpFile(fileName, filePath, category = 'scale-exercises') {
     console.log('Manually added file to GP Browser:', fileName, `(${category})`);
 }
 
-// Make functions globally available for manual file addition and refresh
-window.addGpFile = addGpFile;
-window.refreshGpFiles = refreshGpFiles;
-window.testLoopButton = testLoopButton;
-
-function addKnownGpFiles() {
-    // This function is no longer needed since we use a hardcoded list
-    // Kept for backward compatibility
-    console.log('Using hardcoded file list - no fallback needed');
-}
-
+// Refresh GP files function
 function refreshGpFiles() {
     console.log('Refreshing GP files list...');
     loadGpFilesFromDirectory();
@@ -1764,12 +1896,6 @@ function printTab() {
         printBtn.classList.add('print-preparing');
         
         // Use AlphaTab's built-in print functionality
-        // This opens a popup window with A4-optimized print layout
-        // It automatically handles:
-        // - Proper scaling (0.8x)
-        // - Disabled lazy loading
-        // - Print-optimized layout
-        // - Song title and artist in document title
         api.print();
         
         // Clean up after a brief delay
@@ -1785,1059 +1911,6 @@ function printTab() {
         printBtn.classList.remove('print-preparing');
     }
 }
-
-// Enable/disable control buttons
-function enableControls() {
-    // Implementation of enableControls function
-}
-
-// Get smart categorized instrument options based on current program
-function getInstrumentOptions(currentProgram) {
-    let options = '';
-    
-    // Determine instrument family and create categorized options
-    if (currentProgram >= 24 && currentProgram <= 31) {
-        // Guitar Family
-        options += '<optgroup label="Guitar Family">';
-        const guitarInstruments = [
-            {value: 24, name: "Acoustic Guitar (nylon)"},
-            {value: 25, name: "Acoustic Guitar (steel)"},
-            {value: 26, name: "Electric Guitar (jazz)"},
-            {value: 27, name: "Electric Guitar (clean)"},
-            {value: 28, name: "Electric Guitar (muted)"},
-            {value: 29, name: "Overdriven Guitar"},
-            {value: 30, name: "Distortion Guitar"},
-            {value: 31, name: "Guitar Harmonics"}
-        ];
-        
-        guitarInstruments.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-        // Related Stringed Instruments
-        options += '<optgroup label="Related Stringed">';
-        const relatedStringed = [
-            {value: 105, name: "Banjo"},
-            {value: 104, name: "Sitar"},
-            {value: 106, name: "Shamisen"},
-            {value: 110, name: "Fiddle"}
-        ];
-        
-        relatedStringed.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-        // Bass Options
-        options += '<optgroup label="Bass">';
-        const bassInstruments = [
-            {value: 32, name: "Acoustic Bass"},
-            {value: 33, name: "Electric Bass (finger)"},
-            {value: 34, name: "Electric Bass (pick)"},
-            {value: 35, name: "Fretless Bass"},
-            {value: 36, name: "Slap Bass 1"},
-            {value: 37, name: "Slap Bass 2"}
-        ];
-        
-        bassInstruments.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-    } else if (currentProgram >= 32 && currentProgram <= 39) {
-        // Bass Family
-        options += '<optgroup label="Bass Family">';
-        const bassInstruments = [
-            {value: 32, name: "Acoustic Bass"},
-            {value: 33, name: "Electric Bass (finger)"},
-            {value: 34, name: "Electric Bass (pick)"},
-            {value: 35, name: "Fretless Bass"},
-            {value: 36, name: "Slap Bass 1"},
-            {value: 37, name: "Slap Bass 2"},
-            {value: 38, name: "Synth Bass 1"},
-            {value: 39, name: "Synth Bass 2"}
-        ];
-        
-        bassInstruments.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-        // Related Low-End
-        options += '<optgroup label="Related Low-End">';
-        const relatedLow = [
-            {value: 42, name: "Cello"},
-            {value: 43, name: "Contrabass"},
-            {value: 58, name: "Tuba"}
-        ];
-        
-        relatedLow.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-    } else if (currentProgram >= 0 && currentProgram <= 7) {
-        // Piano Family
-        options += '<optgroup label="Piano Family">';
-        const pianoInstruments = [
-            {value: 0, name: "Acoustic Grand Piano"},
-            {value: 1, name: "Bright Acoustic Piano"},
-            {value: 2, name: "Electric Grand Piano"},
-            {value: 3, name: "Honky-tonk Piano"},
-            {value: 4, name: "Electric Piano 1"},
-            {value: 5, name: "Electric Piano 2"},
-            {value: 6, name: "Harpsichord"},
-            {value: 7, name: "Clavinet"}
-        ];
-        
-        pianoInstruments.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-        // Keyboard Related
-        options += '<optgroup label="Keyboards">';
-        const keyboards = [
-            {value: 16, name: "Drawbar Organ"},
-            {value: 17, name: "Percussive Organ"},
-            {value: 18, name: "Rock Organ"},
-            {value: 21, name: "Accordion"}
-        ];
-        
-        keyboards.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-    } else if (currentProgram >= 40 && currentProgram <= 47) {
-        // Orchestral Strings
-        options += '<optgroup label="Orchestral Strings">';
-        const strings = [
-            {value: 40, name: "Violin"},
-            {value: 41, name: "Viola"},
-            {value: 42, name: "Cello"},
-            {value: 43, name: "Contrabass"},
-            {value: 44, name: "Tremolo Strings"},
-            {value: 45, name: "Pizzicato Strings"},
-            {value: 46, name: "Orchestral Harp"},
-            {value: 47, name: "Timpani"}
-        ];
-        
-        strings.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-        // String Ensembles
-        options += '<optgroup label="String Ensembles">';
-        const ensembles = [
-            {value: 48, name: "String Ensemble 1"},
-            {value: 49, name: "String Ensemble 2"},
-            {value: 50, name: "Synth Strings 1"},
-            {value: 51, name: "Synth Strings 2"}
-        ];
-        
-        ensembles.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-    } else if (currentProgram >= 56 && currentProgram <= 63) {
-        // Brass Family
-        options += '<optgroup label="Brass Family">';
-        const brass = [
-            {value: 56, name: "Trumpet"},
-            {value: 57, name: "Trombone"},
-            {value: 58, name: "Tuba"},
-            {value: 59, name: "Muted Trumpet"},
-            {value: 60, name: "French Horn"},
-            {value: 61, name: "Brass Section"},
-            {value: 62, name: "Synth Brass 1"},
-            {value: 63, name: "Synth Brass 2"}
-        ];
-        
-        brass.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-    } else if (currentProgram >= 64 && currentProgram <= 79) {
-        // Wind Instruments
-        options += '<optgroup label="Reed Instruments">';
-        const reeds = [
-            {value: 64, name: "Soprano Sax"},
-            {value: 65, name: "Alto Sax"},
-            {value: 66, name: "Tenor Sax"},
-            {value: 67, name: "Baritone Sax"},
-            {value: 68, name: "Oboe"},
-            {value: 69, name: "English Horn"},
-            {value: 70, name: "Bassoon"},
-            {value: 71, name: "Clarinet"}
-        ];
-        
-        reeds.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-        options += '<optgroup label="Flutes">';
-        const flutes = [
-            {value: 72, name: "Piccolo"},
-            {value: 73, name: "Flute"},
-            {value: 74, name: "Recorder"},
-            {value: 75, name: "Pan Flute"}
-        ];
-        
-        flutes.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-    } else {
-        // For other instruments, show a general categorized list
-        options += '<optgroup label="Popular Instruments">';
-        const popular = [
-            {value: 0, name: "Piano"},
-            {value: 25, name: "Acoustic Guitar"},
-            {value: 27, name: "Electric Guitar (clean)"},
-            {value: 29, name: "Overdriven Guitar"},
-            {value: 33, name: "Electric Bass"},
-            {value: 40, name: "Violin"},
-            {value: 56, name: "Trumpet"},
-            {value: 65, name: "Alto Sax"},
-            {value: 73, name: "Flute"}
-        ];
-        
-        popular.forEach(inst => {
-            const selected = inst.value === currentProgram ? ' selected' : '';
-            options += `<option value="${inst.value}"${selected}>${inst.name}</option>`;
-        });
-        options += '</optgroup>';
-        
-        // Current instrument if not in popular list
-        if (!popular.find(inst => inst.value === currentProgram)) {
-            options += '<optgroup label="Current">';
-            const currentName = getGeneralMidiInstrumentName(currentProgram);
-            options += `<option value="${currentProgram}" selected>${currentName}</option>`;
-            options += '</optgroup>';
-        }
-    }
-    
-    // Always add a "More Instruments" option that shows common alternatives
-    options += '<optgroup label="More Options">';
-    const moreOptions = [
-        {value: 0, name: "Piano"},
-        {value: 25, name: "Acoustic Guitar"},
-        {value: 29, name: "Overdriven Guitar"},
-        {value: 33, name: "Electric Bass"},
-        {value: 40, name: "Violin"},
-        {value: 48, name: "String Ensemble"},
-        {value: 56, name: "Trumpet"},
-        {value: 65, name: "Alto Sax"},
-        {value: 73, name: "Flute"},
-        {value: 105, name: "Banjo"}
-    ];
-    
-    moreOptions.forEach(inst => {
-        if (inst.value !== currentProgram) { // Don't duplicate current instrument
-            options += `<option value="${inst.value}">${inst.name}</option>`;
-        }
-    });
-    options += '</optgroup>';
-    
-    return options;
-}
-
-// Handle instrument change
-function handleInstrumentChange(event) {
-    if (!event.target.classList.contains('instrument-select')) return;
-    
-    const trackIndex = parseInt(event.target.getAttribute('data-track'));
-    const newProgram = parseInt(event.target.value);
-    
-    console.log(`Changing track ${trackIndex} instrument to program ${newProgram}`);
-    
-    // Update the track's program in the score
-    if (api && api.score && api.score.tracks[trackIndex]) {
-        const track = api.score.tracks[trackIndex];
-        const oldProgram = track.playbackInfo.program;
-        
-        // Update the track's program number
-        track.playbackInfo.program = newProgram;
-        
-        console.log(`Track ${trackIndex} instrument changed from ${oldProgram} to ${newProgram}`);
-        
-        // Update the track info display
-        updateTrackInstrumentDisplay(trackIndex, newProgram);
-        
-        // Apply the instrument change using score reload
-        applyInstrumentChangeViaScoreReload(trackIndex, newProgram);
-    }
-}
-
-// Apply instrument change by reloading the modified score
-function applyInstrumentChangeViaScoreReload(trackIndex, newProgram) {
-    if (!api || !api.score) {
-        console.log('No API or score available for instrument change');
-        return;
-    }
-    
-    try {
-        console.log(`Applying instrument change for track ${trackIndex} -> program ${newProgram}`);
-        
-        // Remember current playback state
-        const wasPlaying = api.playerState === 1;
-        const currentPosition = api.tickPosition || 0;
-        
-        // Force the player to reload with the new instrument settings
-        // This is the most reliable way to ensure instrument changes work
-        if (isPlayerReady) {
-            // Stop current playback if playing
-            if (wasPlaying) {
-                api.stop();
-            }
-            
-            // Small delay to ensure stop is processed
-            setTimeout(() => {
-                // Trigger a reload of the audio with the updated score
-                // This forces AlphaTab to re-initialize with the new program numbers
-                console.log('Reloading audio with updated instrument settings...');
-                
-                // The score has already been modified, so we just need to trigger
-                // a re-initialization of the player audio system
-                if (api.player && api.player.ready) {
-                    // Try to reload just the MIDI data
-                    try {
-                        // This forces AlphaTab to regenerate the MIDI with new instruments
-                        api.renderScore(api.score);
-                        console.log('✓ Score re-rendered with new instruments');
-                        
-                        // Restore playback position and state after a delay
-                        setTimeout(() => {
-                            if (currentPosition > 0) {
-                                api.tickPosition = currentPosition;
-                            }
-                            if (wasPlaying) {
-                                api.playPause();
-                            }
-                            console.log('✓ Instrument change applied successfully');
-                        }, 500);
-                        
-                    } catch (error) {
-                        console.log('Score re-render failed, trying alternative method');
-                        applyInstrumentChangeFallback(trackIndex, newProgram, wasPlaying, currentPosition);
-                    }
-                } else {
-                    console.log('Player not ready, instrument change will apply on next load');
-                }
-            }, 100);
-        } else {
-            console.log('Player not ready, instrument change queued for when ready');
-            queueInstrumentChange(trackIndex, newProgram);
-        }
-        
-    } catch (error) {
-        console.error('Error applying instrument change:', error);
-        console.log('Falling back to queued approach');
-        queueInstrumentChange(trackIndex, newProgram);
-    }
-}
-
-// Fallback method for instrument changes
-function applyInstrumentChangeFallback(trackIndex, newProgram, wasPlaying, currentPosition) {
-    console.log('Using fallback method for instrument change');
-    
-    try {
-        // As a last resort, queue the change for next playback
-        queueInstrumentChange(trackIndex, newProgram);
-        
-        // Show user feedback
-        const trackItem = document.querySelector(`[data-track-index="${trackIndex}"]`);
-        if (trackItem) {
-            // Add a visual indicator that the change will apply on next play
-            trackItem.style.opacity = '0.8';
-            trackItem.style.background = 'rgba(255, 193, 7, 0.1)';
-            
-            setTimeout(() => {
-                trackItem.style.opacity = '';
-                trackItem.style.background = '';
-            }, 2000);
-        }
-        
-        // Inform the user
-        showInstrumentChangeMessage('Instrument change will apply on next playback');
-        
-        // If was playing, restart to apply immediately
-        if (wasPlaying) {
-            setTimeout(() => {
-                if (currentPosition > 0) {
-                    api.tickPosition = currentPosition;
-                }
-                api.playPause();
-            }, 500);
-        }
-        
-    } catch (error) {
-        console.error('Fallback method also failed:', error);
-    }
-}
-
-// Show instrument change message to user
-function showInstrumentChangeMessage(message) {
-    // Create or update the message display
-    let messageDiv = document.getElementById('instrumentChangeMessage');
-    if (!messageDiv) {
-        messageDiv = document.createElement('div');
-        messageDiv.id = 'instrumentChangeMessage';
-        messageDiv.style.cssText = `
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            background: #FFC107;
-            color: #000;
-            padding: 12px 18px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            z-index: 1000;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-            font-family: 'Inter', sans-serif;
-            max-width: 300px;
-        `;
-        document.body.appendChild(messageDiv);
-    }
-    
-    messageDiv.textContent = message;
-    messageDiv.style.display = 'block';
-    messageDiv.style.opacity = '1';
-    
-    // Auto-hide after delay
-    setTimeout(() => {
-        if (messageDiv) {
-            messageDiv.style.opacity = '0';
-            setTimeout(() => {
-                if (messageDiv && messageDiv.style.opacity === '0') {
-                    messageDiv.style.display = 'none';
-                }
-            }, 300);
-        }
-    }, 3000);
-}
-
-// Queue instrument changes for later application (simplified)
-function queueInstrumentChange(trackIndex, newProgram) {
-    if (!window.queuedInstrumentChanges) {
-        window.queuedInstrumentChanges = new Map();
-    }
-    window.queuedInstrumentChanges.set(trackIndex, newProgram);
-    console.log(`Queued instrument change: Track ${trackIndex} -> Program ${newProgram}`);
-}
-
-// Apply queued instrument changes when player starts (simplified)
-function applyQueuedInstrumentChanges() {
-    if (!window.queuedInstrumentChanges || window.queuedInstrumentChanges.size === 0) {
-        return;
-    }
-    
-    console.log(`Note: ${window.queuedInstrumentChanges.size} instrument changes queued - they are already applied to the score`);
-    
-    // Clear the queue since the changes are already in the score
-    window.queuedInstrumentChanges.clear();
-}
-
-// Update track instrument display
-function updateTrackInstrumentDisplay(trackIndex, newProgram) {
-    const trackItem = document.querySelector(`[data-track-index="${trackIndex}"]`);
-    if (!trackItem) return;
-    
-    const trackInfoDetails = trackItem.querySelector('.track-info-details');
-    if (!trackInfoDetails) return;
-    
-    // Get the new instrument name
-    const newInstrumentName = getGeneralMidiInstrumentName(newProgram);
-    
-    // Update the displayed instrument info
-    const track = api.score.tracks[trackIndex];
-    const updatedInstrumentInfo = getInstrumentInfo(track, trackIndex);
-    trackInfoDetails.innerHTML = updatedInstrumentInfo;
-    
-    console.log(`Updated display for track ${trackIndex}: ${newInstrumentName}`);
-}
-
-// Debug function to check synthesizer capabilities
-function debugSynthesizer() {
-    console.log('=== SYNTHESIZER DEBUG INFO ===');
-    
-    if (!api) {
-        console.log('❌ No API available');
-        return;
-    }
-    
-    console.log('✓ API available');
-    console.log('Player ready:', isPlayerReady);
-    console.log('Player state:', api.playerState);
-    
-    if (!api.player) {
-        console.log('❌ No player available');
-        return;
-    }
-    
-    console.log('✓ Player available');
-    console.log('Player type:', typeof api.player);
-    console.log('Player methods:', Object.getOwnPropertyNames(api.player).filter(name => typeof api.player[name] === 'function'));
-    
-    if (!api.player.synthesizer) {
-        console.log('❌ No synthesizer available');
-        return;
-    }
-    
-    const synth = api.player.synthesizer;
-    console.log('✓ Synthesizer available');
-    console.log('Synthesizer type:', typeof synth);
-    console.log('Synthesizer constructor:', synth.constructor.name);
-    console.log('Synthesizer methods:', Object.getOwnPropertyNames(synth).filter(name => typeof synth[name] === 'function'));
-    
-    // Check for specific methods
-    const methods = ['programChange', 'sendEvent', 'setChannelProgram', 'midiEvent'];
-    methods.forEach(method => {
-        const available = typeof synth[method] === 'function';
-        console.log(`${available ? '✓' : '❌'} synth.${method}:`, available ? 'available' : 'not available');
-    });
-    
-    // Check API level methods
-    const apiMethods = ['changeTrackProgram', 'changeTrackVolume'];
-    apiMethods.forEach(method => {
-        const available = typeof api[method] === 'function';
-        console.log(`${available ? '✓' : '❌'} api.${method}:`, available ? 'available' : 'not available');
-    });
-    
-    // Check current score and tracks
-    if (api.score && api.score.tracks) {
-        console.log('✓ Score loaded with', api.score.tracks.length, 'tracks');
-        api.score.tracks.forEach((track, index) => {
-            console.log(`Track ${index}:`, {
-                name: track.name,
-                program: track.playbackInfo.program,
-                primaryChannel: track.playbackInfo.primaryChannel,
-                secondaryChannel: track.playbackInfo.secondaryChannel
-            });
-        });
-    } else {
-        console.log('❌ No score loaded');
-    }
-    
-    console.log('=== END DEBUG INFO ===');
-}// Make debug function globally available
-window.debugSynthesizer = debugSynthesizer;
-
-function handleVolumeChange(event) {
-    if (!event.target.classList.contains('volume-slider')) return;
-    
-    const trackIndex = parseInt(event.target.getAttribute('data-track'));
-    const volume = parseInt(event.target.value) / 100;
-    
-    // Update volume display
-    const volumeDisplay = event.target.parentNode.querySelector('.volume-display');
-    volumeDisplay.textContent = `${event.target.value}%`;
-    
-    // Update AlphaTab volume
-    if (api && isPlayerReady) {
-        api.changeTrackVolume([trackIndex], volume);
-    }
-    
-    // Store volume in track state
-    if (trackStates[trackIndex]) {
-        trackStates[trackIndex].volume = volume;
-    }
-}
-
-// Initialize track controls toggle
-const toggleTrackControlsBtn = document.getElementById('toggleTrackControls');
-const bulkControls = document.querySelector('.bulk-controls');
-let trackControlsVisible = false; // Start hidden by default
-
-if (toggleTrackControlsBtn) {
-    // Set initial state - hidden
-    if (tracksGrid) tracksGrid.style.display = 'none';
-    if (bulkControls) bulkControls.style.display = 'none';
-    toggleTrackControlsBtn.textContent = '👁️';
-    toggleTrackControlsBtn.title = 'Show Track Controls';
-    
-    toggleTrackControlsBtn.addEventListener('click', () => {
-        trackControlsVisible = !trackControlsVisible;
-        
-        if (trackControlsVisible) {
-            if (tracksGrid) tracksGrid.style.display = 'flex';
-            if (bulkControls) bulkControls.style.display = 'flex';
-            toggleTrackControlsBtn.textContent = '🙈';
-            toggleTrackControlsBtn.title = 'Hide Track Controls';
-        } else {
-            if (tracksGrid) tracksGrid.style.display = 'none';
-            if (bulkControls) bulkControls.style.display = 'none';
-            toggleTrackControlsBtn.textContent = '👁️';
-            toggleTrackControlsBtn.title = 'Show Track Controls';
-        }
-    });
-}
-
-// Initialize library toggle
-const toggleLibraryBtn = document.getElementById('toggleLibrary');
-const browserContent = document.getElementById('browserContent');
-let libraryVisible = true;
-
-if (toggleLibraryBtn && browserContent) {
-    toggleLibraryBtn.addEventListener('click', () => {
-        libraryVisible = !libraryVisible;
-        
-        if (libraryVisible) {
-            browserContent.style.display = 'block';
-            toggleLibraryBtn.textContent = '🙈';
-            toggleLibraryBtn.title = 'Hide Library';
-        } else {
-            browserContent.style.display = 'none';
-            toggleLibraryBtn.textContent = '👁️';
-            toggleLibraryBtn.title = 'Show Library';
-        }
-    });
-}
-
-// Mobile touch control functions for pause/play from touch position
-function setupScoreTouchControls() {
-    const scoreElement = document.querySelector('#alphaTab');
-    if (!scoreElement) {
-        console.log('Score element not found for touch controls');
-        return;
-    }
-    
-    console.log('Setting up mobile score touch controls with popup');
-    
-    // Track mobile device detection
-    const isMobile = () => window.innerWidth <= 768 || 'ontouchstart' in window;
-    
-    // Use AlphaTab's beatMouseDown event for precise position detection
-    if (api) {
-        api.beatMouseDown.on((beat) => {
-            if (isMobile() && beat) {
-                handleMobileBeatTouch(beat);
-            }
-        });
-    }
-    
-    // Fallback touch event for mobile devices
-    scoreElement.addEventListener('touchend', (event) => {
-        if (isMobile()) {
-            event.preventDefault();
-            handleMobileScoreTouch(event);
-        }
-    }, { passive: false });
-}
-
-function handleMobileBeatTouch(beat) {
-    if (!api || !beat) return;
-    
-    console.log('Mobile beat touch detected:', beat);
-    
-    // Store the touched beat position for later use
-    window.touchedBeatPosition = beat.absolutePlaybackStart;
-    
-    // Show the mobile control popup at the touch position
-    showMobileControlPopup(event || { touches: [{ clientX: window.innerWidth / 2, clientY: window.innerHeight / 2 }] });
-}
-
-function handleMobileScoreTouch(event) {
-    // Fallback for when beat detection doesn't work
-    if (!api) return;
-    
-    console.log('Mobile score touch detected');
-    
-    // Store current position as fallback
-    window.touchedBeatPosition = api.tickPosition || 0;
-    
-    // Show the mobile control popup at the touch position
-    showMobileControlPopup(event);
-}
-
-function showMobileControlPopup(event) {
-    // Remove any existing popup
-    const existingPopup = document.getElementById('mobileControlPopup');
-    if (existingPopup) {
-        existingPopup.remove();
-    }
-    
-    // Get touch position
-    const touch = event.touches ? event.touches[0] || event.changedTouches[0] : event;
-    const touchX = touch ? touch.clientX : window.innerWidth / 2;
-    const touchY = touch ? touch.clientY : window.innerHeight / 2;
-    
-    // Create popup container
-    const popup = document.createElement('div');
-    popup.id = 'mobileControlPopup';
-    popup.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: linear-gradient(135deg, #FF8C00, #D2691E);
-        border-radius: 20px;
-        padding: 8px;
-        display: flex;
-        gap: 8px;
-        z-index: 3000;
-        box-shadow: 0 12px 40px rgba(255, 140, 0, 0.6);
-        backdrop-filter: blur(15px);
-        border: 1px solid rgba(255, 140, 0, 0.4);
-        animation: popupFadeIn 0.2s ease-out;
-    `;
-    
-    // Add CSS animation
-    if (!document.getElementById('mobilePopupStyles')) {
-        const style = document.createElement('style');
-        style.id = 'mobilePopupStyles';
-        style.textContent = `
-            @keyframes popupFadeIn {
-                from {
-                    opacity: 0;
-                    transform: scale(0.8);
-                }
-                to {
-                    opacity: 1;
-                    transform: scale(1);
-                }
-            }
-            
-            @keyframes popupFadeOut {
-                from {
-                    opacity: 1;
-                    transform: scale(1);
-                }
-                to {
-                    opacity: 0;
-                    transform: scale(0.8);
-                }
-            }
-            
-            .mobile-control-btn {
-                width: 50px;
-                height: 50px;
-                border: none;
-                border-radius: 50%;
-                background: rgba(255, 140, 0, 0.85);
-                color: #FFFFFF;
-                font-size: 20px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                transition: all 0.2s ease;
-                backdrop-filter: blur(5px);
-                border: 1px solid rgba(255, 140, 0, 0.4);
-                box-shadow: 0 4px 15px rgba(255, 140, 0, 0.3);
-            }
-            
-            .mobile-control-btn:hover,
-            .mobile-control-btn:active {
-                background: rgba(255, 140, 0, 0.9);
-                transform: scale(1.1);
-                border: 1px solid rgba(255, 140, 0, 0.6);
-                box-shadow: 0 6px 20px rgba(255, 140, 0, 0.4);
-            }
-            
-            .mobile-control-btn.play {
-                background: linear-gradient(135deg, #FF8C00, #FF7F50);
-                border: 1px solid rgba(255, 140, 0, 0.4);
-                color: #FFFFFF;
-            }
-            
-            .mobile-control-btn.play:hover,
-            .mobile-control-btn.play:active {
-                background: linear-gradient(135deg, #FFA500, #FF8C00);
-                border: 1px solid rgba(255, 140, 0, 0.6);
-                box-shadow: 0 6px 20px rgba(255, 140, 0, 0.4);
-            }
-            
-            .mobile-control-btn.pause {
-                background: linear-gradient(135deg, #D2691E, #CD853F);
-                border: 1px solid rgba(255, 140, 0, 0.4);
-                color: #FFFFFF;
-            }
-            
-            .mobile-control-btn.pause:hover,
-            .mobile-control-btn.pause:active {
-                background: linear-gradient(135deg, #FF8C00, #D2691E);
-                border: 1px solid rgba(255, 140, 0, 0.6);
-                box-shadow: 0 6px 20px rgba(255, 140, 0, 0.4);
-            }
-            
-            .mobile-control-btn.stop {
-                background: linear-gradient(135deg, #B8860B, #DAA520);
-                border: 1px solid rgba(255, 140, 0, 0.4);
-                color: #FFFFFF;
-            }
-            
-            .mobile-control-btn.stop:hover,
-            .mobile-control-btn.stop:active {
-                background: linear-gradient(135deg, #D2691E, #B8860B);
-                border: 1px solid rgba(255, 140, 0, 0.6);
-                box-shadow: 0 6px 20px rgba(255, 140, 0, 0.4);
-            }
-        `;
-        document.head.appendChild(style);
-    }
-    
-    // Determine current playback state
-    const isCurrentlyPlaying = api.playerState === 1; // PlayerState.Playing
-    const isPaused = api.playerState === 2; // PlayerState.Paused
-    
-    // Create control buttons based on current state
-    if (isCurrentlyPlaying) {
-        // Show pause and stop buttons
-        const pauseBtn = createMobileControlButton('⏸️', 'pause', () => {
-            pauseAtTouchedPosition();
-            hideMobileControlPopup();
-        });
-        
-        const stopBtn = createMobileControlButton('⏹️', 'stop', () => {
-            stopPlayback();
-            hideMobileControlPopup();
-        });
-        
-        popup.appendChild(pauseBtn);
-        popup.appendChild(stopBtn);
-    } else {
-        // Show play button (and stop if paused)
-        const playBtn = createMobileControlButton('▶️', 'play', () => {
-            playFromTouchedPosition();
-            hideMobileControlPopup();
-        });
-        
-        popup.appendChild(playBtn);
-        
-        if (isPaused) {
-            const stopBtn = createMobileControlButton('⏹️', 'stop', () => {
-                stopPlayback();
-                hideMobileControlPopup();
-            });
-            popup.appendChild(stopBtn);
-        }
-    }
-    
-    // Add popup to page
-    document.body.appendChild(popup);
-    
-    // Auto-hide after 3 seconds
-    setTimeout(() => {
-        hideMobileControlPopup();
-    }, 3000);
-    
-    // Hide on any other touch outside popup
-    const hideOnTouch = (e) => {
-        if (!popup.contains(e.target)) {
-            hideMobileControlPopup();
-            document.removeEventListener('touchstart', hideOnTouch);
-        }
-    };
-    
-    setTimeout(() => {
-        document.addEventListener('touchstart', hideOnTouch);
-    }, 100);
-}
-
-function createMobileControlButton(icon, className, onClick) {
-    const button = document.createElement('button');
-    button.className = `mobile-control-btn ${className}`;
-    button.textContent = icon;
-    button.addEventListener('click', onClick);
-    button.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        onClick();
-    });
-    return button;
-}
-
-function hideMobileControlPopup() {
-    const popup = document.getElementById('mobileControlPopup');
-    if (popup) {
-        popup.style.animation = 'popupFadeOut 0.2s ease-out';
-        setTimeout(() => {
-            if (popup && popup.parentNode) {
-                popup.remove();
-            }
-        }, 200);
-    }
-}
-
-function pauseAtTouchedPosition() {
-    if (!api) return;
-    
-    console.log('Pausing at touched position');
-    api.pause();
-    
-    // Set position to touched beat if available
-    if (window.touchedBeatPosition !== undefined) {
-        api.tickPosition = window.touchedBeatPosition;
-        console.log('Position set to touched beat:', window.touchedBeatPosition);
-        showMobileMessage('⏸️ Paused at touched position', '#FF8C00');
-    } else {
-        showMobileMessage('⏸️ Paused', '#FF8C00');
-    }
-}
-
-function playFromTouchedPosition() {
-    if (!api) return;
-    
-    console.log('Playing from touched position');
-    
-    // Set position to touched beat if available
-    if (window.touchedBeatPosition !== undefined) {
-        api.tickPosition = window.touchedBeatPosition;
-        console.log('Position set to touched beat:', window.touchedBeatPosition);
-        showMobileMessage('▶️ Playing from touched position', '#FF8C00');
-    } else {
-        showMobileMessage('▶️ Playing', '#FF8C00');
-    }
-    
-    api.play();
-}
-
-function stopPlayback() {
-    if (!api) return;
-    
-    console.log('Stopping playback');
-    api.stop();
-    showMobileMessage('⏹️ Stopped', '#D2691E');
-}
-
-function handleScoreClick(event) {
-    // Desktop behavior - only respond to double-click to avoid conflicts
-    const isMobile = () => window.innerWidth <= 768 || 'ontouchstart' in window;
-    
-    if (!isMobile() && event.detail === 2) { // Double-click on desktop
-        console.log('Desktop double-click detected - toggling playback');
-        togglePlayPause();
-    }
-}
-
-function togglePlayPause() {
-    if (!api || !currentScore) {
-        console.log('No score loaded - cannot play/pause');
-        return;
-    }
-    
-    try {
-        api.playPause();
-        console.log('Toggled playback');
-    } catch (error) {
-        console.error('Error toggling playback:', error);
-    }
-}
-
-// Show mobile-specific messages
-function showMobileMessage(text, color = '#4CAF50') {
-    // Create or update mobile message display
-    let mobileMessage = document.getElementById('mobileMessage');
-    if (!mobileMessage) {
-        mobileMessage = document.createElement('div');
-        mobileMessage.id = 'mobileMessage';
-        mobileMessage.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: ${color};
-            color: white;
-            padding: 16px 24px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            z-index: 2000;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-            font-family: 'Inter', sans-serif;
-            text-align: center;
-            min-width: 200px;
-        `;
-        document.body.appendChild(mobileMessage);
-    }
-
-    mobileMessage.style.background = color;
-    mobileMessage.textContent = text;
-    mobileMessage.style.display = 'block';
-    mobileMessage.style.opacity = '1';
-    mobileMessage.style.transform = 'translate(-50%, -50%) scale(1)';
-
-    // Auto-hide after delay
-    setTimeout(() => {
-        if (mobileMessage && mobileMessage.style.opacity === '1') {
-            mobileMessage.style.opacity = '0';
-            mobileMessage.style.transform = 'translate(-50%, -50%) scale(0.9)';
-            setTimeout(() => {
-                if (mobileMessage && mobileMessage.style.opacity === '0') {
-                    mobileMessage.style.display = 'none';
-                }
-            }, 300);
-        }
-    }, 2000);
-}
-
-// Auto-scroll control functions
-function setScrollMode(mode) {
-    if (!api) {
-        console.log('API not ready - cannot set scroll mode');
-        return;
-    }
-    
-    try {
-        // Use the proper AlphaTab API method to change settings
-        api.changeTrackVolume([], 1); // Dummy call to ensure API is ready
-        
-        // Update the settings object properly
-        if (api.settings && api.settings.player) {
-            api.settings.player.scrollMode = mode;
-            console.log(`Scroll mode set to: ${mode} (0=Off, 1=Continuous, 2=OffScreen)`);
-            
-            // Force a settings update by triggering a re-render if needed
-            if (api.score) {
-                // The settings should take effect immediately for future playback
-                console.log('Settings updated successfully');
-            }
-        } else {
-            console.error('Settings object not available');
-        }
-    } catch (error) {
-        console.error('Error setting scroll mode:', error);
-    }
-}
-
-// Make helper function available globally
-window.addNewGpFileToList = addNewGpFileToList;
-window.debugSynthesizer = debugSynthesizer;
-// Auto-scroll control functions
-window.setScrollMode = setScrollMode;
-window.toggleAutoScroll = toggleAutoScroll;
-window.setScrollSpeed = setScrollSpeed;
-window.setScrollOffset = setScrollOffset;
-window.getScrollInfo = getScrollInfo;
-// Touch control functions
-window.setupScoreTouchControls = setupScoreTouchControls;
-window.togglePlayPause = togglePlayPause;
-
-// Print and download button event listeners
-printBtn.addEventListener('click', printTab);
-downloadBtn.addEventListener('click', downloadCurrentFile);
 
 // Download functionality
 function downloadCurrentFile() {
@@ -2863,6 +1936,7 @@ function downloadCurrentFile() {
         downloadLink.download = currentFileName;
         
         // Add visual feedback
+        const downloadBtn = document.getElementById('downloadBtn');
         downloadBtn.classList.add('downloading');
         downloadBtn.title = 'Downloading...';
         
@@ -2874,65 +1948,806 @@ function downloadCurrentFile() {
         // Clean up the object URL
         URL.revokeObjectURL(downloadLink.href);
         
-        // Show success message
-        showDownloadMessage(`Downloaded: ${currentFileName}`, '#4CAF50');
-        
         console.log('File downloaded successfully:', currentFileName);
         
     } catch (error) {
         console.error('Error downloading file:', error);
         alert('Failed to download the file. Please try again.');
-        showDownloadMessage('Download failed', '#f44336');
     } finally {
         // Restore button state
         setTimeout(() => {
+            const downloadBtn = document.getElementById('downloadBtn');
             downloadBtn.classList.remove('downloading');
             downloadBtn.title = 'Download Guitar Pro File';
         }, 1000);
     }
 }
 
-// Show download status message
-function showDownloadMessage(text, color = '#4CAF50') {
-    // Create or update download message display
-    let downloadMessage = document.getElementById('downloadMessage');
-    if (!downloadMessage) {
-        downloadMessage = document.createElement('div');
-        downloadMessage.id = 'downloadMessage';
-        downloadMessage.style.cssText = `
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: ${color};
-            color: white;
-            padding: 12px 18px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            z-index: 1000;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-            font-family: 'Inter', sans-serif;
-        `;
-        document.body.appendChild(downloadMessage);
+// Initialize scale diagrams
+function initializeScaleDiagrams() {
+    console.log('🎸 Initializing scale diagrams...');
+    console.log('Scale diagram button element:', scaleDiagramBtn);
+    
+    if (scaleDiagramBtn) {
+        scaleDiagramBtn.addEventListener('click', openScaleDiagramModal);
+        console.log('✅ Scale diagram button event listener added');
+    } else {
+        console.error('❌ Scale diagram button not found!');
     }
-
-    downloadMessage.style.background = color;
-    downloadMessage.textContent = text;
-    downloadMessage.style.display = 'block';
-    downloadMessage.style.opacity = '1';
-
-    // Auto-hide after delay
-    setTimeout(() => {
-        if (downloadMessage && downloadMessage.style.opacity === '1') {
-            downloadMessage.style.opacity = '0';
-            setTimeout(() => {
-                if (downloadMessage && downloadMessage.style.opacity === '0') {
-                    downloadMessage.style.display = 'none';
-                }
-            }, 300);
-        }
-    }, 3000);
+    
+    const modal = document.getElementById('scaleDiagramModal');
+    const closeBtn = document.getElementById('closeScaleDiagramModal');
+    
+    console.log('Scale diagram modal elements:', { modal, closeBtn });
+    
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeScaleDiagramModal);
+        console.log('✅ Close button event listener added');
+    }
+    
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeScaleDiagramModal();
+            }
+        });
+        console.log('✅ Modal click-outside event listener added');
+    }
+    
+    // Test if Fretboard library is available
+    if (typeof Fretboard !== 'undefined') {
+        console.log('✅ Fretboard.js library is available');
+    } else {
+        console.error('❌ Fretboard.js library not found!');
+    }
 }
 
+// Open scale diagram modal
+function openScaleDiagramModal() {
+    console.log('🎸 Scale diagram button clicked!');
+    
+    if (!currentFileName) {
+        console.error('❌ No file loaded');
+        alert('Please load a Guitar Pro file first');
+        return;
+    }
+    
+    // Use currentFileName and trim whitespace, remove file extension
+    const fileName = currentFileName.replace(/\.gp\d?x?$/i, '').trim();
+    console.log('📁 Current file name:', fileName);
+    console.log('📚 Available scale patterns:', Object.keys(scalePatterns));
+    
+    const modal = document.getElementById('scaleDiagramModal');
+    const container = document.getElementById('scaleDiagramContainer');
+    
+    if (!modal || !container) {
+        console.error('❌ Modal elements not found:', { modal, container });
+        return;
+    }
+    
+    // DEBUG: Log modal state before changes
+    console.log('🔍 Modal before changes:', {
+        display: window.getComputedStyle(modal).display,
+        visibility: window.getComputedStyle(modal).visibility,
+        opacity: window.getComputedStyle(modal).opacity,
+        zIndex: window.getComputedStyle(modal).zIndex
+    });
+    
+    // Clear previous diagrams
+    container.innerHTML = '';
+    
+    // Check if we have scale patterns for this file
+    const scaleData = scalePatterns[fileName];
+    console.log('🔍 Looking for patterns for:', fileName);
+    console.log('🎵 Found scale data:', scaleData);
+    
+    if (scaleData && scaleData.patterns && scaleData.patterns.length > 0) {
+        console.log('✅ Scale patterns found, generating diagrams...');
+        generateScaleDiagrams(scaleData.patterns, container);
+    } else {
+        console.log('⚠️ No scale patterns found for this file');
+        // Show available patterns or message
+        container.innerHTML = `
+            <div class="scale-diagram-item">
+                <div class="scale-diagram-title">Scale Diagrams</div>
+                <p>Scale diagrams for "<strong>${fileName}</strong>" are not yet available.</p>
+                <p><strong>Currently supported files:</strong></p>
+                <ul style="text-align: left; max-width: 400px; margin: 0 auto;">
+                    ${Object.keys(scalePatterns).map(name => `<li>${name}</li>`).join('')}
+                </ul>
+                <p style="margin-top: 20px; font-style: italic;">More scale diagrams coming soon!</p>
+            </div>
+        `;
+    }
+    
+    // Force display with !important via style attribute
+    modal.style.cssText = 'display: block !important; position: fixed !important; z-index: 10000 !important;';
+    document.body.style.overflow = 'hidden';
+    
+    // DEBUG: Log modal state after changes
+    setTimeout(() => {
+        console.log('🔍 Modal after changes:', {
+            display: window.getComputedStyle(modal).display,
+            visibility: window.getComputedStyle(modal).visibility,
+            opacity: window.getComputedStyle(modal).opacity,
+            zIndex: window.getComputedStyle(modal).zIndex,
+            position: window.getComputedStyle(modal).position,
+            top: window.getComputedStyle(modal).top,
+            left: window.getComputedStyle(modal).left,
+            width: window.getComputedStyle(modal).width,
+            height: window.getComputedStyle(modal).height
+        });
+    }, 100);
+    
+    console.log('✅ Scale diagram modal opened');
+}
+
+// Close scale diagram modal
+function closeScaleDiagramModal() {
+    const modal = document.getElementById('scaleDiagramModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Generate scale diagrams using Fretboard.js
+function generateScaleDiagrams(patterns, container) {
+    // Check if Fretboard library is available
+    if (typeof Fretboard === 'undefined') {
+        console.error('Fretboard library not loaded');
+        container.innerHTML = `
+            <div class="scale-diagram-item">
+                <div class="scale-diagram-title">Error</div>
+                <p>Fretboard library not available. Please refresh the page and try again.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    patterns.forEach((pattern, index) => {
+        const diagramItem = document.createElement('div');
+        diagramItem.className = 'scale-diagram-item';
+        
+        const title = document.createElement('div');
+        title.className = 'scale-diagram-title';
+        title.textContent = pattern.name;
+        
+        const subtitle = document.createElement('div');
+        subtitle.className = 'scale-diagram-subtitle';
+        subtitle.textContent = `Scale Notes: ${pattern.notes.join(' - ')}`;
+        
+        // Create enhanced legend showing tab usage
+        const legend = document.createElement('div');
+        legend.className = 'scale-legend';
+        
+        const legendTitle = document.createElement('div');
+        legendTitle.className = 'scale-legend-title';
+        legendTitle.textContent = 'Note Colors:';
+        
+        const legendItems = document.createElement('div');
+        legendItems.className = 'scale-legend-items';
+        
+        // Check if we have tab data loaded
+        const tabData = extractTabFretPositions();
+        const hasTabData = tabData.length > 0;
+        
+        if (hasTabData) {
+            // Root note used in tab
+            const rootUsedItem = document.createElement('div');
+            rootUsedItem.className = 'scale-legend-item';
+            
+            const rootUsedDot = document.createElement('div');
+            rootUsedDot.className = 'scale-legend-dot';
+            rootUsedDot.style.backgroundColor = '#dc3545';
+            rootUsedDot.style.border = '3px solid #ffd700';
+            rootUsedDot.style.color = 'white';
+            rootUsedDot.textContent = '●';
+            
+            const rootUsedText = document.createElement('span');
+            rootUsedText.textContent = `${pattern.notes[0]} (Root - Used in Tab)`;
+            
+            rootUsedItem.appendChild(rootUsedDot);
+            rootUsedItem.appendChild(rootUsedText);
+            
+            // Scale notes used in tab
+            const scaleUsedItem = document.createElement('div');
+            scaleUsedItem.className = 'scale-legend-item';
+            
+            const scaleUsedDot = document.createElement('div');
+            scaleUsedDot.className = 'scale-legend-dot';
+            scaleUsedDot.style.backgroundColor = '#A0522D';
+            scaleUsedDot.style.border = '3px solid #ffd700';
+            scaleUsedDot.style.color = 'white';
+            scaleUsedDot.textContent = '●';
+            
+            const scaleUsedText = document.createElement('span');
+            scaleUsedText.textContent = 'Scale Notes (Used in Tab)';
+            
+            scaleUsedItem.appendChild(scaleUsedDot);
+            scaleUsedItem.appendChild(scaleUsedText);
+            
+            // Root note not used in tab
+            const rootUnusedItem = document.createElement('div');
+            rootUnusedItem.className = 'scale-legend-item';
+            
+            const rootUnusedDot = document.createElement('div');
+            rootUnusedDot.className = 'scale-legend-dot';
+            rootUnusedDot.style.backgroundColor = '#dc3545';
+            rootUnusedDot.style.border = '2px solid #ffffff';
+            rootUnusedDot.style.color = 'white';
+            rootUnusedDot.textContent = '●';
+            
+            const rootUnusedText = document.createElement('span');
+            rootUnusedText.textContent = `${pattern.notes[0]} (Root - Available)`;
+            
+            rootUnusedItem.appendChild(rootUnusedDot);
+            rootUnusedItem.appendChild(rootUnusedText);
+            
+            // Scale notes not used in tab
+            const scaleUnusedItem = document.createElement('div');
+            scaleUnusedItem.className = 'scale-legend-item';
+            
+            const scaleUnusedDot = document.createElement('div');
+            scaleUnusedDot.className = 'scale-legend-dot';
+            scaleUnusedDot.style.backgroundColor = '#A0522D';
+            scaleUnusedDot.style.border = '2px solid #ffffff';
+            scaleUnusedDot.style.color = 'white';
+            scaleUnusedDot.textContent = '●';
+            
+            const scaleUnusedText = document.createElement('span');
+            scaleUnusedText.textContent = 'Scale Notes (Available)';
+            
+            scaleUnusedItem.appendChild(scaleUnusedDot);
+            scaleUnusedItem.appendChild(scaleUnusedText);
+            
+            legendItems.appendChild(rootUsedItem);
+            legendItems.appendChild(scaleUsedItem);
+            legendItems.appendChild(rootUnusedItem);
+            legendItems.appendChild(scaleUnusedItem);
+            
+        } else {
+            // No tab loaded - show simple legend
+            // Root note legend item
+            const rootItem = document.createElement('div');
+            rootItem.className = 'scale-legend-item';
+            
+            const rootDot = document.createElement('div');
+            rootDot.className = 'scale-legend-dot';
+            rootDot.style.backgroundColor = '#dc3545';
+            rootDot.style.color = 'white';
+            rootDot.textContent = '●';
+            
+            const rootText = document.createElement('span');
+            rootText.textContent = `${pattern.notes[0]} (Root Note)`;
+            
+            rootItem.appendChild(rootDot);
+            rootItem.appendChild(rootText);
+            
+            // Scale notes legend item
+            const scaleItem = document.createElement('div');
+            scaleItem.className = 'scale-legend-item';
+            
+            const scaleDot = document.createElement('div');
+            scaleDot.className = 'scale-legend-dot';
+            scaleDot.style.backgroundColor = '#A0522D';
+            scaleDot.style.color = 'white';
+            scaleDot.textContent = '●';
+            
+            const scaleText = document.createElement('span');
+            scaleText.textContent = 'Other Scale Notes';
+            
+            scaleItem.appendChild(scaleDot);
+            scaleItem.appendChild(scaleText);
+            
+            legendItems.appendChild(rootItem);
+            legendItems.appendChild(scaleItem);
+        }
+        
+        legend.appendChild(legendTitle);
+        legend.appendChild(legendItems);
+        
+        const fretboardContainer = document.createElement('div');
+        fretboardContainer.className = 'fretboard-container';
+        
+        // Add helpful text with tab information
+        const helpText = document.createElement('div');
+        helpText.style.cssText = 'text-align: center; margin-bottom: 10px; font-size: 12px; color: #666; font-style: italic;';
+        
+        const tabPositions = extractTabFretPositions();
+        if (tabPositions.length > 0) {
+            helpText.textContent = `Scroll horizontally to see the full fretboard • Gold borders highlight notes used in the current tab (${tabPositions.length} positions)`;
+        } else {
+            helpText.textContent = 'Scroll horizontally to see the full fretboard • Load a tab file to see which notes are actually used';
+        }
+        
+        try {
+            // Create fretboard instance with full 22 fret range
+            const fretboard = new Fretboard({
+                el: fretboardContainer,
+                frets: 22, // Full fretboard range
+                strings: 6,
+                fretWidth: 40, // Slightly smaller for better fit
+                fretHeight: 30,
+                nutWidth: 8,
+                stringWidth: 2,
+                fretColor: '#d0d0d0',
+                stringColor: '#888888',
+                backgroundColor: '#ffffff',
+                showFretNumbers: true,
+                fretNumbersHeight: 18,
+                dotSize: 20, // Bigger dots
+                dotStrokeColor: '#ffffff',
+                dotStrokeWidth: 2,
+                showThumbPosition: false
+            });
+            
+            // Generate full fretboard scale pattern with tab highlighting
+            const dots = generateFullFretboardPattern(pattern);
+            
+            // Set dots and render
+            fretboard.setDots(dots).render();
+            
+            console.log(`✅ Generated full fretboard for ${pattern.name} with ${dots.length} note positions`);
+            
+        } catch (error) {
+            console.error('Error creating fretboard:', error);
+            fretboardContainer.innerHTML = `
+                <p style="color: #dc3545; padding: 20px;">
+                    Error generating fretboard diagram for ${pattern.name}
+                </p>
+            `;
+        }
+        
+        diagramItem.appendChild(title);
+        diagramItem.appendChild(subtitle);
+        diagramItem.appendChild(legend);
+        diagramItem.appendChild(helpText);
+        diagramItem.appendChild(fretboardContainer);
+        container.appendChild(diagramItem);
+    });
+}
+
+// Generate full fretboard pattern for a scale
+function generateFullFretboardPattern(pattern) {
+    const dots = [];
+    const scaleNotes = pattern.notes;
+    const rootNote = scaleNotes[0];
+    
+    // Standard guitar tuning (from 6th string to 1st string)
+    const stringTuning = ['E', 'A', 'D', 'G', 'B', 'E'];
+    
+    // All chromatic notes using FLATS (not sharps)
+    const chromaticNotes = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+    
+    // Convert sharp notes to flat equivalents
+    const normalizeNote = (note) => {
+        const sharpToFlat = {
+            'C#': 'Db', 'D#': 'Eb', 'F#': 'Gb', 'G#': 'Ab', 'A#': 'Bb'
+        };
+        return sharpToFlat[note] || note;
+    };
+    
+    // Normalize scale notes to use flats
+    const normalizedScaleNotes = scaleNotes.map(normalizeNote);
+    const normalizedRootNote = normalizeNote(rootNote);
+    
+    // Function to get note at specific fret on specific string
+    const getNoteAtFret = (stringIndex, fret) => {
+        const openStringNote = stringTuning[stringIndex];
+        const openStringIndex = chromaticNotes.indexOf(openStringNote);
+        const noteIndex = (openStringIndex + fret) % 12;
+        return chromaticNotes[noteIndex];
+    };
+    
+    // Generate dots for ALL strings and ALL frets (0-22)
+    for (let stringNum = 1; stringNum <= 6; stringNum++) {
+        const stringIndex = stringNum - 1; // Convert to 0-based index
+        
+        // Check every fret from 0 (open) to 22
+        for (let fret = 0; fret <= 22; fret++) {
+            const noteAtFret = getNoteAtFret(stringIndex, fret);
+            
+            // Check if this note is in our scale
+            if (normalizedScaleNotes.includes(noteAtFret)) {
+                const isRoot = noteAtFret === normalizedRootNote;
+                
+                // Simple color system: root or scale note
+                const className = isRoot ? 'dot-root' : 'dot-scale';
+                
+                dots.push({
+                    string: stringNum,
+                    fret: fret,
+                    note: noteAtFret,
+                    className: className,
+                    text: noteAtFret // Show the note name on the dot
+                });
+            }
+        }
+    }
+    
+    console.log(`✅ Generated ${dots.length} scale note positions for ${pattern.name}`);
+    console.log('Scale notes:', normalizedScaleNotes.join(', '));
+    
+    return dots;
+}
+
+// Enable/disable scale diagrams button
+function enableScaleDiagrams(enable) {
+    console.log('🎛️ enableScaleDiagrams called with:', enable);
+    console.log('Scale diagram button element:', scaleDiagramBtn);
+    
+    if (scaleDiagramBtn) {
+        scaleDiagramBtn.disabled = !enable;
+        console.log('✅ Scale diagram button disabled state set to:', !enable);
+    } else {
+        console.error('❌ Scale diagram button not found in enableScaleDiagrams!');
+    }
+}
+
+// Make functions globally available for manual file addition and refresh
+window.addGpFile = addGpFile;
+window.refreshGpFiles = refreshGpFiles;
+window.testLoopButton = testLoopButton;
+
+// Handle volume changes for individual tracks
+function handleVolumeChange(event) {
+    if (!event.target.classList.contains('volume-slider')) return;
+    
+    const trackIndex = parseInt(event.target.getAttribute('data-track'));
+    const volume = parseFloat(event.target.value) / 100; // Convert percentage to decimal
+    
+    // Update the volume display
+    const volumeDisplay = event.target.nextElementSibling;
+    if (volumeDisplay && volumeDisplay.classList.contains('volume-display')) {
+        volumeDisplay.textContent = `${event.target.value}%`;
+    }
+    
+    // Apply volume change to AlphaTab if available
+    if (api && isPlayerReady) {
+        try {
+            api.changeTrackVolume([trackIndex], volume);
+            console.log(`Changed track ${trackIndex} volume to ${Math.round(volume * 100)}%`);
+        } catch (error) {
+            console.warn('Could not change track volume:', error);
+        }
+    }
+}
+
+// Apply queued instrument changes when player starts (simplified)
+function applyQueuedInstrumentChanges() {
+    if (!window.queuedInstrumentChanges || window.queuedInstrumentChanges.size === 0) {
+        return;
+    }
+    
+    console.log(`Note: ${window.queuedInstrumentChanges.size} instrument changes queued - they are already applied to the score`);
+    
+    // Clear the queue since the changes are already in the score
+    window.queuedInstrumentChanges.clear();
+}
+
+// Mobile touch control functions for pause/play from touch position
+function setupScoreTouchControls() {
+    const scoreElement = document.querySelector('#alphaTab');
+    if (!scoreElement) {
+        console.log('Score element not found for touch controls');
+        return;
+    }
+    
+    console.log('Setting up mobile score touch controls');
+    
+    // Track mobile device detection
+    const isMobile = () => window.innerWidth <= 768 || 'ontouchstart' in window;
+    
+    // Use AlphaTab's beatMouseDown event for precise position detection
+    if (api) {
+        api.beatMouseDown.on((beat) => {
+            if (isMobile() && beat) {
+                console.log('Mobile beat touch detected:', beat);
+                // Simple implementation - just play/pause
+                if (api.playerState === 1) { // Playing
+                    api.playPause(); // Pause
+                } else {
+                    api.playPause(); // Play
+                }
+            }
+        });
+    }
+    
+    // Fallback touch event for mobile devices
+    scoreElement.addEventListener('touchend', (event) => {
+        if (isMobile()) {
+            event.preventDefault();
+            console.log('Mobile score touch detected');
+            // Simple play/pause toggle
+            if (api && isPlayerReady) {
+                api.playPause();
+            }
+        }
+    }, { passive: false });
+}
+
+// Scale Pattern Generator Tool
+window.generateScalePattern = function(scaleName, rootNote, scaleFormula, startFret = 8) {
+    console.log('🎼 Generating scale pattern for:', scaleName);
+    
+    // Note mapping with enharmonic equivalents
+    const noteMap = {
+        'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5,
+        'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11
+    };
+    
+    const allNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const rootIndex = noteMap[rootNote];
+    
+    // Generate scale notes from formula (semitone intervals)
+    const scaleNotes = [rootNote];
+    let currentIndex = rootIndex;
+    
+    for (let i = 0; i < scaleFormula.length - 1; i++) {
+        currentIndex = (currentIndex + scaleFormula[i]) % 12;
+        scaleNotes.push(allNotes[currentIndex]);
+    }
+    
+    console.log('Generated scale notes:', scaleNotes);
+    
+    // Standard guitar tuning (low to high): E A D G B E
+    const stringTuning = [4, 9, 2, 7, 11, 4]; // E=4, A=9, D=2, G=7, B=11, E=4
+    
+    const frets = [];
+    const strings = [];
+    const noteLabels = [];
+    
+    // Generate pattern across fretboard (3 notes per string typically)
+    for (let string = 6; string >= 1; string--) {
+        const stringIndex = string - 1;
+        const openNote = stringTuning[stringIndex];
+        
+        // Find scale notes on this string within a reasonable fret range
+        for (let fret = startFret; fret <= startFret + 7; fret++) {
+            const noteValue = (openNote + fret) % 12;
+            const noteName = allNotes[noteValue];
+            
+            // Check if this note is in our scale
+            if (scaleNotes.includes(noteName)) {
+                frets.push(fret);
+                strings.push(string);
+                noteLabels.push(noteName);
+            }
+        }
+    }
+    
+    const pattern = {
+        name: scaleName,
+        notes: scaleNotes,
+        frets: frets,
+        strings: strings,
+        noteLabels: noteLabels
+    };
+    
+    console.log('🎸 Generated pattern:', pattern);
+    console.log('📋 Copy this to add to scalePatterns:');
+    console.log(`'${scaleName}': {
+    patterns: [${JSON.stringify(pattern, null, 8)}]
+},`);
+    
+    return pattern;
+};
+
+// Common scale formulas (semitone intervals)
+window.scaleFormulas = {
+    major: [2, 2, 1, 2, 2, 2, 1],
+    naturalMinor: [2, 1, 2, 2, 1, 2, 2],
+    harmonicMinor: [2, 1, 2, 2, 1, 3, 1],
+    melodicMinor: [2, 1, 2, 2, 2, 2, 1],
+    dorian: [2, 1, 2, 2, 2, 1, 2],
+    phrygian: [1, 2, 2, 2, 1, 2, 2],
+    lydian: [2, 2, 2, 1, 2, 2, 1],
+    mixolydian: [2, 2, 1, 2, 2, 1, 2],
+    locrian: [1, 2, 2, 1, 2, 2, 2],
+    wholeTone: [2, 2, 2, 2, 2, 2],
+    halfWholeDiminished: [1, 2, 1, 2, 1, 2, 1, 2],
+    wholeHalfDiminished: [2, 1, 2, 1, 2, 1, 2, 1],
+    chromatic: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+};
+
+// Quick pattern generators for common scales
+window.generateMajorScale = (root) => generateScalePattern(`${root} Major Scale`, root, scaleFormulas.major);
+window.generateMinorScale = (root) => generateScalePattern(`${root} Natural Minor Scale`, root, scaleFormulas.naturalMinor);
+window.generateDorianMode = (root) => generateScalePattern(`${root} Dorian Mode`, root, scaleFormulas.dorian);
+window.generatePhrygianMode = (root) => generateScalePattern(`${root} Phrygian Mode`, root, scaleFormulas.phrygian);
+window.generateLydianMode = (root) => generateScalePattern(`${root} Lydian Mode`, root, scaleFormulas.lydian);
+window.generateMixolydianMode = (root) => generateScalePattern(`${root} Mixolydian Mode`, root, scaleFormulas.mixolydian);
+window.generateLocrianMode = (root) => generateScalePattern(`${root} Locrian Mode`, root, scaleFormulas.locrian);
+
+console.log('🎼 Scale pattern generator tools loaded!');
+console.log('Use: generateScalePattern("Scale Name", "Root", [intervals])');
+console.log('Or use shortcuts like: generateDorianMode("C")');
+console.log('Available formulas:', Object.keys(scaleFormulas));
+
+// Debug function to force show modal (for testing)
+window.forceShowModal = function() {
+    const modal = document.getElementById('scaleDiagramModal');
+    if (modal) {
+        modal.style.cssText = 'display: block !important; position: fixed !important; z-index: 10000 !important; left: 0 !important; top: 0 !important; width: 100% !important; height: 100% !important; background: rgba(0,0,0,0.8) !important;';
+        console.log('🚀 Modal force displayed');
+    }
+};
+
+// Test function to verify Fretboard.js is working
+window.testFretboard = function() {
+    console.log('🧪 Testing Fretboard...');
+    
+    // Create a test container
+    const testContainer = document.createElement('div');
+    testContainer.style.cssText = 'position: fixed; top: 50px; left: 50px; background: white; padding: 20px; border: 2px solid red; z-index: 99999;';
+    document.body.appendChild(testContainer);
+    
+    // Create a simple fretboard
+    const fretboard = new Fretboard({
+        el: testContainer,
+        frets: 12,
+        strings: 6
+    });
+    
+    // Add some test dots
+    fretboard.setDots([
+        { string: 6, fret: 3, note: 'C', className: 'dot-root' },
+        { string: 5, fret: 5, note: 'D', className: 'dot-note' },
+        { string: 4, fret: 7, note: 'E', className: 'dot-note' }
+    ]).render();
+    
+    console.log('✅ Test fretboard created');
+    
+    // Remove after 5 seconds
+    setTimeout(() => {
+        document.body.removeChild(testContainer);
+        console.log('🗑️ Test fretboard removed');
+    }, 5000);
+};
+
+// Extract fret positions used in the current tab
+function extractTabFretPositions() {
+    if (!currentScore) {
+        console.log('No score loaded to analyze');
+        return [];
+    }
+    
+    const usedPositions = new Set();
+    
+    try {
+        // Iterate through all tracks
+        for (let trackIndex = 0; trackIndex < currentScore.tracks.length; trackIndex++) {
+            const track = currentScore.tracks[trackIndex];
+            
+            // Skip non-guitar tracks (drums, etc.)
+            if (!track.channel || track.channel.channel1 === 9) continue; // Channel 9 is typically drums
+            
+            // Iterate through all staves in the track
+            for (let staffIndex = 0; staffIndex < track.staves.length; staffIndex++) {
+                const staff = track.staves[staffIndex];
+                
+                // Iterate through all bars
+                for (let barIndex = 0; barIndex < staff.bars.length; barIndex++) {
+                    const bar = staff.bars[barIndex];
+                    
+                    // Iterate through all voices in the bar
+                    for (let voiceIndex = 0; voiceIndex < bar.voices.length; voiceIndex++) {
+                        const voice = bar.voices[voiceIndex];
+                        
+                        // Iterate through all beats in the voice
+                        for (let beatIndex = 0; beatIndex < voice.beats.length; beatIndex++) {
+                            const beat = voice.beats[beatIndex];
+                            
+                            // Iterate through all notes in the beat
+                            for (let noteIndex = 0; noteIndex < beat.notes.length; noteIndex++) {
+                                const note = beat.notes[noteIndex];
+                                
+                                // Check if note has fret information
+                                if (note.fret !== undefined && note.string !== undefined) {
+                                    // Convert to 1-based string numbering (6th string = 1, 1st string = 6)
+                                    const stringNumber = 7 - note.string; // AlphaTab uses 0-based, we need 1-based from bottom
+                                    const fretNumber = note.fret;
+                                    
+                                    // Add to our set of used positions
+                                    usedPositions.add(`${stringNumber}-${fretNumber}`);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Convert Set to array of position objects
+        const positions = Array.from(usedPositions).map(pos => {
+            const [string, fret] = pos.split('-').map(Number);
+            return { string, fret };
+        });
+        
+        console.log(`✅ Extracted ${positions.length} unique fret positions from tab:`, positions);
+        return positions;
+        
+    } catch (error) {
+        console.error('Error extracting fret positions:', error);
+        return [];
+    }
+}
+
+// Generate full fretboard pattern for a scale with tab highlights
+function generateFullFretboardPattern(pattern) {
+    const dots = [];
+    const scaleNotes = pattern.notes;
+    const rootNote = scaleNotes[0];
+    
+    // Get fret positions used in the current tab
+    const tabPositions = extractTabFretPositions();
+    const tabPositionSet = new Set(tabPositions.map(pos => `${pos.string}-${pos.fret}`));
+    
+    // Standard guitar tuning (from 6th string to 1st string)
+    const stringTuning = ['E', 'A', 'D', 'G', 'B', 'E'];
+    
+    // All chromatic notes using FLATS (not sharps)
+    const chromaticNotes = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+    
+    // Convert sharp notes to flat equivalents
+    const normalizeNote = (note) => {
+        const sharpToFlat = {
+            'C#': 'Db', 'D#': 'Eb', 'F#': 'Gb', 'G#': 'Ab', 'A#': 'Bb'
+        };
+        return sharpToFlat[note] || note;
+    };
+    
+    // Normalize scale notes to use flats
+    const normalizedScaleNotes = scaleNotes.map(normalizeNote);
+    const normalizedRootNote = normalizeNote(rootNote);
+    
+    // Function to get note at specific fret on specific string
+    const getNoteAtFret = (stringIndex, fret) => {
+        const openStringNote = stringTuning[stringIndex];
+        const openStringIndex = chromaticNotes.indexOf(openStringNote);
+        const noteIndex = (openStringIndex + fret) % 12;
+        return chromaticNotes[noteIndex];
+    };
+    
+    // Generate dots for ALL strings and ALL frets (0-22)
+    for (let stringNum = 1; stringNum <= 6; stringNum++) {
+        const stringIndex = stringNum - 1; // Convert to 0-based index
+        
+        // Check every fret from 0 (open) to 22
+        for (let fret = 0; fret <= 22; fret++) {
+            const noteAtFret = getNoteAtFret(stringIndex, fret);
+            
+            // Check if this note is in our scale
+            if (normalizedScaleNotes.includes(noteAtFret)) {
+                const isRoot = noteAtFret === normalizedRootNote;
+                const isUsedInTab = tabPositionSet.has(`${stringNum}-${fret}`);
+                
+                // Determine dot class based on note type and tab usage
+                let className = 'dot-scale';
+                if (isRoot && isUsedInTab) {
+                    className = 'dot-root-used';
+                } else if (isRoot) {
+                    className = 'dot-root';
+                } else if (isUsedInTab) {
+                    className = 'dot-scale-used';
+                }
+                
+                dots.push({
+                    string: stringNum,
+                    fret: fret,
+                    note: noteAtFret,
+                    className: className,
+                    text: noteAtFret, // Show the note name on the dot
+                    usedInTab: isUsedInTab
+                });
+            }
+        }
+    }
+    
+    console.log(`✅ Generated ${dots.length} scale note positions for ${pattern.name}`);
+    console.log(`📊 ${dots.filter(d => d.usedInTab).length} positions are used in the current tab`);
+    console.log('Scale notes:', normalizedScaleNotes.join(', '));
+    
+    return dots;
+}
