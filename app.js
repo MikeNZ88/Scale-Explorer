@@ -1643,6 +1643,7 @@ async function loadGpFilesFromDirectory() {
     const gpFilesList = [
         // Scale Exercises
         { name: 'C Major Scale and Arpeggio Exercises.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
+        { name: 'C Major Scale and its Modes Using 1 shape.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
         { name: 'A Minor & C Major Pentatonic Scale Shapes.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
         { name: 'E Minor and G Major Pentatonic Scale Shapes.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
         { name: 'Pentatonic_Exercises.gp', category: 'scale-exercises', folder: 'Scale Exercises' },
