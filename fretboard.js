@@ -1,171 +1,367 @@
-// Custom Fretboard Implementation
+// 🎸 FRETBOARD VISUALIZATION LIBRARY
+// Renders interactive guitar fretboard diagrams with scale patterns
+
 class Fretboard {
-    constructor(options = {}) {
-        this.el = options.el;
-        this.frets = options.frets || 15;
-        this.strings = options.strings || 6;
-        this.fretWidth = options.fretWidth || 45;
-        this.fretHeight = options.fretHeight || 35;
-        this.nutWidth = options.nutWidth || 8;
-        this.stringWidth = options.stringWidth || 2;
-        this.fretColor = options.fretColor || '#d0d0d0';
-        this.stringColor = options.stringColor || '#888888';
-        this.backgroundColor = options.backgroundColor || '#ffffff';
-        this.showFretNumbers = options.showFretNumbers !== false;
-        this.fretNumbersHeight = options.fretNumbersHeight || 18;
-        this.dotSize = options.dotSize || 20;
-        this.dotStrokeColor = options.dotStrokeColor || '#ffffff';
-        this.dotStrokeWidth = options.dotStrokeWidth || 2;
+    constructor(container, options = {}) {
+        this.container = container;
+        this.options = {
+            frets: options.frets || 12,
+            strings: options.strings || 6,
+            startFret: options.startFret || 0,
+            showFretNumbers: options.showFretNumbers !== false,
+            showStringLabels: options.showStringLabels !== false,
+            dotSize: options.dotSize || 16,
+            fretSpacing: options.fretSpacing || 50,
+            stringSpacing: options.stringSpacing || 30,
+            nutWidth: options.nutWidth || 8,
+            ...options
+        };
         
-        this.dots = [];
-        this.width = this.frets * this.fretWidth + this.nutWidth;
-        this.height = (this.strings - 1) * this.fretHeight + 60; // Extra space for fret numbers
+        // Standard guitar tuning (high to low for display purposes)
+        this.tuning = options.tuning || ['E', 'B', 'G', 'D', 'A', 'E'];
+        
+        // Use the same chromatic scale system as app.js
+        this.chromaticScale = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        
+        // Flat keys for proper note spelling
+        this.flatKeys = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'];
+        
+        this.init();
     }
     
-    setDots(dots) {
-        this.dots = dots;
-        return this;
+    init() {
+        this.container.innerHTML = '';
+        this.container.style.position = 'relative';
+        this.container.style.overflow = 'auto';
+        
+        this.createFretboard();
     }
     
-    render() {
-        if (!this.el) {
-            console.error('No container element provided');
-            return;
-        }
-        
-        // Create SVG
+    createFretboard() {
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('width', this.width);
-        svg.setAttribute('height', this.height);
-        svg.setAttribute('viewBox', `0 0 ${this.width} ${this.height}`);
-        svg.style.background = this.backgroundColor;
+        const width = (this.options.frets + 1) * this.options.fretSpacing + this.options.nutWidth + 40;
+        const height = (this.options.strings - 1) * this.options.stringSpacing + 60;
         
-        // Clear container
-        this.el.innerHTML = '';
+        svg.setAttribute('width', width);
+        svg.setAttribute('height', height);
+        svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+        svg.style.background = '#fafafa';
         
-        // Draw frets (vertical lines)
-        for (let fret = 0; fret <= this.frets; fret++) {
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            const x = fret === 0 ? this.nutWidth / 2 : this.nutWidth + (fret - 1) * this.fretWidth + this.fretWidth / 2;
+        this.svg = svg;
+        this.width = width;
+        this.height = height;
+        
+        this.drawFrets();
+        this.drawStrings();
+        this.drawFretNumbers();
+        this.drawStringLabels();
+        this.drawFretboardInlays();
+        
+        this.container.appendChild(svg);
+    }
+    
+    drawFrets() {
+        const startY = 20;
+        const endY = startY + (this.options.strings - 1) * this.options.stringSpacing;
+        
+        // Draw nut (thick line at fret 0)
+        if (this.options.startFret === 0) {
+            const nutLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            nutLine.setAttribute('x1', 20);
+            nutLine.setAttribute('y1', startY);
+            nutLine.setAttribute('x2', 20);
+            nutLine.setAttribute('y2', endY);
+            nutLine.setAttribute('stroke', '#333');
+            nutLine.setAttribute('stroke-width', this.options.nutWidth);
+            this.svg.appendChild(nutLine);
+        }
+        
+        // Draw frets
+        for (let fret = this.options.startFret; fret <= this.options.startFret + this.options.frets; fret++) {
+            const x = 20 + this.options.nutWidth + (fret - this.options.startFret) * this.options.fretSpacing;
+            const fretLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            fretLine.setAttribute('x1', x);
+            fretLine.setAttribute('y1', startY);
+            fretLine.setAttribute('x2', x);
+            fretLine.setAttribute('y2', endY);
+            fretLine.setAttribute('stroke', '#999');
+            fretLine.setAttribute('stroke-width', fret === 0 ? 4 : 2);
+            this.svg.appendChild(fretLine);
+        }
+    }
+    
+    drawStrings() {
+        const startX = 20;
+        const endX = 20 + this.options.nutWidth + this.options.frets * this.options.fretSpacing;
+        
+        for (let string = 0; string < this.options.strings; string++) {
+            const y = 20 + string * this.options.stringSpacing;
+            const stringLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            stringLine.setAttribute('x1', startX);
+            stringLine.setAttribute('y1', y);
+            stringLine.setAttribute('x2', endX);
+            stringLine.setAttribute('y2', y);
+            stringLine.setAttribute('stroke', '#666');
+            stringLine.setAttribute('stroke-width', 1.5);
+            this.svg.appendChild(stringLine);
+        }
+    }
+    
+    drawFretNumbers() {
+        if (!this.options.showFretNumbers) return;
+        
+        for (let fret = this.options.startFret + 1; fret <= this.options.startFret + this.options.frets; fret++) {
+            const x = 20 + this.options.nutWidth + (fret - this.options.startFret - 0.5) * this.options.fretSpacing;
+            const y = 20 + (this.options.strings - 1) * this.options.stringSpacing + 25;
             
-            line.setAttribute('x1', x);
-            line.setAttribute('y1', 30);
-            line.setAttribute('x2', x);
-            line.setAttribute('y2', this.height - 30);
-            line.setAttribute('stroke', this.fretColor);
-            line.setAttribute('stroke-width', fret === 0 ? 4 : 2);
-            svg.appendChild(line);
-        }
-        
-        // Draw strings (horizontal lines)
-        for (let string = 0; string < this.strings; string++) {
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            const y = 30 + string * this.fretHeight;
-            
-            line.setAttribute('x1', 0);
-            line.setAttribute('y1', y);
-            line.setAttribute('x2', this.width);
-            line.setAttribute('y2', y);
-            line.setAttribute('stroke', this.stringColor);
-            line.setAttribute('stroke-width', this.stringWidth);
-            svg.appendChild(line);
-        }
-        
-        // Draw fret numbers
-        if (this.showFretNumbers) {
-            for (let fret = 1; fret <= this.frets; fret++) {
-                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                const x = this.nutWidth + (fret - 1) * this.fretWidth + this.fretWidth / 2;
-                
-                text.setAttribute('x', x);
-                text.setAttribute('y', this.height - 10);
-                text.setAttribute('text-anchor', 'middle');
-                text.setAttribute('font-family', 'Arial, sans-serif');
-                text.setAttribute('font-size', '12px');
-                text.setAttribute('fill', '#666');
-                text.textContent = fret;
-                svg.appendChild(text);
-            }
-        }
-        
-        // Draw dots
-        this.dots.forEach(dot => {
-            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
             const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', x);
+            text.setAttribute('y', y);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('font-family', 'Arial, sans-serif');
+            text.setAttribute('font-size', '12');
+            text.setAttribute('fill', '#666');
+            text.textContent = fret;
+            this.svg.appendChild(text);
+        }
+    }
+    
+    drawStringLabels() {
+        if (!this.options.showStringLabels) return;
+        
+        for (let string = 0; string < this.options.strings; string++) {
+            const x = 8;
+            const y = 20 + string * this.options.stringSpacing + 4;
             
-            // Calculate position
-            const x = this.nutWidth + (dot.fret - 0.5) * this.fretWidth;
-            const y = 30 + (this.strings - dot.string) * this.fretHeight;
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', x);
+            text.setAttribute('y', y);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('font-family', 'Arial, sans-serif');
+            text.setAttribute('font-size', '12');
+            text.setAttribute('font-weight', 'bold');
+            text.setAttribute('fill', '#333');
+            text.textContent = this.tuning[string];
+            this.svg.appendChild(text);
+        }
+    }
+    
+    drawFretboardInlays() {
+        const inlayFrets = [3, 5, 7, 9, 12, 15, 17, 19, 21];
+        const doubleInlayFrets = [12, 24];
+        
+        for (let fret of inlayFrets) {
+            if (fret < this.options.startFret || fret > this.options.startFret + this.options.frets) continue;
             
-            // Circle
-            circle.setAttribute('cx', x);
-            circle.setAttribute('cy', y);
-            circle.setAttribute('r', this.dotSize / 2);
+            const x = 20 + this.options.nutWidth + (fret - this.options.startFret - 0.5) * this.options.fretSpacing;
             
-            // Color based on whether it's a root note and/or used in tab
-            const isRoot = dot.className === 'dot-root' || dot.className === 'dot-root-used';
-            const isUsedInTab = dot.className === 'dot-scale-used' || dot.className === 'dot-root-used';
-            
-            let fillColor, strokeColor, strokeWidth;
-            
-            if (dot.className === 'dot-root-used') {
-                // Root note used in tab - bright red with gold border
-                fillColor = '#dc3545';
-                strokeColor = '#ffd700';
-                strokeWidth = 4;
-            } else if (dot.className === 'dot-scale-used') {
-                // Scale note used in tab - brown with gold border
-                fillColor = '#A0522D';
-                strokeColor = '#ffd700';
-                strokeWidth = 4;
-            } else if (dot.className === 'dot-root') {
-                // Root note not used in tab - red with white border
-                fillColor = '#dc3545';
-                strokeColor = '#ffffff';
-                strokeWidth = 2;
+            if (doubleInlayFrets.includes(fret)) {
+                // Double dots for octave markers
+                const y1 = 20 + (this.options.strings - 1) * this.options.stringSpacing * 0.25;
+                const y2 = 20 + (this.options.strings - 1) * this.options.stringSpacing * 0.75;
+                
+                this.createInlayDot(x, y1);
+                this.createInlayDot(x, y2);
             } else {
-                // Scale note not used in tab - brown with white border
-                fillColor = '#A0522D';
-                strokeColor = '#ffffff';
-                strokeWidth = 2;
+                // Single dot
+                const y = 20 + (this.options.strings - 1) * this.options.stringSpacing * 0.5;
+                this.createInlayDot(x, y);
             }
-            
-            circle.setAttribute('fill', fillColor);
-            circle.setAttribute('stroke', strokeColor);
-            circle.setAttribute('stroke-width', strokeWidth);
-            
-            svg.appendChild(circle);
-            
-            // Note label
-            if (dot.note) {
-                text.setAttribute('x', x);
-                text.setAttribute('y', y + 1);
-                text.setAttribute('text-anchor', 'middle');
-                text.setAttribute('dominant-baseline', 'central');
-                text.setAttribute('font-family', 'Arial, sans-serif');
-                text.setAttribute('font-size', '12px');
-                text.setAttribute('font-weight', 'bold');
-                text.setAttribute('fill', 'white');
-                text.textContent = dot.note;
-                svg.appendChild(text);
-            }
+        }
+    }
+    
+    createInlayDot(x, y) {
+        const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        dot.setAttribute('cx', x);
+        dot.setAttribute('cy', y);
+        dot.setAttribute('r', 4);
+        dot.setAttribute('fill', '#ddd');
+        dot.setAttribute('stroke', '#bbb');
+        dot.setAttribute('stroke-width', 1);
+        this.svg.appendChild(dot);
+    }
+    
+    render(notes = []) {
+        // Clear existing note dots
+        const existingDots = this.svg.querySelectorAll('.note-dot');
+        existingDots.forEach(dot => dot.remove());
+        
+        // Add new note dots
+        notes.forEach(note => this.addNoteDot(note));
+    }
+    
+    addNoteDot(note) {
+        const { fret, string, note: noteName, class: noteClass = 'scale' } = note;
+        
+        // Calculate position
+        const x = 20 + this.options.nutWidth + (fret - this.options.startFret - 0.5) * this.options.fretSpacing;
+        const y = 20 + (string - 1) * this.options.stringSpacing;
+        
+        // Create note dot
+        const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        dot.setAttribute('cx', x);
+        dot.setAttribute('cy', y);
+        dot.setAttribute('r', this.options.dotSize / 2);
+        dot.setAttribute('class', `note-dot ${noteClass}`);
+        
+        // Set colors based on note type
+        switch (noteClass) {
+            case 'root':
+                dot.setAttribute('fill', '#dc2626');
+                dot.setAttribute('stroke', '#991b1b');
+                break;
+            case 'scale':
+                dot.setAttribute('fill', '#2563eb');
+                dot.setAttribute('stroke', '#1d4ed8');
+                break;
+            case 'chord':
+                dot.setAttribute('fill', '#f59e0b');
+                dot.setAttribute('stroke', '#d97706');
+                break;
+            default:
+                dot.setAttribute('fill', '#6b7280');
+                dot.setAttribute('stroke', '#4b5563');
+        }
+        
+        dot.setAttribute('stroke-width', 2);
+        this.svg.appendChild(dot);
+        
+        // Add note label
+        if (noteName) {
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', x);
+            text.setAttribute('y', y + 4);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('font-family', 'Arial, sans-serif');
+            text.setAttribute('font-size', '11');
+            text.setAttribute('font-weight', 'bold');
+            text.setAttribute('fill', 'white');
+            text.setAttribute('class', 'note-dot');
+            text.textContent = noteName;
+            this.svg.appendChild(text);
+        }
+        
+        // Add hover effect
+        dot.style.cursor = 'pointer';
+        dot.addEventListener('mouseenter', () => {
+            dot.setAttribute('r', this.options.dotSize / 2 + 2);
         });
+        dot.addEventListener('mouseleave', () => {
+            dot.setAttribute('r', this.options.dotSize / 2);
+        });
+    }
+    
+    // Calculate note at specific fret and string with proper spelling
+    getNoteAt(string, fret, useFlats = false) {
+        // Map string numbers to tuning array indices
+        // String 1 (high E) = index 0, String 6 (low E) = index 5
+        const stringIndex = string - 1;
+        const openNote = this.tuning[stringIndex];
+        const openNoteIndex = this.chromaticScale.indexOf(openNote);
+        const noteIndex = (openNoteIndex + fret) % 12;
+        let note = this.chromaticScale[noteIndex];
         
-        // Add title if provided
-        const title = document.createElement('div');
-        title.style.textAlign = 'center';
-        title.style.marginBottom = '10px';
-        title.style.fontWeight = 'bold';
-        title.style.fontSize = '14px';
-        title.style.color = '#8B4513';
+        // Use flats if specified
+        if (useFlats && note.includes('#')) {
+            const flatEquivalents = {
+                'C#': 'Db',
+                'D#': 'Eb',
+                'F#': 'Gb',
+                'G#': 'Ab',
+                'A#': 'Bb'
+            };
+            note = flatEquivalents[note] || note;
+        }
         
-        this.el.appendChild(title);
-        this.el.appendChild(svg);
+        return note;
+    }
+    
+    // Generate fretboard pattern from scale notes with proper spelling
+    generatePattern(scaleNotes, rootNote = null) {
+        const pattern = [];
+        const useFlats = rootNote && this.flatKeys.includes(rootNote);
         
-        return this;
+        // Create enharmonic equivalents map for better note matching
+        const enharmonicMap = {
+            'C': ['C', 'B#'],
+            'C#': ['C#', 'Db'],
+            'D': ['D'],
+            'D#': ['D#', 'Eb'],
+            'E': ['E', 'Fb'],
+            'F': ['F', 'E#'],
+            'F#': ['F#', 'Gb'],
+            'G': ['G'],
+            'G#': ['G#', 'Ab'],
+            'A': ['A'],
+            'A#': ['A#', 'Bb'],
+            'B': ['B', 'Cb'],
+            // Also include reverse mappings
+            'Db': ['C#', 'Db'],
+            'Eb': ['D#', 'Eb'],
+            'Fb': ['E', 'Fb'],
+            'Gb': ['F#', 'Gb'],
+            'Ab': ['G#', 'Ab'],
+            'Bb': ['A#', 'Bb'],
+            'Cb': ['B', 'Cb'],
+            'B#': ['C', 'B#'],
+            'E#': ['F', 'E#']
+        };
+        
+        // Function to find the scale note name that matches this fretboard position
+        function getScaleNoteName(fretboardNote, scaleNotes) {
+            // First check for direct match
+            if (scaleNotes.includes(fretboardNote)) {
+                return fretboardNote;
+            }
+            
+            // Check enharmonic equivalents and return the scale's spelling
+            const equivalents = enharmonicMap[fretboardNote] || [fretboardNote];
+            for (let equiv of equivalents) {
+                if (scaleNotes.includes(equiv)) {
+                    return equiv; // Return the scale's spelling, not the fretboard's
+                }
+            }
+            
+            return null; // Not in scale
+        }
+        
+        for (let string = 1; string <= this.options.strings; string++) {
+            for (let fret = this.options.startFret; fret <= this.options.startFret + this.options.frets; fret++) {
+                const fretboardNote = this.getNoteAt(string, fret, useFlats);
+                const scaleNoteName = getScaleNoteName(fretboardNote, scaleNotes);
+                
+                if (scaleNoteName) {
+                    // Check if this note is the root (considering enharmonics)
+                    const isRoot = rootNote && (scaleNoteName === rootNote || 
+                        (enharmonicMap[scaleNoteName] && enharmonicMap[scaleNoteName].includes(rootNote)) ||
+                        (enharmonicMap[rootNote] && enharmonicMap[rootNote].includes(scaleNoteName)));
+                    
+                    pattern.push({
+                        fret: fret,
+                        string: string,
+                        note: scaleNoteName, // Use the scale's note spelling, not fretboard calculation
+                        class: isRoot ? 'root' : 'scale'
+                    });
+                }
+            }
+        }
+        
+        return pattern;
+    }
+    
+    // Display a scale pattern
+    displayScale(scaleNotes, rootNote = null) {
+        const pattern = this.generatePattern(scaleNotes, rootNote);
+        this.render(pattern);
+    }
+    
+    // Clear all notes
+    clear() {
+        this.render([]);
     }
 }
 
-// Make it globally available
-window.Fretboard = Fretboard;
-console.log('✅ Custom Fretboard library loaded successfully!');
+// Export for use in other files
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = Fretboard;
+}
