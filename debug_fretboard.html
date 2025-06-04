@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fretboard Debug Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .fretboard-container {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+            display: flex;
+            justify-content: center;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎸 Fretboard.js Debug Test</h1>
+        
+        <div id="status" class="status">Loading Fretboard.js library...</div>
+        
+        <button class="test-button" onclick="testBasicFretboard()">Test Basic Fretboard</button>
+        <button class="test-button" onclick="testCMajorScale()">Test C Major Scale</button>
+        <button class="test-button" onclick="testScalePattern()">Test Scale Pattern from App</button>
+        
+        <div id="fretboard1" class="fretboard-container"></div>
+        <div id="fretboard2" class="fretboard-container"></div>
+        <div id="fretboard3" class="fretboard-container"></div>
+        
+        <h3>Available Scale Patterns:</h3>
+        <ul id="scalePatternsList"></ul>
+    </div>
+
+    <!-- Load Fretboard.js -->
+    <script src="https://cdn.jsdelivr.net/npm/fretboard@1.0.0/dist/fretboard.umd.js"></script>
+    
+    <script>
+        // Copy scale patterns from main app
+        const scalePatterns = {
+            'C Major Scale and its Modes Using 1 shape': {
+                patterns: [
+                    {
+                        name: 'C Ionian (Major)',
+                        notes: ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
+                        frets: [8, 10, 12, 8, 10, 12, 9, 10, 12, 9, 10, 12, 10, 12, 8, 10, 12],
+                        strings: [6, 6, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 1, 1, 1],
+                        noteLabels: ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'A', 'B', 'C', 'D', 'E']
+                    }
+                ]
+            },
+            'C Ionian Mode': {
+                patterns: [{
+                    name: 'C Ionian (Major Scale)',
+                    notes: ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
+                    frets: [8, 10, 12, 8, 10, 12, 9, 10, 12, 9, 10, 12, 10, 12, 8, 10, 12],
+                    strings: [6, 6, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 1, 1, 1],
+                    noteLabels: ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'A', 'B', 'C', 'D', 'E']
+                }]
+            }
+        };
+
+        // Check if Fretboard library loaded
+        window.addEventListener('load', function() {
+            const statusEl = document.getElementById('status');
+            const listEl = document.getElementById('scalePatternsList');
+            
+            if (typeof Fretboard !== 'undefined') {
+                statusEl.className = 'status success';
+                statusEl.textContent = '✅ Fretboard.js library loaded successfully!';
+                console.log('Fretboard library version:', Fretboard.version || 'Unknown');
+            } else {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ Fretboard.js library failed to load!';
+            }
+            
+            // List available scale patterns
+            Object.keys(scalePatterns).forEach(name => {
+                const li = document.createElement('li');
+                li.textContent = name;
+                listEl.appendChild(li);
+            });
+        });
+
+        function testBasicFretboard() {
+            console.log('Testing basic fretboard...');
+            const container = document.getElementById('fretboard1');
+            container.innerHTML = '<h4>Basic Empty Fretboard</h4>';
+            
+            try {
+                const fretboard = new Fretboard({
+                    el: container,
+                    frets: 12,
+                    strings: 6,
+                    fretWidth: 40,
+                    fretHeight: 30,
+                    nutWidth: 8,
+                    stringWidth: 2,
+                    showFretNumbers: true
+                });
+                
+                fretboard.render();
+                console.log('✅ Basic fretboard rendered successfully');
+                
+            } catch (error) {
+                console.error('❌ Error creating basic fretboard:', error);
+                container.innerHTML = '<h4>❌ Error creating basic fretboard: ' + error.message + '</h4>';
+            }
+        }
+
+        function testCMajorScale() {
+            console.log('Testing C Major scale...');
+            const container = document.getElementById('fretboard2');
+            container.innerHTML = '<h4>C Major Scale (Simple)</h4>';
+            
+            try {
+                const fretboard = new Fretboard({
+                    el: container,
+                    frets: 15,
+                    strings: 6,
+                    fretWidth: 40,
+                    fretHeight: 30,
+                    nutWidth: 8,
+                    stringWidth: 2,
+                    showFretNumbers: true,
+                    dotSize: 12,
+                    dotStrokeColor: '#ffffff',
+                    dotStrokeWidth: 2
+                });
+                
+                // Simple C Major scale dots
+                const dots = [
+                    { string: 6, fret: 8, note: 'C', className: 'dot-root' },
+                    { string: 6, fret: 10, note: 'D', className: 'dot-note' },
+                    { string: 6, fret: 12, note: 'E', className: 'dot-note' },
+                    { string: 5, fret: 8, note: 'F', className: 'dot-note' },
+                    { string: 5, fret: 10, note: 'G', className: 'dot-note' },
+                    { string: 5, fret: 12, note: 'A', className: 'dot-note' }
+                ];
+                
+                fretboard.setDots(dots).render();
+                console.log('✅ C Major scale rendered successfully');
+                
+            } catch (error) {
+                console.error('❌ Error creating C Major scale:', error);
+                container.innerHTML = '<h4>❌ Error creating C Major scale: ' + error.message + '</h4>';
+            }
+        }
+
+        function testScalePattern() {
+            console.log('Testing scale pattern from app...');
+            const container = document.getElementById('fretboard3');
+            container.innerHTML = '<h4>Scale Pattern from App Data</h4>';
+            
+            try {
+                const pattern = scalePatterns['C Ionian Mode'].patterns[0];
+                console.log('Using pattern:', pattern);
+                
+                const fretboard = new Fretboard({
+                    el: container,
+                    frets: 15,
+                    strings: 6,
+                    fretWidth: 40,
+                    fretHeight: 30,
+                    nutWidth: 8,
+                    stringWidth: 2,
+                    showFretNumbers: true,
+                    dotSize: 12,
+                    dotStrokeColor: '#ffffff',
+                    dotStrokeWidth: 2
+                });
+                
+                // Convert pattern data to dots
+                const dots = [];
+                for (let i = 0; i < pattern.frets.length; i++) {
+                    const fret = pattern.frets[i];
+                    const string = pattern.strings[i];
+                    const note = pattern.noteLabels[i];
+                    const isRoot = note === pattern.notes[0];
+                    
+                    dots.push({
+                        string: string,
+                        fret: fret,
+                        note: note,
+                        className: isRoot ? 'dot-root' : 'dot-note'
+                    });
+                }
+                
+                console.log('Generated dots:', dots);
+                fretboard.setDots(dots).render();
+                console.log('✅ Scale pattern rendered successfully');
+                
+            } catch (error) {
+                console.error('❌ Error creating scale pattern:', error);
+                container.innerHTML = '<h4>❌ Error creating scale pattern: ' + error.message + '</h4>';
+            }
+        }
+    </script>
+</body>
+</html> 

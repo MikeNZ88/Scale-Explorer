@@ -182,9 +182,11 @@ class Fretboard {
     }
     
     render(notes = []) {
-        // Clear existing note dots
+        // Clear existing note dots and text
         const existingDots = this.svg.querySelectorAll('.note-dot');
+        const existingText = this.svg.querySelectorAll('.note-text');
         existingDots.forEach(dot => dot.remove());
+        existingText.forEach(text => text.remove());
         
         // Add new note dots
         notes.forEach(note => this.addNoteDot(note));
@@ -236,7 +238,7 @@ class Fretboard {
             text.setAttribute('font-size', '11');
             text.setAttribute('font-weight', 'bold');
             text.setAttribute('fill', 'white');
-            text.setAttribute('class', 'note-dot');
+            text.setAttribute('class', 'note-text');
             text.textContent = noteName;
             this.svg.appendChild(text);
         }

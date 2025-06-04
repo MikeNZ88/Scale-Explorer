@@ -3,168 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guitar Tab Player</title>
-    
-    <!-- External CSS -->
+    <title>Guitar Scale Explorer</title>
     <link rel="stylesheet" href="styles.css">
-    
-    <!-- AlphaTab CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/alphaTab.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/alphatab/1.3.0/alphatab.min.css">
 </head>
 <body>
     <div class="container">
         <!-- Header -->
         <header class="header">
-            <h1>Guitar Tab Player</h1>
-            <p>Supports Guitar Pro formats: .gp, .gp3, .gp4, .gp5, .gp6, .gp7, .gpx</p>
-            <p class="brand-text">Mike Nelson Guitar Lessons</p>
+            <h1>Guitar Scale Explorer</h1>
+            <p class="subtitle">Master scales through keys, modes, and harmonic relationships</p>
         </header>
 
-        <!-- File Input Section -->
-        <div class="file-section">
-            <div class="file-input-container" id="fileInputContainer">
-                <input type="file" id="fileInput" accept=".gp,.gp3,.gp4,.gp5,.gpx,.gp6,.gp7" class="file-input">
-                <label for="fileInput" class="file-input-label" tabindex="-1">
-                    <span class="file-input-icon">📁</span>
-                    <span class="file-input-text">Choose Guitar Pro File</span>
-                </label>
-                <div id="fileNameDisplay" class="file-name-display" style="display: none;"></div>
-            </div>
-        </div>
-
-        <!-- GP Files Browser -->
-        <div class="gp-files-browser" id="gpFilesBrowser">
-            <div class="browser-header">
-                <div class="browser-search">
-                    <input type="text" id="fileSearch" placeholder="Search files..." class="search-input">
-                    <span class="search-icon">🔍</span>
-                </div>
-                <button id="toggleLibrary" class="toggle-library-btn" title="Hide/Show Library">
-                    🙈
-                </button>
-            </div>
-            
-            <div class="browser-content" id="browserContent">
-                <div class="browser-controls">
-                    <div class="filter-buttons">
-                        <button class="filter-btn active" data-filter="scale-exercises">Scales</button>
-                        <button class="filter-btn" data-filter="arpeggios">Arpeggios</button>
-                        <button class="filter-btn" data-filter="licks">Licks</button>
-                        <button class="filter-btn" data-filter="chord-progressions">Chord Progressions</button>
-                        <button class="filter-btn" data-filter="songs">Songs</button>
-                    </div>
-                    
-                    <div class="sort-controls">
-                        <button id="sortToggle" class="sort-toggle-btn" title="Toggle A-Z / Z-A">
-                            A-Z
-                        </button>
+        <!-- Scale Library -->
+        <div class="scale-library" id="scale-library">
+            <!-- Key Selector -->
+            <div class="key-selector-section">
+                <div class="key-controls">
+                    <div class="key-selector-wrapper">
+                        <label for="key-selector">Root Note:</label>
+                        <select id="key-selector" class="key-selector">
+                            <option value="C">C</option>
+                            <option value="C#">C#</option>
+                            <option value="D">D</option>
+                            <option value="D#">D#</option>
+                            <option value="E">E</option>
+                            <option value="F">F</option>
+                            <option value="F#">F#</option>
+                            <option value="G">G</option>
+                            <option value="G#">G#</option>
+                            <option value="A">A</option>
+                            <option value="A#">A#</option>
+                            <option value="B">B</option>
+                        </select>
                     </div>
                 </div>
                 
-                <div class="files-container">
-                    <div id="filesList" class="files-list">
-                        <!-- Files will be populated here -->
+                <!-- Parent Scale Display -->
+                <div class="parent-scale-section">
+                    <div class="parent-scale-title">Parent Scale</div>
+                    <div class="parent-scale-display" id="parent-scale-display">C Major</div>
+                </div>
+            </div>
+
+            <!-- Category Tabs -->
+            <div class="category-tabs">
+                <button class="category-tab active" data-category="major">Major</button>
+                <button class="category-tab" data-category="harmonic">Harmonic Minor</button>
+                <button class="category-tab" data-category="melodic">Melodic Minor</button>
+                <button class="category-tab" data-category="diminished">Diminished</button>
+                <button class="category-tab" data-category="chromatic">Chromatic</button>
+                <button class="category-tab" data-category="wholeTone">Whole Tone</button>
+                <button class="category-tab" data-category="pentatonic">Pentatonic</button>
+                <button class="category-tab" data-category="blues">Blues</button>
+            </div>
+
+            <!-- Pentatonic Type Selector (hidden by default) -->
+            <div class="pentatonic-controls hidden" id="pentatonic-controls">
+                <div class="pentatonic-selector-wrapper">
+                    <label for="pentatonic-type-selector">Pentatonic Type:</label>
+                    <select id="pentatonic-type-selector" class="pentatonic-type-selector">
+                        <option value="major">Major Pentatonic</option>
+                        <option value="minor">Minor Pentatonic</option>
+                        <option value="egyptian">Egyptian Pentatonic</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Scale Grid -->
+            <div class="scale-grid" id="scale-grid">
+                <div class="mode-grid" id="mode-grid">
+                    <!-- Mode cards will be dynamically generated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Mode Detail View (hidden by default) -->
+        <div class="mode-detail hidden" id="mode-detail">
+            <div class="navigation">
+                <button class="nav-btn" id="back-to-grid">
+                    ← Back to Grid
+                </button>
+            </div>
+
+            <div class="mode-header">
+                <h2 class="mode-title" id="mode-name"></h2>
+                <p class="mode-root" id="mode-root"></p>
+            </div>
+
+            <div class="mode-content">
+                <div class="theory-section">
+                    <h3 class="section-title">📚 Theory</h3>
+                    <div class="theory-grid" id="theory-grid">
+                        <div class="theory-item">
+                            <div class="theory-label">Formula:</div>
+                            <div class="theory-value" id="mode-formula"></div>
+                        </div>
+                        <div class="theory-item">
+                            <div class="theory-label">Intervals:</div>
+                            <div class="theory-value" id="mode-intervals"></div>
+                        </div>
+                        <div class="theory-item">
+                            <div class="theory-label">Notes:</div>
+                            <div class="theory-value" id="mode-notes"></div>
+                        </div>
+                        <div class="theory-item">
+                            <div class="theory-label">Mood:</div>
+                            <div class="theory-value" id="mode-mood"></div>
+                        </div>
+                        <div class="theory-item">
+                            <div class="theory-label">Description:</div>
+                            <div class="theory-value" id="mode-description"></div>
+                        </div>
+                        <div class="theory-item">
+                            <div class="theory-label">Applications:</div>
+                            <div class="theory-value">
+                                <ul id="mode-applications"></ul>
+                            </div>
+                        </div>
                     </div>
-                    <div id="filesEmptyState" class="empty-state" style="display: none;">
-                        <div class="empty-icon">📁</div>
-                        <p>No files found</p>
-                        <small>Try adjusting your search or filter criteria</small>
+                </div>
+
+                <div class="fretboard-section">
+                    <h3 class="section-title">🎸 Fretboard Pattern</h3>
+                    <div class="fretboard-container" id="fretboard-container">
+                        <!-- Fretboard will be rendered here -->
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Track Info -->
-        <div id="trackInfo" class="track-info" style="display: none;">
-            <div class="song-details">
-                <h2 id="songTitle">Song Title</h2>
-                <p id="songArtist">Artist Name</p>
-                <p id="trackCount">Tracks: 0</p>
+            <div class="practice-section">
+                <h3 class="section-title">🎵 Practice Tabs</h3>
+                <div class="practice-tabs" id="practice-tabs">
+                    <!-- Practice tabs will be populated here -->
+                </div>
+            </div>
+
+            <div class="navigation mt-4">
+                <button class="nav-btn" id="back-to-mode">
+                    ← Back to Mode
+                </button>
             </div>
         </div>
 
-        <!-- Track Controls -->
-        <div id="trackControls" class="track-controls" style="display: none;">
-            <div class="track-controls-header">
-                <h3>Track Controls
-                    <button id="toggleTrackControls" class="toggle-controls-btn" title="Show Track Controls">
-                        👁️
-                    </button>
-                </h3>
-                <div class="bulk-controls">
-                    <button id="showAllTracks" class="bulk-btn">Show All</button>
-                    <button id="hideAllTracks" class="bulk-btn">Hide All</button>
-                    <button id="unmuteAllTracks" class="bulk-btn">Unmute All</button>
-                    <button id="unsoloAllTracks" class="bulk-btn">Unsolo All</button>
-                </div>
+        <!-- Tab Player (hidden by default) -->
+        <div class="tab-player hidden" id="tab-player">
+            <div class="player-controls">
+                <button class="control-btn" id="play-btn">▶</button>
+                <button class="control-btn" id="pause-btn">⏸</button>
+                <button class="control-btn" id="stop-btn">⏹</button>
+                <button class="control-btn" id="slow-btn">🐌</button>
+                <button class="control-btn" id="loop-btn">🔄</button>
             </div>
-            <div id="tracksGrid" class="tracks-grid"></div>
-        </div>
 
-        <!-- Horizontal Playback Controls -->
-        <div id="horizontalControls" class="horizontal-controls">
-            <div class="playback-buttons">
-                <button id="playBtn" class="horizontal-btn" disabled>
-                    <span class="btn-icon">▶️</span>
-                </button>
-                <button id="pauseBtn" class="horizontal-btn" disabled>
-                    <span class="btn-icon">⏸️</span>
-                </button>
-                <button id="stopBtn" class="horizontal-btn" disabled>
-                    <span class="btn-icon">⏹️</span>
-                </button>
-                <button id="printBtn" class="horizontal-btn" disabled title="Print Tab">
-                    <span class="btn-icon">🖨️</span>
-                </button>
-                <button id="downloadBtn" class="horizontal-btn" disabled title="Download Guitar Pro File">
-                    <span class="btn-icon">💾</span>
-                </button>
-                <button id="scaleDiagramBtn" class="horizontal-btn" disabled title="Show Scale Diagrams">
-                    <span class="btn-icon">🎸</span>
-                </button>
-            </div>
-            
-            <div class="horizontal-divider"></div>
-            
-            <div class="slider-controls">
-                <div class="horizontal-volume">
-                    <span class="volume-icon">🔊</span>
-                    <input type="range" id="volumeSlider" min="0" max="100" value="80" class="horizontal-slider">
-                    <span id="volumeValue" class="horizontal-display">80%</span>
-                </div>
-
-                <div class="horizontal-speed">
-                    <span class="speed-icon">🎵</span>
-                    <input type="range" id="speedSlider" min="25" max="200" value="100" step="5" class="horizontal-slider">
-                    <span id="speedValue" class="horizontal-display">100%</span>
-                </div>
+            <div class="tab-content" id="tab-content">
+                <!-- Tab notation will be displayed here -->
             </div>
         </div>
 
-        <!-- AlphaTab Container -->
-        <div class="alphatab-section">
-            <div id="alphaTab">
-            </div>
+        <!-- File Upload Section -->
+        <div class="upload-section" id="upload-section">
+            <div class="upload-icon">📁</div>
+            <h3>Upload Guitar Pro Files</h3>
+            <p>Drag and drop your .gp, .gpx, or .gp5 files here</p>
+            <input type="file" id="file-input" class="file-input" accept=".gp,.gpx,.gp5,.gp4,.gp3" multiple>
+            <button class="upload-btn" onclick="document.getElementById('file-input').click()">
+                Choose Files
+            </button>
         </div>
+    </div>
 
-        <!-- Scale Diagram Modal -->
-        <div id="scaleDiagramModal" class="modal scale-diagram-modal">
-            <div class="modal-content scale-diagram-content">
-                <div class="modal-header">
-                    <h2>Scale Diagrams</h2>
-                    <button id="closeScaleDiagramModal" class="close-btn">&times;</button>
-                </div>
-                <div id="scaleDiagramContainer" class="scale-diagram-container">
-                    <!-- Scale diagrams will be generated here -->
-                </div>
+    <!-- Modal for Scale Details -->
+    <div class="modal hidden" id="scale-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Scale Details</h3>
+                <button class="close-btn" id="close-modal">×</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Modal content will be populated here -->
             </div>
         </div>
     </div>
 
-    <!-- External Scripts -->
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/alphaTab.js"></script>
     <script src="fretboard.js"></script>
-    <script src="debug.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

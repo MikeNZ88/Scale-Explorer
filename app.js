@@ -69,7 +69,7 @@ const scaleFormulas = {
     major: [2, 2, 1, 2, 2, 2, 1],
     harmonicMinor: [2, 1, 2, 2, 1, 3, 1],
     melodicMinor: [2, 1, 2, 2, 2, 2, 1],
-    wholeTone: [2, 2, 2, 2, 2, 2],
+    wholeTone: [2, 2, 2, 2, 2, 2], // 6 intervals to generate 6 notes plus octave
     diminished: [2, 1, 2, 1, 2, 1, 2, 1], // Whole-Half
     chromatic: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     pentatonicMajor: [2, 2, 3, 2, 3],
@@ -150,8 +150,128 @@ const pentatonicTypes = {
     }
 };
 
+// Blues scale modes
+const bluesScaleModes = [
+    { name: 'Minor Blues', mode: 0, mood: 'Bluesy, soulful, expressive', description: 'Minor pentatonic with added flat 5th (blue note)' },
+    { name: 'Major Blues', mode: 1, mood: 'Happy blues, country, folk', description: 'Major pentatonic with added flat 3rd (blue note)' },
+    { name: 'Dorian Blues', mode: 2, mood: 'Sophisticated blues, jazzy', description: 'Blues scale starting on the flat 3rd' },
+    { name: 'Mixolydian Blues', mode: 3, mood: 'Dominant blues, funky', description: 'Blues scale starting on the 4th' },
+    { name: 'Phrygian Blues', mode: 4, mood: 'Dark blues, Spanish flavor', description: 'Blues scale starting on the flat 5th' },
+    { name: 'Lydian Blues', mode: 5, mood: 'Floating blues, ethereal', description: 'Blues scale starting on the 5th' }
+];
+
+// Global state for fretboard display mode
+let fretboardDisplayMode = 'notes'; // 'notes' or 'intervals'
+
+// Function to generate fretboard SVG using the Fretboard class
+function generateFretboard(scale, displayMode = 'notes', isModal = false) {
+    // Create a temporary container
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.visibility = 'hidden';
+    document.body.appendChild(tempContainer);
+    
+    // Create fretboard instance with appropriate sizing
+    const fretboardOptions = {
+        frets: 12,
+        strings: 6,
+        startFret: 0,
+        showFretNumbers: true,
+        showStringLabels: true,
+        dotSize: isModal ? 20 : 16,
+        fretSpacing: isModal ? 70 : 50,
+        stringSpacing: isModal ? 40 : 30,
+        nutWidth: 8
+    };
+    
+    const fretboard = new Fretboard(tempContainer, fretboardOptions);
+    
+    // Generate the scale pattern on the fretboard
+    if (scale && scale.notes && Array.isArray(scale.notes)) {
+        const pattern = fretboard.generatePattern(scale.notes, scale.root);
+        
+        // Convert pattern to display format based on mode
+        const displayPattern = pattern.map(note => {
+            let displayText = '';
+            
+            if (displayMode === 'intervals' && scale.intervals) {
+                // Find the interval for this note
+                const noteIndex = scale.notes.findIndex(scaleNote => {
+                    // Handle enharmonic equivalents
+                    const noteChromatic = fretboard.chromaticScale.indexOf(note.note.replace('b', '#'));
+                    const scaleNoteChromatic = fretboard.chromaticScale.indexOf(scaleNote.replace('b', '#'));
+                    return noteChromatic === scaleNoteChromatic;
+                });
+                
+                if (noteIndex !== -1 && scale.intervals[noteIndex]) {
+                    displayText = scale.intervals[noteIndex];
+                }
+            } else {
+                displayText = note.note;
+            }
+            
+            return {
+                ...note,
+                note: displayText
+            };
+        });
+        
+        fretboard.render(displayPattern);
+    }
+    
+    // Get the SVG element and add classes
+    const svgElement = tempContainer.querySelector('svg');
+    if (svgElement) {
+        svgElement.classList.add('fretboard-svg');
+        if (isModal) {
+            svgElement.classList.add('modal-fretboard');
+        }
+        
+        // Return the outer HTML of the SVG
+        const svgHTML = svgElement.outerHTML;
+        
+        // Clean up
+        document.body.removeChild(tempContainer);
+        
+        return svgHTML;
+    }
+    
+    // Clean up and return empty string if failed
+    document.body.removeChild(tempContainer);
+    return '<p>Error generating fretboard</p>';
+}
+
 // Function to get proper note spelling based on key signature and scale type
 function getProperNoteSpelling(noteIndex, key, scaleType = 'major') {
+    // For whole tone scales, use the 2-scale system
+    if (scaleType === 'wholeTone') {
+        const wholeToneScale1Notes = ['C', 'D', 'E', 'F#', 'G#', 'A#'];
+        const wholeToneScale2Notes = ['Db', 'Eb', 'F', 'G', 'A', 'B'];
+        
+        const wholeToneMapping = {
+            'C': wholeToneScale1Notes, 'D': wholeToneScale1Notes, 'E': wholeToneScale1Notes,
+            'F#': wholeToneScale1Notes, 'G#': wholeToneScale1Notes, 'A#': wholeToneScale1Notes,
+            'Gb': wholeToneScale1Notes, 'Ab': wholeToneScale1Notes, 'Bb': wholeToneScale1Notes,
+            
+            'Db': wholeToneScale2Notes, 'Eb': wholeToneScale2Notes, 'F': wholeToneScale2Notes,
+            'G': wholeToneScale2Notes, 'A': wholeToneScale2Notes, 'B': wholeToneScale2Notes,
+            'C#': wholeToneScale2Notes, 'D#': wholeToneScale2Notes
+        };
+        
+        const scaleNotes = wholeToneMapping[key];
+        if (scaleNotes) {
+            // Find which note in the scale corresponds to this chromatic index
+            for (let note of scaleNotes) {
+                const chromIndex = chromaticScale.indexOf(note.replace('b', '#'));
+                if (chromIndex === noteIndex) {
+                    return note;
+                }
+            }
+        }
+        
+        return chromaticScale[noteIndex];
+    }
+    
     // For harmonic and melodic minor, use direct note mapping
     if (scaleType === 'harmonicMinor') {
         const harmonicMinorSpellings = {
@@ -227,25 +347,83 @@ function getProperNoteSpelling(noteIndex, key, scaleType = 'major') {
         return chromaticScale[noteIndex];
     }
     
-    // For major scales, use chromatic spelling rules
+    // For major scales, use proper music theory spelling
+    if (scaleType === 'major') {
+        // Define correct major scale spellings for all keys
+        const majorScaleSpellings = {
+            'C': ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
+            'C#': ['C#', 'D#', 'E#', 'F#', 'G#', 'A#', 'B#'],
+            'Db': ['Db', 'Eb', 'F', 'Gb', 'Ab', 'Bb', 'C'],
+            'D': ['D', 'E', 'F#', 'G', 'A', 'B', 'C#'],
+            'D#': ['D#', 'E#', 'F##', 'G#', 'A#', 'B#', 'C##'],
+            'Eb': ['Eb', 'F', 'G', 'Ab', 'Bb', 'C', 'D'],
+            'E': ['E', 'F#', 'G#', 'A', 'B', 'C#', 'D#'],
+            'F': ['F', 'G', 'A', 'Bb', 'C', 'D', 'E'],
+            'F#': ['F#', 'G#', 'A#', 'B', 'C#', 'D#', 'E#'],
+            'Gb': ['Gb', 'Ab', 'Bb', 'Cb', 'Db', 'Eb', 'F'],
+            'G': ['G', 'A', 'B', 'C', 'D', 'E', 'F#'],
+            'G#': ['G#', 'A#', 'B#', 'C#', 'D#', 'E#', 'F##'],
+            'Ab': ['Ab', 'Bb', 'C', 'Db', 'Eb', 'F', 'G'],
+            'A': ['A', 'B', 'C#', 'D', 'E', 'F#', 'G#'],
+            'A#': ['A#', 'B#', 'C##', 'D#', 'E#', 'F##', 'G##'],
+            'Bb': ['Bb', 'C', 'D', 'Eb', 'F', 'G', 'A'],
+            'B': ['B', 'C#', 'D#', 'E', 'F#', 'G#', 'A#']
+        };
+        
+        // Helper function to convert note to chromatic index
+        function noteToChromatic(note) {
+            const noteMap = {
+                'C': 0, 'B#': 0,
+                'C#': 1, 'Db': 1, 
+                'C##': 2, 'D': 2, 
+                'D#': 3, 'Eb': 3,
+                'E': 4, 'Fb': 4, 
+                'E#': 5, 'F': 5,
+                'F#': 6, 'Gb': 6, 
+                'F##': 8, 'G': 7,
+                'G#': 8, 'Ab': 8,
+                'G##': 10, 'A': 9,
+                'A#': 10, 'Bb': 10,
+                'B': 11, 'Cb': 11
+            };
+            return noteMap[note] !== undefined ? noteMap[note] : -1;
+        }
+        
+        // Find which scale degree this note represents in the major scale
+        const scaleNotes = majorScaleSpellings[key];
+        if (scaleNotes) {
+            for (let i = 0; i < scaleNotes.length; i++) {
+                const scaleNote = scaleNotes[i];
+                const scaleNoteIndex = noteToChromatic(scaleNote);
+                if (scaleNoteIndex === noteIndex) {
+                    return scaleNote;
+                }
+            }
+        }
+        
+        // Fallback to chromatic scale
+        return chromaticScale[noteIndex];
+    }
+    
+    // For other scale types, use the old chromatic spelling rules
     const majorSpellingRules = {
         'C': ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
-        'C#': ['C#', 'D', 'D#', 'E', 'E#', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'B#'],
-        'Db': ['Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B', 'C'],
-        'D': ['D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#'],
-        'D#': ['D#', 'E', 'E#', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'B#', 'C#', 'D'],
-        'Eb': ['Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B', 'C', 'Db', 'D'],
-        'E': ['E', 'E#', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'D#'],
-        'F': ['F', 'F#', 'G', 'G#', 'A', 'Bb', 'B', 'C', 'C#', 'D', 'D#', 'E'],
-        'F#': ['F#', 'G', 'G#', 'A', 'A#', 'B', 'B#', 'C#', 'D', 'D#', 'E', 'E#'],
-        'Gb': ['Gb', 'G', 'Ab', 'A', 'Bb', 'Cb', 'C', 'Db', 'D', 'Eb', 'E', 'F'],
-        'G': ['G', 'G#', 'A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#'],
-        'G#': ['G#', 'A', 'A#', 'B', 'B#', 'C#', 'D', 'D#', 'E', 'E#', 'F#', 'G'],
-        'Ab': ['Ab', 'A', 'Bb', 'B', 'C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G'],
-        'A': ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#'],
-        'A#': ['A#', 'B', 'B#', 'C#', 'D', 'D#', 'E', 'E#', 'F#', 'G', 'G#', 'A'],
-        'Bb': ['Bb', 'B', 'C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A'],
-        'B': ['B', 'B#', 'C#', 'D', 'D#', 'E', 'E#', 'F#', 'G', 'G#', 'A', 'A#']
+        'C#': ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
+        'Db': ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
+        'D': ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
+        'D#': ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
+        'Eb': ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
+        'E': ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
+        'F': ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
+        'F#': ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
+        'Gb': ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
+        'G': ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
+        'G#': ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
+        'Ab': ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
+        'A': ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
+        'A#': ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
+        'Bb': ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],
+        'B': ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
     };
     
     const keyRules = majorSpellingRules[key] || chromaticScale;
@@ -259,9 +437,33 @@ function calculateScale(root, formula, scaleType = 'major') {
         return [];
     }
     
-    // Normalize root note to handle both sharp and flat representations
-    const normalizedRoot = root.replace('b', '#');
-    const rootIndex = chromaticScale.indexOf(normalizedRoot);
+    // Improved root note normalization to handle both sharp and flat names
+    let rootIndex = chromaticScale.indexOf(root);
+    
+    // If not found, try converting flats to sharps
+    if (rootIndex === -1) {
+        const flatToSharpMap = {
+            'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#'
+        };
+        const sharpEquivalent = flatToSharpMap[root];
+        if (sharpEquivalent) {
+            rootIndex = chromaticScale.indexOf(sharpEquivalent);
+        }
+    }
+    
+    // If still not found, try converting sharps to flats for reverse lookup
+    if (rootIndex === -1) {
+        const sharpToFlatMap = {
+            'C#': 'Db', 'D#': 'Eb', 'F#': 'Gb', 'G#': 'Ab', 'A#': 'Bb'
+        };
+        const flatEquivalent = sharpToFlatMap[root];
+        if (flatEquivalent) {
+            rootIndex = chromaticScale.indexOf(root.replace('#', ''));
+            if (rootIndex !== -1) {
+                rootIndex = (rootIndex + 1) % 12; // Sharp is one semitone up
+            }
+        }
+    }
     
     if (rootIndex === -1) {
         console.error('calculateScale: Invalid root note', root);
@@ -334,6 +536,24 @@ function getIntervals(notes, root) {
         return noteMap[note] !== undefined ? noteMap[note] : -1;
     }
     
+    // For whole tone scales, always return the characteristic whole tone intervals
+    if (notes.length === 6) {
+        // Check if this is a whole tone scale by verifying all intervals are whole steps
+        const isWholeToneScale = notes.every((note, index) => {
+            if (index === 0) return true; // Skip root
+            const prevNote = notes[index - 1];
+            const currentIndex = noteToIndex(note);
+            const prevIndex = noteToIndex(prevNote);
+            if (currentIndex === -1 || prevIndex === -1) return false;
+            const interval = (currentIndex - prevIndex + 12) % 12;
+            return interval === 2; // Whole step = 2 semitones
+        });
+        
+        if (isWholeToneScale) {
+            return ['1', '2', '3', '#4', '#5', '#6'];
+        }
+    }
+    
     const rootIndex = noteToIndex(root);
     
     if (rootIndex === -1) {
@@ -375,13 +595,15 @@ function generateScaleLibrary() {
         
         // Major scales and modes
         const majorScale = calculateScale(properKey, scaleFormulas.major);
+        
         library.major[`${properKey} Major`] = {
             root: properKey,
             parentScale: `${properKey} Major`,
             scale: majorScale,
             modes: majorModes.map(modeInfo => {
                 const modeNotes = getModeNotes(majorScale, modeInfo.mode);
-                const modeRoot = modeNotes[0];
+                // The root of the mode is the note at the mode position in the original scale
+                const modeRoot = majorScale[modeInfo.mode];
                 return {
                     id: `${modeRoot} ${modeInfo.name}`,
                     root: modeRoot,
@@ -404,7 +626,8 @@ function generateScaleLibrary() {
             scale: harmonicMinorScale,
             modes: harmonicMinorModes.map(modeInfo => {
                 const modeNotes = getModeNotes(harmonicMinorScale, modeInfo.mode);
-                const modeRoot = modeNotes[0];
+                // The root of the mode is the note at the mode position in the original scale
+                const modeRoot = harmonicMinorScale[modeInfo.mode];
                 return {
                     id: `${modeRoot} ${modeInfo.name}`,
                     root: modeRoot,
@@ -427,7 +650,8 @@ function generateScaleLibrary() {
             scale: melodicMinorScale,
             modes: melodicMinorModes.map(modeInfo => {
                 const modeNotes = getModeNotes(melodicMinorScale, modeInfo.mode);
-                const modeRoot = modeNotes[0];
+                // The root of the mode is the note at the mode position in the original scale
+                const modeRoot = melodicMinorScale[modeInfo.mode];
                 return {
                     id: `${modeRoot} ${modeInfo.name}`,
                     root: modeRoot,
@@ -480,74 +704,118 @@ function generateScaleLibrary() {
             }]
         };
         
-        // Blues Scale
+        // Blues Scale with modes
         const bluesScale = calculateScale(properKey, scaleFormulas.blues);
         library.blues[`${properKey} Blues`] = {
             root: properKey,
             parentScale: `${properKey} Blues`,
             scale: bluesScale,
-            modes: [{
-                id: `${properKey} Blues Scale`,
-                root: properKey,
-                notes: bluesScale,
-                intervals: getIntervals(bluesScale, properKey),
-                formula: scaleFormulas.blues,
-                mood: 'Bluesy, soulful, expressive',
-                description: 'Minor pentatonic with added flat 5th (blue note)',
-                applications: ['Blues', 'Jazz', 'Rock', 'Soul', 'R&B'],
-                parentScale: `${properKey} Blues`
-            }]
+            modes: bluesScaleModes.map(modeInfo => {
+                const modeNotes = getModeNotes(bluesScale, modeInfo.mode);
+                // The root of the mode is the note at the mode position in the original scale
+                const modeRoot = bluesScale[modeInfo.mode];
+                return {
+                    id: `${modeRoot} ${modeInfo.name}`,
+                    root: modeRoot,
+                    notes: modeNotes,
+                    intervals: getIntervals(modeNotes, modeRoot),
+                    formula: scaleFormulas.blues,
+                    mood: modeInfo.mood,
+                    description: modeInfo.description,
+                    applications: ['Blues', 'Jazz', 'Rock', 'Soul', 'R&B', 'Country'],
+                    parentScale: `${properKey} Blues`
+                };
+            })
         };
     });
     
-    // Whole Tone scales (only 2 unique whole tone scales exist)
-    const wholeToneRoots = ['C', 'Db']; // These generate all 12 whole tone scales
-    wholeToneRoots.forEach(root => {
-        const wholeToneScale = calculateScale(root, scaleFormulas.wholeTone);
-        const relatedKeys = [];
+    // Whole Tone scales - there are only 2 unique whole tone scales in all of music
+    // Each root note belongs to one specific whole tone scale - they are NOT modes of each other
+    
+    // Whole Tone Scale 1: C-D-E-F#-G#-A#
+    const wholeToneScale1 = ['C', 'D', 'E', 'F#', 'G#', 'A#'];
+    
+    // Whole Tone Scale 2: Db-Eb-F-G-A-B  
+    const wholeToneScale2 = ['Db', 'Eb', 'F', 'G', 'A', 'B'];
+    
+    // Map each root note to its specific whole tone scale
+    const rootToWholeToneScale = {
+        // Whole Tone Scale 1 roots
+        'C': wholeToneScale1,
+        'D': wholeToneScale1, 
+        'E': wholeToneScale1,
+        'F#': wholeToneScale1,
+        'Gb': wholeToneScale1, // F# enharmonic
+        'G#': wholeToneScale1,
+        'Ab': wholeToneScale1, // G# enharmonic
+        'A#': wholeToneScale1,
+        'Bb': wholeToneScale1, // A# enharmonic
         
-        // Find all keys that produce the same whole tone scale
-        chromaticScale.forEach(testKey => {
-            const testScale = calculateScale(testKey, scaleFormulas.wholeTone);
-            const normalizedTest = testScale.map(n => n.replace('b', '#')).sort();
-            const normalizedOriginal = wholeToneScale.map(n => n.replace('b', '#')).sort();
+        // Whole Tone Scale 2 roots
+        'C#': wholeToneScale2,
+        'Db': wholeToneScale2, // C# enharmonic
+        'D#': wholeToneScale2,
+        'Eb': wholeToneScale2, // D# enharmonic
+        'F': wholeToneScale2,
+        'G': wholeToneScale2,
+        'A': wholeToneScale2,
+        'B': wholeToneScale2
+    };
+    
+    // Generate whole tone scale for each key
+    chromaticScale.forEach(key => {
+        const properKey = keySignatures[key] || key;
+        const scaleNotes = rootToWholeToneScale[properKey];
+        
+        if (scaleNotes) {
+            // Find the starting position of the root in its whole tone scale
+            const rootIndex = scaleNotes.indexOf(properKey);
             
-            if (JSON.stringify(normalizedTest) === JSON.stringify(normalizedOriginal)) {
-                relatedKeys.push(keySignatures[testKey]);
+            // If exact match not found, try enharmonic equivalents
+            let startIndex = rootIndex;
+            if (rootIndex === -1) {
+                // Handle enharmonic equivalents
+                for (let i = 0; i < scaleNotes.length; i++) {
+                    const scaleNote = scaleNotes[i];
+                    const scaleNoteSharp = scaleNote.replace('b', '#');
+                    const properKeySharp = properKey.replace('b', '#');
+                    
+                    if (scaleNoteSharp === properKeySharp) {
+                        startIndex = i;
+                        break;
+                    }
+                }
             }
-        });
-        
-        library.wholeTone[`${root} Whole Tone`] = {
-            root: root,
-            parentScale: `Whole Tone (${relatedKeys.join(', ')})`,
-            scale: wholeToneScale,
-            modes: [{
-                id: `Whole Tone Scale`,
-                root: root,
-                notes: wholeToneScale,
-                intervals: getIntervals(wholeToneScale, root),
-                formula: scaleFormulas.wholeTone,
-                mood: 'Dreamy, impressionistic, floating',
-                description: `All whole steps - same as ${relatedKeys.slice(1).join(', ')} whole tone`,
-                applications: ['Impressionist music', 'Jazz fusion', 'Film scores', 'Ambient'],
-                parentScale: `Whole Tone (${relatedKeys.join(', ')})`
-            }]
-        };
+            
+            if (startIndex !== -1) {
+                // Rotate the scale to start from the selected key
+                const rotatedScale = [...scaleNotes.slice(startIndex), ...scaleNotes.slice(0, startIndex)];
+                
+                // Determine which scale group this belongs to
+                const scaleGroup = scaleNotes === wholeToneScale1 ? 1 : 2;
+                
+                library.wholeTone[`${properKey} Whole Tone`] = {
+                    root: properKey,
+                    parentScale: `Whole Tone Scale ${scaleGroup}`,
+                    scale: rotatedScale,
+                    modes: [{
+                        id: `${properKey} Whole Tone Scale`,
+                        root: properKey,
+                        notes: rotatedScale,
+                        intervals: getIntervals(rotatedScale, properKey),
+                        formula: scaleFormulas.wholeTone,
+                        mood: 'Dreamy, impressionistic, floating',
+                        description: `6-note whole tone scale. Contains only whole steps (2 semitones between each note).`,
+                        applications: ['Impressionist music', 'Jazz fusion', 'Film scores', 'Ambient'],
+                        parentScale: `Whole Tone Scale ${scaleGroup}`
+                    }]
+                };
+            }
+        }
     });
     
     return library;
 }
-
-// Initialize scale library
-const scaleLibrary = generateScaleLibrary();
-
-console.log('🎼 Scale Library initialized with', 
-    Object.values(scaleLibrary).reduce((total, category) => {
-        return total + Object.values(category).reduce((catTotal, key) => {
-            return catTotal + (key.modes ? key.modes.length : 0);
-        }, 0);
-    }, 0), 
-    'scales and modes');
 
 // 🎸 SCALE-FIRST INTERFACE SYSTEM
 let currentKey = 'C';
@@ -577,6 +845,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     try {
+        // Initialize scale library with fixed mode logic
+        const scaleLibrary = generateScaleLibrary();
+        
+        console.log('🎼 Scale Library initialized with', 
+            Object.values(scaleLibrary).reduce((total, category) => {
+                return total + Object.values(category).reduce((catTotal, key) => {
+                    return catTotal + (key.modes ? key.modes.length : 0);
+                }, 0);
+            }, 0), 
+            'scales and modes');
+        
+        // Make scaleLibrary globally available
+        window.scaleLibrary = scaleLibrary;
+        
         initializeScaleLibrary();
         setupEventListeners();
         updateParentScaleDisplay();
@@ -785,6 +1067,13 @@ function renderModeGrid() {
         
         // Get scales for current category and key
         let scales = [];
+        const scaleLibrary = window.scaleLibrary;
+        
+        if (!scaleLibrary) {
+            gridContainer.innerHTML = '<p class="no-content">Scale library not initialized</p>';
+            return;
+        }
+        
         const categoryData = scaleLibrary[currentCategory];
         
         if (categoryData) {
@@ -792,7 +1081,7 @@ function renderModeGrid() {
             
             // Find scales that match the current key
             Object.entries(categoryData).forEach(([scaleName, scaleData]) => {
-                if (scaleName.startsWith(properKey + ' ') || currentCategory === 'wholeTone') {
+                if (scaleName.startsWith(properKey + ' ')) {
                     scales.push(scaleData);
                 }
             });
@@ -851,7 +1140,8 @@ function renderPentatonicModes() {
             try {
                 const modeNotes = getModeNotes(pentatonicScale, modeInfo.mode);
                 if (modeNotes && modeNotes.length > 0) {
-                    const modeRoot = modeNotes[0];
+                    // The root of the mode is the note at the mode position in the original scale
+                    const modeRoot = pentatonicScale[modeInfo.mode];
                     
                     const mode = {
                         id: `${modeRoot} ${modeInfo.name}`,
@@ -952,7 +1242,7 @@ function renderModeDetails(mode) {
     });
     
     // Render fretboard patterns using the fretboard library
-    renderScaleFretboard(mode);
+    renderScaleFretboard(mode, 'fretboard-container');
     
     // Render practice tabs (placeholder for now)
     renderPracticeTabs([]);
@@ -962,166 +1252,262 @@ function renderModeDetails(mode) {
     document.getElementById('scale-grid').classList.add('hidden');
 }
 
-function renderScaleFretboard(mode) {
-    const fretboardContainer = document.getElementById('fretboard-container');
-    if (!fretboardContainer) {
-        console.warn('Fretboard container not found');
+function renderScaleFretboard(scale, containerId = 'fretboard-container') {
+    const container = document.getElementById(containerId);
+    if (!container) {
+        console.error('Fretboard container not found:', containerId);
         return;
     }
+
+    // Create toggle button container
+    const toggleContainer = document.createElement('div');
+    toggleContainer.className = 'fretboard-toggle-container';
+    toggleContainer.innerHTML = `
+        <div class="fretboard-toggle-wrapper">
+            <button class="fretboard-toggle-btn ${fretboardDisplayMode === 'notes' ? 'active' : ''}" 
+                    onclick="toggleFretboardDisplay('notes', '${containerId}', '${scale.root}', '${scale.id || scale.name || 'Scale'}')">
+                Note Names
+            </button>
+            <button class="fretboard-toggle-btn ${fretboardDisplayMode === 'intervals' ? 'active' : ''}" 
+                    onclick="toggleFretboardDisplay('intervals', '${containerId}', '${scale.root}', '${scale.id || scale.name || 'Scale'}')">
+                Intervals
+            </button>
+        </div>
+    `;
+
+    // Create fretboard container
+    const fretboardContainer = document.createElement('div');
+    fretboardContainer.className = 'fretboard-display-container';
     
-    // Clear previous fretboard
-    fretboardContainer.innerHTML = '';
-    
-    // Create new fretboard instance
-    const fretboard = new Fretboard(fretboardContainer, {
-        frets: 12,
-        strings: 6,
-        startFret: 0,
-        showFretNumbers: true,
-        showStringLabels: true,
-        fretSpacing: 45,
-        stringSpacing: 25
-    });
-    
-    // Display the scale pattern using the scale notes and root
-    fretboard.displayScale(mode.notes, mode.root);
-    
-    // Add pattern title
-    const title = document.createElement('h4');
-    title.className = 'fretboard-title';
-    title.textContent = `${mode.id} Pattern`;
-    fretboardContainer.insertBefore(title, fretboardContainer.firstChild);
+    // Clear container and add both toggle and fretboard
+    container.innerHTML = '';
+    container.appendChild(toggleContainer);
+    container.appendChild(fretboardContainer);
+
+    // Generate the fretboard SVG
+    const fretboardSVG = generateFretboard(scale, fretboardDisplayMode);
+    fretboardContainer.innerHTML = fretboardSVG;
+
+    // Make fretboard clickable for modal
+    const svgElement = fretboardContainer.querySelector('.fretboard-svg');
+    if (svgElement) {
+        svgElement.style.cursor = 'pointer';
+        svgElement.onclick = () => openFretboardModal(scale);
+    }
 }
 
-function renderPracticeTabs(tabs) {
-    const tabsContainer = document.getElementById('practice-tabs');
-    if (!tabsContainer) return;
+function openFretboardModal(scale) {
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('fretboard-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'fretboard-modal';
+        modal.className = 'modal fretboard-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="fretboard-modal-title">Fretboard Pattern</h3>
+                    <button class="close-btn" onclick="closeFretboardModal()">×</button>
+                </div>
+                <div class="modal-body" id="fretboard-modal-body">
+                    <!-- Modal content will be populated here -->
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        // Add click outside to close
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeFretboardModal();
+            }
+        });
+    }
     
-    tabsContainer.innerHTML = '';
+    // Update modal content
+    const title = document.getElementById('fretboard-modal-title');
+    const body = document.getElementById('fretboard-modal-body');
     
-    if (!tabs || tabs.length === 0) {
-        tabsContainer.innerHTML = '<p class="no-content">Practice tabs coming soon! Upload your own Guitar Pro files to practice with.</p>';
+    title.textContent = `${scale.id} - ${scale.root}`;
+    
+    // Create scale info section
+    const scaleInfo = document.createElement('div');
+    scaleInfo.className = 'scale-info';
+    scaleInfo.innerHTML = `
+        <h3>${scale.id}</h3>
+        <div class="scale-details">
+            <div class="scale-detail-item">
+                <strong>Root:</strong>
+                ${scale.root}
+            </div>
+            <div class="scale-detail-item">
+                <strong>Notes:</strong>
+                ${scale.notes.join(' - ')}
+            </div>
+            <div class="scale-detail-item">
+                <strong>Intervals:</strong>
+                ${scale.intervals.join(' - ')}
+            </div>
+        </div>
+    `;
+    
+    // Create toggle buttons for modal
+    const toggleContainer = document.createElement('div');
+    toggleContainer.className = 'fretboard-toggle-container';
+    toggleContainer.innerHTML = `
+        <div class="fretboard-toggle-wrapper">
+            <button class="fretboard-toggle-btn ${fretboardDisplayMode === 'notes' ? 'active' : ''}" 
+                    onclick="toggleModalFretboardDisplay('notes')">
+                Note Names
+            </button>
+            <button class="fretboard-toggle-btn ${fretboardDisplayMode === 'intervals' ? 'active' : ''}" 
+                    onclick="toggleModalFretboardDisplay('intervals')">
+                Intervals
+            </button>
+        </div>
+    `;
+    
+    // Create fretboard container for modal
+    const fretboardContainer = document.createElement('div');
+    fretboardContainer.className = 'fretboard-container';
+    fretboardContainer.id = 'modal-fretboard-container';
+    
+    // Generate enlarged fretboard
+    const fretboardSVG = generateFretboard(scale, fretboardDisplayMode, true);
+    fretboardContainer.innerHTML = fretboardSVG;
+    
+    // Clear and populate modal body
+    body.innerHTML = '';
+    body.appendChild(scaleInfo);
+    body.appendChild(toggleContainer);
+    body.appendChild(fretboardContainer);
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeFretboardModal() {
+    const modal = document.getElementById('fretboard-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+}
+
+function toggleModalFretboardDisplay(mode) {
+    fretboardDisplayMode = mode;
+    
+    // Update button states in modal
+    const modal = document.getElementById('fretboard-modal');
+    if (modal) {
+        const buttons = modal.querySelectorAll('.fretboard-toggle-btn');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        buttons.forEach(btn => {
+            if ((mode === 'notes' && btn.textContent.trim() === 'Note Names') ||
+                (mode === 'intervals' && btn.textContent.trim() === 'Intervals')) {
+                btn.classList.add('active');
+            }
+        });
+        
+        // Regenerate fretboard with new display mode
+        const fretboardContainer = document.getElementById('modal-fretboard-container');
+        if (fretboardContainer && currentMode) {
+            const fretboardSVG = generateFretboard(currentMode, fretboardDisplayMode, true);
+            fretboardContainer.innerHTML = fretboardSVG;
+        }
+    }
+}
+
+// Function to toggle fretboard display between notes and intervals
+function toggleFretboardDisplay(mode, containerId, root, scaleName) {
+    fretboardDisplayMode = mode;
+    
+    // Update button states
+    const container = document.getElementById(containerId);
+    if (container) {
+        const buttons = container.querySelectorAll('.fretboard-toggle-btn');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        buttons.forEach(btn => {
+            if ((mode === 'notes' && btn.textContent.trim() === 'Note Names') ||
+                (mode === 'intervals' && btn.textContent.trim() === 'Intervals')) {
+                btn.classList.add('active');
+            }
+        });
+        
+        // Get the current scale data
+        const scale = getCurrentScale();
+        if (scale) {
+            // Regenerate fretboard with new display mode
+            const fretboardContainer = container.querySelector('.fretboard-display-container');
+            if (fretboardContainer) {
+                const fretboardSVG = generateFretboard(scale, fretboardDisplayMode);
+                fretboardContainer.innerHTML = fretboardSVG;
+                
+                // Re-add click handler for modal
+                const svgElement = fretboardContainer.querySelector('.fretboard-svg');
+                if (svgElement) {
+                    svgElement.style.cursor = 'pointer';
+                    svgElement.onclick = () => openFretboardModal(scale);
+                }
+            }
+        }
+    }
+}
+
+// Function to get current scale data
+function getCurrentScale() {
+    return currentMode;
+}
+
+// Function to render practice tabs (placeholder for now)
+function renderPracticeTabs(tabs = []) {
+    const practiceContainer = document.getElementById('practice-tabs');
+    if (!practiceContainer) {
+        console.warn('Practice tabs container not found');
         return;
     }
     
-    tabs.forEach((tab, index) => {
+    if (tabs.length === 0) {
+        practiceContainer.innerHTML = '<p class="no-content">Practice exercises coming soon!</p>';
+        return;
+    }
+    
+    practiceContainer.innerHTML = '';
+    
+    tabs.forEach(tab => {
         const tabCard = document.createElement('div');
         tabCard.className = 'practice-tab-card';
-        
         tabCard.innerHTML = `
-            <h4 class="practice-tab-title">${tab.name}</h4>
+            <h4 class="practice-tab-title">${tab.title}</h4>
             <p class="practice-tab-description">${tab.description}</p>
             <div class="practice-tab-meta">
-                <span class="practice-tab-tempo">Tempo: ${tab.tempo} BPM</span>
-                <span class="practice-tab-difficulty ${tab.difficulty.toLowerCase()}">${tab.difficulty}</span>
+                <span class="practice-tab-tempo">♩ = ${tab.tempo || 120}</span>
+                <span class="practice-tab-difficulty ${tab.difficulty || 'beginner'}">${tab.difficulty || 'Beginner'}</span>
             </div>
         `;
         
-        tabCard.addEventListener('click', () => loadPracticeTab(index));
-        tabsContainer.appendChild(tabCard);
+        tabCard.addEventListener('click', () => {
+            // Load practice tab (placeholder)
+            console.log('Loading practice tab:', tab.title);
+        });
+        
+        practiceContainer.appendChild(tabCard);
     });
 }
 
-function loadPracticeTab(tabIndex) {
-    console.log('Loading practice tab:', tabIndex);
-    // Implementation for loading practice tabs
-}
-
-function handleFileUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    console.log('📁 File selected:', file.name);
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            initializeAlphaTab(e.target.result);
-            document.getElementById('tab-player').classList.remove('hidden');
-            document.getElementById('mode-detail').classList.add('hidden');
-        } catch (error) {
-            console.error('Error loading file:', error);
-            alert('Error loading file. Please make sure it\'s a valid Guitar Pro file.');
-        }
-    };
-    
-    reader.readAsArrayBuffer(file);
-}
-
-function initializeAlphaTab(data) {
-    const tabContainer = document.getElementById('alphaTab');
-    if (!tabContainer) return;
-    
-    tabContainer.innerHTML = '';
-    
-    // Initialize AlphaTab
-    alphaTabApi = new alphaTab.AlphaTabApi(tabContainer, {
-        file: data,
-        player: {
-            enablePlayer: true,
-            soundFont: 'https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/soundfont/sonivox.sf2',
-            scrollElement: '.at-viewport'
-        }
-    });
-    
-    // Setup player event listeners
-    alphaTabApi.playerReady.on(() => {
-        console.log('🎵 AlphaTab player ready');
-    });
-    
-    alphaTabApi.playerStateChanged.on((e) => {
-        updatePlayerUI(e.state);
-    });
-}
-
-function updatePlayerUI(state) {
-    const playBtn = document.getElementById('play-btn');
-    const pauseBtn = document.getElementById('pause-btn');
-    const stopBtn = document.getElementById('stop-btn');
-    
-    // Reset all buttons
-    [playBtn, pauseBtn, stopBtn].forEach(btn => {
-        if (btn) btn.classList.remove('active');
-    });
-    
-    // Set active button based on state
-    switch (state) {
-        case 1: // Playing
-            if (playBtn) playBtn.classList.add('active');
-            break;
-        case 2: // Paused
-            if (pauseBtn) pauseBtn.classList.add('active');
-            break;
-        default: // Stopped
-            if (stopBtn) stopBtn.classList.add('active');
-            break;
-    }
-}
-
-function toggleLoop() {
-    if (alphaTabApi) {
-        alphaTabApi.isLooping = !alphaTabApi.isLooping;
-        const loopBtn = document.getElementById('loop-btn');
-        if (loopBtn) {
-            loopBtn.classList.toggle('active', alphaTabApi.isLooping);
-        }
-    }
-}
-
+// Function to setup player controls (placeholder)
 function setupPlayerControls() {
-    const playBtn = document.getElementById('play-btn');
-    const pauseBtn = document.getElementById('pause-btn');
-    const stopBtn = document.getElementById('stop-btn');
-    const loopBtn = document.getElementById('loop-btn');
-
-    if (playBtn) playBtn.addEventListener('click', () => alphaTabApi?.play());
-    if (pauseBtn) pauseBtn.addEventListener('click', () => alphaTabApi?.pause());
-    if (stopBtn) stopBtn.addEventListener('click', () => alphaTabApi?.stop());
-    if (loopBtn) loopBtn.addEventListener('click', toggleLoop);
+    // Player controls setup would go here
+    // This is a placeholder for future guitar tab player functionality
+    console.log('Player controls setup - placeholder');
 }
 
-// Legacy compatibility for any remaining old code
-function initializeApp() {
-    console.log('🔄 Legacy initializeApp called - redirecting to scale library');
-    initializeScaleLibrary();
+// Function to handle file upload (placeholder)
+function handleFileUpload(event) {
+    // File upload handling would go here
+    // This is a placeholder for future file upload functionality
+    console.log('File upload handled - placeholder');
 }
