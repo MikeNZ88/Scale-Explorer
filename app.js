@@ -208,17 +208,18 @@ function generateFretboard(scale, displayMode = 'notes', isModal = false) {
     tempContainer.style.visibility = 'hidden';
     document.body.appendChild(tempContainer);
     
-    // Create fretboard instance with appropriate sizing
+    // Create fretboard instance with appropriate sizing for modal vs regular display
     const fretboardOptions = {
         frets: 12,
         strings: 6,
         startFret: 0,
         showFretNumbers: true,
         showStringLabels: true,
-        dotSize: isModal ? 20 : 16,
-        fretSpacing: isModal ? 70 : 50,
-        stringSpacing: isModal ? 40 : 30,
-        nutWidth: 8
+        dotSize: isModal ? 24 : 16,
+        fretSpacing: isModal ? 90 : 50,
+        stringSpacing: isModal ? 50 : 30,
+        nutWidth: isModal ? 12 : 8,
+        fontSize: isModal ? 14 : 10
     };
     
     const fretboard = new Fretboard(tempContainer, fretboardOptions);
@@ -262,6 +263,11 @@ function generateFretboard(scale, displayMode = 'notes', isModal = false) {
         svgElement.classList.add('fretboard-svg');
         if (isModal) {
             svgElement.classList.add('modal-fretboard');
+            // Set explicit dimensions for modal fretboard to ensure it scales properly
+            svgElement.setAttribute('width', '100%');
+            svgElement.setAttribute('height', '100%');
+            svgElement.setAttribute('viewBox', '0 0 1100 300');
+            svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
         }
         
         // Return the outer HTML of the SVG
@@ -1119,10 +1125,15 @@ function setupEventListeners() {
     });
 
     // Back navigation handlers
-    document.getElementById('back-to-grid')?.addEventListener('click', function() {
-        document.getElementById('mode-detail').classList.add('hidden');
-        document.getElementById('scale-library').classList.remove('hidden');
-        renderModeGrid(); // Re-render the grid to show cards
+    document.getElementById('back-to-top')?.addEventListener('click', function() {
+        // Scroll to the top of the mode detail section
+        const modeDetailElement = document.getElementById('mode-detail');
+        if (modeDetailElement) {
+            modeDetailElement.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        }
     });
 
     document.getElementById('back-to-mode')?.addEventListener('click', function() {
@@ -1138,6 +1149,12 @@ function setupEventListeners() {
 
     // Setup player controls if they exist
     setupPlayerControls();
+
+    // Initialize pentatonic controls visibility based on current category
+    const pentatonicControls = document.getElementById('pentatonic-controls');
+    if (pentatonicControls) {
+        pentatonicControls.style.display = currentCategory === 'pentatonic' ? 'block' : 'none';
+    }
 
     // Update parent scale display initially
     updateParentScaleDisplay();
@@ -1282,6 +1299,9 @@ function renderPentatonicModes() {
     }
     
     try {
+        // Clear the grid container first to prevent accumulation
+        gridContainer.innerHTML = '';
+        
         const pentatonicType = pentatonicTypes[currentPentatonicType];
         
         if (!pentatonicType) {
@@ -1377,6 +1397,17 @@ function createModeCard(mode) {
 function openModeDetail(mode) {
     currentMode = mode;
     renderModeDetails(mode);
+    
+    // Auto-scroll to the mode detail section to show theory and fretboard
+    setTimeout(() => {
+        const modeDetailElement = document.getElementById('mode-detail');
+        if (modeDetailElement) {
+            modeDetailElement.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        }
+    }, 100); // Small delay to ensure DOM is updated
 }
 
 function renderModeDetails(mode) {
@@ -1410,7 +1441,7 @@ function renderModeDetails(mode) {
     
     // Show mode detail view
     document.getElementById('mode-detail').classList.remove('hidden');
-    document.getElementById('scale-grid').classList.add('hidden');
+    document.getElementById('scale-library').classList.add('hidden');
 }
 
 function renderScaleFretboard(scale, containerId = 'fretboard-container') {
@@ -1458,95 +1489,308 @@ function renderScaleFretboard(scale, containerId = 'fretboard-container') {
 }
 
 function openFretboardModal(scale) {
-    // Create modal if it doesn't exist
     let modal = document.getElementById('fretboard-modal');
+    
     if (!modal) {
         modal = document.createElement('div');
         modal.id = 'fretboard-modal';
         modal.className = 'modal fretboard-modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 id="fretboard-modal-title">Fretboard Pattern</h3>
-                    <button class="close-btn" onclick="closeFretboardModal()">×</button>
-                </div>
-                <div class="modal-body" id="fretboard-modal-body">
-                    <!-- Modal content will be populated here -->
-                </div>
-            </div>
-        `;
         document.body.appendChild(modal);
-        
-        // Add click outside to close
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closeFretboardModal();
-            }
-        });
     }
     
-    // Update modal content
-    const title = document.getElementById('fretboard-modal-title');
-    const body = document.getElementById('fretboard-modal-body');
+    // Get the display title, handling both scale.name and scale.id
+    let scaleTitle = scale.name || scale.id || 'Scale';
     
-    title.textContent = `${scale.id} - ${scale.root}`;
+    // Remove redundant root note patterns like "C Ionian - C" or "C - C"
+    if (scale.root) {
+        // Pattern 1: "Scale Name - Root" -> "Scale Name"
+        if (scaleTitle.includes(' - ') && scaleTitle.endsWith(` - ${scale.root}`)) {
+            scaleTitle = scaleTitle.replace(` - ${scale.root}`, '');
+        }
+        // Pattern 2: If the title already contains the root at the beginning, don't duplicate
+        // This is already correct for patterns like "C Ionian"
+    }
     
-    // Create scale info section
-    const scaleInfo = document.createElement('div');
-    scaleInfo.className = 'scale-info';
-    scaleInfo.innerHTML = `
-        <h3>${scale.id}</h3>
-        <div class="scale-details">
-            <div class="scale-detail-item">
-                <strong>Root:</strong>
-                ${scale.root}
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>${scaleTitle}</h3>
+                <div class="modal-controls">
+                    <button class="modal-control-btn" onclick="toggleModalFullscreen()" title="Toggle Fullscreen">
+                        <span class="fullscreen-icon">⛶</span>
+                    </button>
+                    <button class="close-btn" onclick="closeFretboardModal()">&times;</button>
+                </div>
             </div>
-            <div class="scale-detail-item">
-                <strong>Notes:</strong>
-                ${scale.notes.join(' - ')}
+            <div class="modal-body">
+                <div class="fretboard-toggle-container modal-toggle">
+                    <div class="fretboard-toggle-wrapper">
+                        <button class="fretboard-toggle-btn active" onclick="toggleModalFretboardDisplay('notes')">Note Names</button>
+                        <button class="fretboard-toggle-btn" onclick="toggleModalFretboardDisplay('intervals')">Intervals</button>
+                    </div>
+                </div>
+                <div class="fretboard-container" id="modal-fretboard-container">
+                    ${generateFretboard(scale, 'notes', true)}
+                </div>
             </div>
-            <div class="scale-detail-item">
-                <strong>Intervals:</strong>
-                ${scale.intervals.join(' - ')}
-            </div>
+            <div class="modal-resize-handle"></div>
         </div>
     `;
     
-    // Create toggle buttons for modal
-    const toggleContainer = document.createElement('div');
-    toggleContainer.className = 'fretboard-toggle-container';
-    toggleContainer.innerHTML = `
-        <div class="fretboard-toggle-wrapper">
-            <button class="fretboard-toggle-btn ${fretboardDisplayMode === 'notes' ? 'active' : ''}" 
-                    onclick="toggleModalFretboardDisplay('notes')">
-                Note Names
-            </button>
-            <button class="fretboard-toggle-btn ${fretboardDisplayMode === 'intervals' ? 'active' : ''}" 
-                    onclick="toggleModalFretboardDisplay('intervals')">
-                Intervals
-            </button>
-        </div>
-    `;
-    
-    // Create fretboard container for modal
-    const fretboardContainer = document.createElement('div');
-    fretboardContainer.className = 'fretboard-container';
-    fretboardContainer.id = 'modal-fretboard-container';
-    
-    // Generate enlarged fretboard
-    const fretboardSVG = generateFretboard(scale, fretboardDisplayMode, true);
-    fretboardContainer.innerHTML = fretboardSVG;
-    
-    // Clear and populate modal body
-    body.innerHTML = '';
-    body.appendChild(scaleInfo);
-    body.appendChild(toggleContainer);
-    body.appendChild(fretboardContainer);
-    
-    // Show modal
     modal.classList.remove('hidden');
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
+    
+    // Set optimal size for the modal
+    setOptimalModalSize();
+    
+    // Handle mobile orientation
+    handleMobileOrientation();
+    
+    // Make modal draggable and resizable
+    makeFretboardModalDraggable();
+    makeFretboardModalResizable();
+    
+    // Setup additional modal controls
+    setupModalControls();
+    
+    // Close modal when clicking outside
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeFretboardModal();
+        }
+    });
+}
+
+function setOptimalModalSize() {
+    const modal = document.getElementById('fretboard-modal-content');
+    if (!modal) return;
+    
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const isMobile = viewportWidth <= 768;
+    
+    if (isMobile) {
+        // Mobile: Use most of the screen
+        modal.style.width = '95vw';
+        modal.style.height = '90vh';
+        modal.style.maxWidth = '95vw';
+        modal.style.maxHeight = '90vh';
+    } else {
+        // Desktop: Optimal size for fretboard viewing
+        const optimalWidth = Math.min(viewportWidth * 0.85, 1400);
+        const optimalHeight = Math.min(viewportHeight * 0.85, 900);
+        
+        modal.style.width = `${optimalWidth}px`;
+        modal.style.height = `${optimalHeight}px`;
+        modal.style.maxWidth = '90vw';
+        modal.style.maxHeight = '90vh';
+    }
+    
+    // Center the modal
+    modal.style.left = '50%';
+    modal.style.top = '50%';
+    modal.style.transform = 'translate(-50%, -50%)';
+    modal.style.position = 'fixed';
+}
+
+function handleMobileOrientation() {
+    const isMobile = window.innerWidth <= 768;
+    if (!isMobile) return;
+    
+    // Suggest landscape orientation for better fretboard viewing
+    if (window.orientation !== undefined) {
+        const orientationBtn = document.getElementById('modal-rotate-btn');
+        if (orientationBtn) {
+            orientationBtn.style.display = 'block';
+            
+            // Add orientation change listener
+            window.addEventListener('orientationchange', () => {
+                setTimeout(() => {
+                    setOptimalModalSize();
+                }, 100);
+            });
+        }
+    }
+}
+
+function makeFretboardModalDraggable() {
+    const modal = document.getElementById('fretboard-modal-content');
+    const header = document.getElementById('modal-header');
+    
+    if (!modal || !header) return;
+    
+    let isDragging = false;
+    let startX, startY, startLeft, startTop;
+    
+    header.style.cursor = 'move';
+    header.addEventListener('mousedown', startDrag);
+    header.addEventListener('touchstart', startDrag, { passive: false });
+    
+    function startDrag(e) {
+        isDragging = true;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        startX = clientX;
+        startY = clientY;
+        
+        const rect = modal.getBoundingClientRect();
+        startLeft = rect.left;
+        startTop = rect.top;
+        
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', stopDrag);
+        document.addEventListener('touchmove', drag, { passive: false });
+        document.addEventListener('touchend', stopDrag);
+        
+        e.preventDefault();
+    }
+    
+    function drag(e) {
+        if (!isDragging) return;
+        
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        const deltaX = clientX - startX;
+        const deltaY = clientY - startY;
+        
+        const newLeft = startLeft + deltaX;
+        const newTop = startTop + deltaY;
+        
+        // Constrain to viewport
+        const maxLeft = window.innerWidth - modal.offsetWidth;
+        const maxTop = window.innerHeight - modal.offsetHeight;
+        
+        modal.style.left = `${Math.max(0, Math.min(newLeft, maxLeft))}px`;
+        modal.style.top = `${Math.max(0, Math.min(newTop, maxTop))}px`;
+        modal.style.transform = 'none';
+        
+        e.preventDefault();
+    }
+    
+    function stopDrag() {
+        isDragging = false;
+        document.removeEventListener('mousemove', drag);
+        document.removeEventListener('mouseup', stopDrag);
+        document.removeEventListener('touchmove', drag);
+        document.removeEventListener('touchend', stopDrag);
+    }
+}
+
+function makeFretboardModalResizable() {
+    const modal = document.getElementById('fretboard-modal-content');
+    const resizeHandle = document.getElementById('resize-handle');
+    
+    if (!modal || !resizeHandle) return;
+    
+    let isResizing = false;
+    let startX, startY, startWidth, startHeight;
+    
+    resizeHandle.addEventListener('mousedown', startResize);
+    resizeHandle.addEventListener('touchstart', startResize, { passive: false });
+    
+    function startResize(e) {
+        isResizing = true;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        startX = clientX;
+        startY = clientY;
+        startWidth = modal.offsetWidth;
+        startHeight = modal.offsetHeight;
+        
+        document.addEventListener('mousemove', resize);
+        document.addEventListener('mouseup', stopResize);
+        document.addEventListener('touchmove', resize, { passive: false });
+        document.addEventListener('touchend', stopResize);
+        
+        e.preventDefault();
+    }
+    
+    function resize(e) {
+        if (!isResizing) return;
+        
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        const deltaX = clientX - startX;
+        const deltaY = clientY - startY;
+        
+        const newWidth = Math.max(400, Math.min(startWidth + deltaX, window.innerWidth * 0.95));
+        const newHeight = Math.max(300, Math.min(startHeight + deltaY, window.innerHeight * 0.95));
+        
+        modal.style.width = `${newWidth}px`;
+        modal.style.height = `${newHeight}px`;
+        
+        e.preventDefault();
+    }
+    
+    function stopResize() {
+        isResizing = false;
+        document.removeEventListener('mousemove', resize);
+        document.removeEventListener('mouseup', stopResize);
+        document.removeEventListener('touchmove', resize);
+        document.removeEventListener('touchend', stopResize);
+    }
+}
+
+function setupModalControls() {
+    const fullscreenBtn = document.getElementById('modal-fullscreen-btn');
+    const rotateBtn = document.getElementById('modal-rotate-btn');
+    
+    if (fullscreenBtn) {
+        fullscreenBtn.addEventListener('click', toggleModalFullscreen);
+    }
+    
+    if (rotateBtn) {
+        rotateBtn.addEventListener('click', suggestRotation);
+        
+        // Hide on desktop
+        if (window.innerWidth > 768) {
+            rotateBtn.style.display = 'none';
+        }
+    }
+}
+
+function toggleModalFullscreen() {
+    const modal = document.getElementById('fretboard-modal-content');
+    if (!modal) return;
+    
+    const isFullscreen = modal.classList.contains('fullscreen');
+    
+    if (isFullscreen) {
+        modal.classList.remove('fullscreen');
+        modal.style.width = '';
+        modal.style.height = '';
+        setOptimalModalSize();
+    } else {
+        modal.classList.add('fullscreen');
+        modal.style.width = '98vw';
+        modal.style.height = '98vh';
+        modal.style.left = '50%';
+        modal.style.top = '50%';
+        modal.style.transform = 'translate(-50%, -50%)';
+    }
+}
+
+function suggestRotation() {
+    // Create a temporary message suggesting rotation
+    const message = document.createElement('div');
+    message.className = 'rotation-suggestion';
+    message.innerHTML = `
+        <div class="rotation-message">
+            <span class="rotation-icon">📱</span>
+            <p>Rotate your device to landscape mode for a better fretboard view!</p>
+        </div>
+    `;
+    
+    document.body.appendChild(message);
+    
+    setTimeout(() => {
+        if (message.parentNode) {
+            message.parentNode.removeChild(message);
+        }
+    }, 3000);
 }
 
 function closeFretboardModal() {
@@ -1555,6 +1799,17 @@ function closeFretboardModal() {
         modal.classList.add('hidden');
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
+        
+        // Reset modal size and position for next time
+        const modalContent = document.getElementById('fretboard-modal-content');
+        if (modalContent) {
+            modalContent.classList.remove('fullscreen');
+            modalContent.style.transform = '';
+            modalContent.style.left = '';
+            modalContent.style.top = '';
+            modalContent.style.width = '';
+            modalContent.style.height = '';
+        }
     }
 }
 

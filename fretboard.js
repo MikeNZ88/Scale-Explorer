@@ -39,7 +39,9 @@ class Fretboard {
     
     createFretboard() {
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        const width = (this.options.frets + 1) * this.options.fretSpacing + this.options.nutWidth + 40;
+        // Add extra space on the left for open string dots
+        const leftMargin = 40; // Space for open string dots and labels
+        const width = leftMargin + (this.options.frets + 1) * this.options.fretSpacing + this.options.nutWidth + 20;
         const height = (this.options.strings - 1) * this.options.stringSpacing + 60;
         
         svg.setAttribute('width', width);
@@ -61,15 +63,16 @@ class Fretboard {
     }
     
     drawFrets() {
+        const leftMargin = 40;
         const startY = 20;
         const endY = startY + (this.options.strings - 1) * this.options.stringSpacing;
         
         // Draw nut (thick line at fret 0)
         if (this.options.startFret === 0) {
             const nutLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            nutLine.setAttribute('x1', 20);
+            nutLine.setAttribute('x1', leftMargin);
             nutLine.setAttribute('y1', startY);
-            nutLine.setAttribute('x2', 20);
+            nutLine.setAttribute('x2', leftMargin);
             nutLine.setAttribute('y2', endY);
             nutLine.setAttribute('stroke', '#333');
             nutLine.setAttribute('stroke-width', this.options.nutWidth);
@@ -78,7 +81,7 @@ class Fretboard {
         
         // Draw frets
         for (let fret = this.options.startFret; fret <= this.options.startFret + this.options.frets; fret++) {
-            const x = 20 + this.options.nutWidth + (fret - this.options.startFret) * this.options.fretSpacing;
+            const x = leftMargin + this.options.nutWidth + (fret - this.options.startFret) * this.options.fretSpacing;
             const fretLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
             fretLine.setAttribute('x1', x);
             fretLine.setAttribute('y1', startY);
@@ -91,8 +94,9 @@ class Fretboard {
     }
     
     drawStrings() {
-        const startX = 20;
-        const endX = 20 + this.options.nutWidth + this.options.frets * this.options.fretSpacing;
+        const leftMargin = 40;
+        const startX = leftMargin;
+        const endX = leftMargin + this.options.nutWidth + this.options.frets * this.options.fretSpacing;
         
         for (let string = 0; string < this.options.strings; string++) {
             const y = 20 + string * this.options.stringSpacing;
@@ -110,8 +114,9 @@ class Fretboard {
     drawFretNumbers() {
         if (!this.options.showFretNumbers) return;
         
+        const leftMargin = 40;
         for (let fret = this.options.startFret + 1; fret <= this.options.startFret + this.options.frets; fret++) {
-            const x = 20 + this.options.nutWidth + (fret - this.options.startFret - 0.5) * this.options.fretSpacing;
+            const x = leftMargin + this.options.nutWidth + (fret - this.options.startFret - 0.5) * this.options.fretSpacing;
             const y = 20 + (this.options.strings - 1) * this.options.stringSpacing + 25;
             
             const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -130,7 +135,7 @@ class Fretboard {
         if (!this.options.showStringLabels) return;
         
         for (let string = 0; string < this.options.strings; string++) {
-            const x = 8;
+            const x = 20; // Keep string labels in their original position
             const y = 20 + string * this.options.stringSpacing + 4;
             
             const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -147,13 +152,14 @@ class Fretboard {
     }
     
     drawFretboardInlays() {
+        const leftMargin = 40;
         const inlayFrets = [3, 5, 7, 9, 12, 15, 17, 19, 21];
         const doubleInlayFrets = [12, 24];
         
         for (let fret of inlayFrets) {
             if (fret < this.options.startFret || fret > this.options.startFret + this.options.frets) continue;
             
-            const x = 20 + this.options.nutWidth + (fret - this.options.startFret - 0.5) * this.options.fretSpacing;
+            const x = leftMargin + this.options.nutWidth + (fret - this.options.startFret - 0.5) * this.options.fretSpacing;
             
             if (doubleInlayFrets.includes(fret)) {
                 // Double dots for octave markers
@@ -195,8 +201,16 @@ class Fretboard {
     addNoteDot(note) {
         const { fret, string, note: noteName, class: noteClass = 'scale' } = note;
         
-        // Calculate position
-        const x = 20 + this.options.nutWidth + (fret - this.options.startFret - 0.5) * this.options.fretSpacing;
+        // Calculate position - special handling for open strings (fret 0)
+        const leftMargin = 40;
+        let x;
+        if (fret === 0) {
+            // Position open string dots to the left of the nut
+            x = leftMargin - 15;
+        } else {
+            // Normal position calculation for fretted notes
+            x = leftMargin + this.options.nutWidth + (fret - this.options.startFret - 0.5) * this.options.fretSpacing;
+        }
         const y = 20 + (string - 1) * this.options.stringSpacing;
         
         // Create note dot
