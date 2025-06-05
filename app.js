@@ -313,14 +313,14 @@ const intervalColors = {
   '#4': '#922B21',  // Tritone (Aug 4th) - Dark crimson (devil's interval)
   'b5': '#922B21',  // Tritone (Dim 5th) - Dark crimson (instability)
   
-  // AUGMENTED/DIMINISHED (Unnatural intervals) - Sophisticated purples/violets
-  '#5': '#7D3C98',  // Augmented Fifth - Deep purple
-  '#1': '#BB8FCE',  // Augmented Unison - Light lavender
-  'bb7': '#6C3483', // Diminished Seventh - Dark plum
-  '#7': '#A569BD',  // Augmented Seventh - Medium orchid
-  '#2': '#CA6F1E',  // Augmented Second - Burnt sienna
-  'bb3': '#76448A', // Diminished Third - Dark violet
-  '#6': '#239B56'   // Augmented Sixth - Forest green
+  // ENHARMONIC EQUIVALENTS - Consistent colors for same pitches
+  '#5': '#85929E',  // Augmented Fifth = b6 (same pitch, same color)
+  '#1': '#D35400',  // Augmented Unison = b2 (same pitch, same color)
+  'bb7': '#58D68D', // Diminished Seventh = 6 (same pitch, same color)
+  '#7': '#FFF5E6',  // Augmented Seventh = 1 (same pitch, same color)
+  '#2': '#8E44AD',  // Augmented Second = b3 (same pitch, same color)
+  'bb3': '#E67E22', // Diminished Third = 2 (same pitch, same color)
+  '#6': '#CD6155'   // Augmented Sixth = b7 (same pitch, same color)
 };
 
 // Scale degree weights based on harmonic importance hierarchy
@@ -584,14 +584,14 @@ function getProperNoteSpelling(noteIndex, key, scaleType = 'major') {
     if (scaleType === 'diminished') {
         const diminishedSpellings = {
             'C': ['C', 'D', 'Eb', 'F', 'Gb', 'Ab', 'A', 'B'],
-            'C#': ['C#', 'D#', 'E', 'F#', 'G', 'A', 'A#', 'B#'],
+            'C#': ['C#', 'D#', 'E', 'F#', 'G', 'A', 'Bb', 'B'],
             'Db': ['Db', 'Eb', 'E', 'Gb', 'G', 'A', 'Bb', 'C'],
             'D': ['D', 'E', 'F', 'G', 'Ab', 'Bb', 'B', 'C#'],
-            'D#': ['D#', 'E#', 'F#', 'G#', 'A', 'B', 'B#', 'C##'],
+            'D#': ['D#', 'E#', 'F#', 'G#', 'A', 'B', 'C', 'D'],
             'Eb': ['Eb', 'F', 'Gb', 'Ab', 'A', 'B', 'C', 'D'],
-            'E': ['E', 'F#', 'G', 'A', 'Bb', 'C', 'C#', 'D#'],
+            'E': ['E', 'F#', 'G', 'A', 'Bb', 'C', 'Db', 'D'],
             'F': ['F', 'G', 'Ab', 'Bb', 'B', 'Db', 'D', 'E'],
-            'F#': ['F#', 'G#', 'A', 'B', 'C', 'D', 'D#', 'E#'],
+            'F#': ['F#', 'G#', 'A', 'B', 'C', 'D', 'Eb', 'E'],
             'Gb': ['Gb', 'Ab', 'A', 'B', 'C', 'D', 'Eb', 'F'],
             'G': ['G', 'A', 'Bb', 'C', 'Db', 'Eb', 'E', 'F#'],
             'G#': ['G#', 'A#', 'B', 'C#', 'D', 'E', 'E#', 'F##'],
@@ -1063,6 +1063,11 @@ function getIntervals(notes, root) {
     // For whole tone scales, always return the characteristic whole tone intervals
     if (notes.length === 6) {
         return ['1', '2', '3', '#4', '#5', '#6'];
+    }
+
+    // For diminished scales (8 notes), use the known interval pattern
+    if (notes.length === 8) {
+        return ['1', '2', 'b3', '4', 'b5', 'b6', '6', '7'];
     }
 
     // For harmonic minor scales, use the known interval pattern
