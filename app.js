@@ -114,7 +114,19 @@ const scaleFormulas = {
     pentatonicEgyptian: [2, 3, 2, 3, 2],
     pentatonicBluesMajor: [3, 2, 1, 1, 3, 2], // Actually blues major
     pentatonicBluesMinor: [3, 2, 1, 1, 3, 2], // Blues scale
-    blues: [3, 2, 1, 1, 3, 2]
+    blues: [3, 2, 1, 1, 3, 2],
+    // Other scales
+    hungarian: [2, 1, 3, 1, 1, 3, 1], // Hungarian Minor
+    neapolitan: [1, 2, 2, 2, 2, 2, 1], // Neapolitan Minor
+    persian: [1, 3, 1, 1, 2, 3, 1], // Persian (Double Harmonic)
+    bebopDominant: [2, 2, 1, 2, 2, 1, 1, 1], // Bebop Dominant (8 notes)
+    bebopMajor: [2, 2, 1, 2, 1, 1, 2, 1], // Bebop Major (8 notes)
+    hirajoshi: [2, 1, 4, 1, 4], // Hirajoshi
+    inSen: [1, 4, 2, 3, 2], // Japanese In Sen (5 notes)
+    augmented: [3, 1, 3, 1, 3, 1], // Augmented Scale (6 notes)
+    halfWhole: [1, 2, 1, 2, 1, 2, 1, 2], // Half-Whole Diminished (8 notes)
+    spanish: [1, 3, 1, 2, 1, 2, 2], // Spanish Scale (Phrygian Major)
+    byzantine: [1, 3, 1, 2, 1, 3, 1] // Byzantine Scale
 };
 
 // Mode data for major scale
@@ -184,6 +196,17 @@ const pentatonicTypes = {
             { name: 'Iwato (Shape 4)', mode: 3, mood: 'Japanese, dark', description: 'Japanese Iwato scale' },
             { name: 'In (Shape 5)', mode: 4, mood: 'Japanese, bright', description: 'Japanese In scale' }
         ]
+    },
+    hirajoshi: {
+        name: 'Hirajoshi',
+        formula: [2, 1, 4, 1, 4],
+        modes: [
+            { name: 'Hirajoshi (Shape 1)', mode: 0, mood: 'Japanese, meditative, peaceful', description: 'Traditional Japanese pentatonic scale' },
+            { name: 'Kumoi (Shape 2)', mode: 1, mood: 'Japanese, contemplative', description: 'Japanese Kumoi variation' },
+            { name: 'Hon-Kumoi (Shape 3)', mode: 2, mood: 'Japanese, serene', description: 'Traditional Kumoi mode' },
+            { name: 'Iwato (Shape 4)', mode: 3, mood: 'Japanese, dark, mysterious', description: 'Dark Japanese scale' },
+            { name: 'Chinese (Shape 5)', mode: 4, mood: 'Asian, pentatonic', description: 'Chinese pentatonic variation' }
+        ]
     }
 };
 
@@ -197,8 +220,250 @@ const bluesScaleModes = [
     { name: 'Lydian Blues', mode: 5, mood: 'Floating blues, ethereal', description: 'Blues scale starting on the 5th' }
 ];
 
+// Other scales types - World, Exotic, and Jazz scales
+const otherScaleTypes = {
+    hungarian: {
+        name: 'Hungarian Minor',
+        formula: [2, 1, 3, 1, 1, 3, 1],
+        mood: 'Dark, exotic, mysterious',
+        description: 'Eastern European folk scale with augmented second'
+    },
+    neapolitan: {
+        name: 'Neapolitan Minor',
+        formula: [1, 2, 2, 2, 2, 2, 1],
+        mood: 'Classical, dramatic, Italian',
+        description: 'Classical scale with distinctive flat second degree'
+    },
+    persian: {
+        name: 'Persian (Double Harmonic)',
+        formula: [1, 3, 1, 2, 1, 3, 1],
+        mood: 'Exotic, Middle Eastern, mystical',
+        description: 'Middle Eastern scale with two augmented seconds'
+    },
+    bebopDominant: {
+        name: 'Bebop Dominant',
+        formula: [2, 2, 1, 2, 2, 1, 1, 1],
+        mood: 'Jazzy, sophisticated, swing',
+        description: 'Mixolydian with added major 7th for smooth voice leading'
+    },
+    bebopMajor: {
+        name: 'Bebop Major',
+        formula: [2, 2, 1, 2, 1, 1, 2, 1],
+        mood: 'Jazzy, sophisticated, major swing',
+        description: 'Major scale with added augmented 5th for smooth voice leading'
+    },
+    hirajoshi: {
+        name: 'Hirajoshi',
+        formula: [2, 1, 4, 1, 4],
+        mood: 'Japanese, contemplative, pentatonic',
+        description: 'Traditional Japanese scale with distinctive wide intervals'
+    },
+    inSen: {
+        name: 'In Sen',
+        formula: [1, 4, 2, 3, 2],
+        mood: 'Japanese, contemplative, serene',
+        description: 'Japanese scale often used in meditation music'
+    },
+    augmented: {
+        name: 'Augmented Scale',
+        formula: [3, 1, 3, 1, 3, 1],
+        mood: 'Mysterious, floating, symmetrical',
+        description: 'Symmetrical scale with alternating minor thirds and semitones'
+    },
+    spanish: {
+        name: 'Spanish Scale',
+        formula: [1, 3, 1, 2, 1, 2, 2],
+        mood: 'Flamenco, passionate, Spanish',
+        description: 'Phrygian major scale with distinctive flat second'
+    },
+    byzantine: {
+        name: 'Byzantine Scale',
+        formula: [1, 3, 1, 2, 1, 3, 1],
+        mood: 'Orthodox, ancient, ceremonial',
+        description: 'Eastern Orthodox liturgical scale'
+    }
+};
+
 // Global state for fretboard display mode
-let fretboardDisplayMode = 'notes'; // 'notes' or 'intervals'
+let fretboardDisplayMode = 'notes';
+
+// === IMPROVED INTERVAL COLOR SYSTEM ===
+// Refined based on musical theory and visual harmony with the app's warm theme
+// Colors are more muted and harmonious while maintaining the tension-based logic
+
+const intervalColors = {
+  // STABLE INTERVALS (Low Tension) - Warm, stable tones
+  '1': '#FFF5E6',   // Unison/Root - Warm white (stability, completeness)
+  '3': '#F4D03F',   // Major Third - Warm golden yellow (happiness, brightness)
+  '5': '#5DADE2',   // Perfect Fifth - Soft blue (stability, consonance)
+  
+  // MILD TENSION (Medium Tension) - Earth tones
+  '2': '#E67E22',   // Major Second - Warm orange (movement, gentle tension)
+  'b2': '#D35400',  // Minor Second - Burnt orange (mild tension, spice)
+  '6': '#58D68D',   // Major Sixth - Soft green (yearning, natural)
+  'b6': '#85929E',  // Minor Sixth - Muted blue-gray (melancholy, contemplative)
+  
+  // STRONG TENSION (High Tension) - Deeper, richer colors
+  '4': '#E74C3C',   // Perfect Fourth - Rich red (suspension, strength)
+  '7': '#C0392B',   // Major Seventh - Deep red (leading tone tension)
+  'b7': '#CD6155',  // Minor Seventh - Rose red (bluesy, soulful)
+  'b3': '#8E44AD',  // Minor Third - Rich purple (minor quality, depth)
+  
+  // EXTREME TENSION (Maximum Tension) - Dark, intense colors
+  '#4': '#922B21',  // Tritone (Aug 4th) - Dark crimson (devil's interval)
+  'b5': '#922B21',  // Tritone (Dim 5th) - Dark crimson (instability)
+  
+  // AUGMENTED/DIMINISHED (Unnatural intervals) - Sophisticated purples/violets
+  '#5': '#7D3C98',  // Augmented Fifth - Deep purple
+  '#1': '#BB8FCE',  // Augmented Unison - Light lavender
+  'bb7': '#6C3483', // Diminished Seventh - Dark plum
+  '#7': '#A569BD',  // Augmented Seventh - Medium orchid
+  '#2': '#CA6F1E',  // Augmented Second - Burnt sienna
+  'bb3': '#76448A', // Diminished Third - Dark violet
+  '#6': '#239B56'   // Augmented Sixth - Forest green
+};
+
+// Scale degree weights based on harmonic importance hierarchy
+const scaleWeights = {
+  '1': 3.0,  // Tonic - most stable and resolved tone
+  '3': 2.5,  // Mediant - determines modal quality (major/minor)
+  'b3': 2.5, // Minor third - equally important for modal character
+  '5': 2.0,  // Dominant - next in importance to tonic
+  '7': 1.8,  // Leading tone - peak of tension in tonal music
+  'b7': 1.8, // Minor seventh - important in minor modes
+  '4': 1.5,  // Subdominant - active, unstable tone
+  '6': 1.2,  // Submediant - varies by major/minor
+  'b6': 1.2, // Minor sixth - important in minor modes
+  '2': 1.0,  // Supertonic - unstable and active
+  'b2': 1.0, // Minor second - chromatic tension
+  '#4': 2.2, // Tritone - extremely important dissonance
+  'b5': 2.2  // Tritone - extremely important dissonance
+};
+
+// Helper functions for color calculations
+function hexToRgb(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? [
+    parseInt(result[1], 16),
+    parseInt(result[2], 16),
+    parseInt(result[3], 16)
+  ] : [0, 0, 0];
+}
+
+function rgbToHex(r, g, b) {
+  return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+// Calculate scale color using enhanced algorithm for better mode distinction
+function calculateScaleColor(scaleIntervals) {
+  if (!scaleIntervals || scaleIntervals.length === 0) {
+    return '#8B4513'; // Default warm brown to match app theme
+  }
+  
+  // Enhanced color mapping for better mode distinction
+  const modeColorMap = {
+    // Major modes - warm colors
+    'Ionian': '#E67E22',      // Warm orange (bright, stable)
+    'Lydian': '#F39C12',      // Golden orange (floating, ethereal)
+    'Mixolydian': '#D35400',  // Burnt orange (dominant, bluesy)
+    
+    // Minor modes - cooler colors  
+    'Dorian': '#8E44AD',      // Purple (sophisticated, jazzy)
+    'Aeolian': '#2C3E50',     // Dark blue-gray (natural minor, sad)
+    'Phrygian': '#C0392B',    // Deep red (exotic, Spanish)
+    'Locrian': '#7F8C8D'      // Gray (unstable, diminished)
+  };
+  
+  // Try to match mode by interval pattern
+  const intervalString = scaleIntervals.join('');
+  
+  // Check for common mode patterns
+  if (intervalString.includes('3') && intervalString.includes('7')) {
+    return modeColorMap.Ionian; // Major quality
+  } else if (intervalString.includes('b3') && intervalString.includes('6')) {
+    return modeColorMap.Dorian; // Dorian quality
+  } else if (intervalString.includes('b3') && intervalString.includes('b2')) {
+    return modeColorMap.Phrygian; // Phrygian quality
+  } else if (intervalString.includes('4') && intervalString.includes('#4')) {
+    return modeColorMap.Lydian; // Lydian quality
+  } else if (intervalString.includes('3') && intervalString.includes('b7')) {
+    return modeColorMap.Mixolydian; // Mixolydian quality
+  } else if (intervalString.includes('b3') && intervalString.includes('b6')) {
+    return modeColorMap.Aeolian; // Natural minor
+  } else if (intervalString.includes('b5') || intervalString.includes('#4')) {
+    return modeColorMap.Locrian; // Unstable/diminished
+  }
+  
+  // Fallback: enhanced weighted average with better contrast
+  let totalR = 0, totalG = 0, totalB = 0, totalWeight = 0;
+  
+  scaleIntervals.forEach(interval => {
+    const color = intervalColors[interval];
+    if (color) {
+      // Emphasize characteristic intervals more
+      let weight = scaleWeights[interval] || 1.0;
+      
+      // Boost weight for characteristic intervals
+      if (interval === '3' || interval === 'b3') weight *= 2.5; // Modal character
+      if (interval === '7' || interval === 'b7') weight *= 2.0; // Leading tone
+      if (interval === '#4' || interval === 'b5') weight *= 2.0; // Tritone
+      if (interval === 'b2') weight *= 1.8; // Phrygian character
+      if (interval === '#11') weight *= 1.8; // Lydian character
+      
+      const [r, g, b] = hexToRgb(color);
+      
+      totalR += r * weight;
+      totalG += g * weight;
+      totalB += b * weight;
+      totalWeight += weight;
+    }
+  });
+  
+  if (totalWeight === 0) return '#8B4513';
+  
+  const avgR = Math.round(totalR / totalWeight);
+  const avgG = Math.round(totalG / totalWeight);
+  const avgB = Math.round(totalB / totalWeight);
+  
+  // Enhance saturation and contrast for better visibility
+  const enhanceColor = (r, g, b) => {
+    // Convert to HSL for better manipulation
+    const max = Math.max(r, g, b) / 255;
+    const min = Math.min(r, g, b) / 255;
+    const diff = max - min;
+    
+    // Increase saturation by 20%
+    const saturationBoost = 1.3;
+    const newR = Math.min(255, Math.round(r + (r - avgR) * saturationBoost * 0.3));
+    const newG = Math.min(255, Math.round(g + (g - avgG) * saturationBoost * 0.3));
+    const newB = Math.min(255, Math.round(b + (b - avgB) * saturationBoost * 0.3));
+    
+    return [
+      Math.max(0, Math.min(255, newR)),
+      Math.max(0, Math.min(255, newG)), 
+      Math.max(0, Math.min(255, newB))
+    ];
+  };
+  
+  const [enhancedR, enhancedG, enhancedB] = enhanceColor(avgR, avgG, avgB);
+  
+  return rgbToHex(enhancedR, enhancedG, enhancedB);
+}
+
+// Get interval color with fallback
+function getIntervalColor(interval) {
+  return intervalColors[interval] || '#CCCCCC';
+}
+
+// Calculate a lighter version of a color for backgrounds
+function lightenColor(hex, percent = 50) {
+  const [r, g, b] = hexToRgb(hex);
+  const lighten = (color) => Math.min(255, Math.round(color + (255 - color) * (percent / 100)));
+  return rgbToHex(lighten(r), lighten(g), lighten(b));
+}
+
+// Global flag for color mode - ENABLED BY DEFAULT
+let colorModeEnabled = true;
 
 // Function to generate fretboard SVG using the Fretboard class
 function generateFretboard(scale, displayMode = 'notes', isModal = false) {
@@ -304,6 +569,41 @@ function getProperNoteSpelling(noteIndex, key, scaleType = 'major') {
         const scaleNotes = wholeToneMapping[key];
         if (scaleNotes) {
             // Find which note in the scale corresponds to this chromatic index
+            for (let note of scaleNotes) {
+                const chromIndex = chromaticScale.indexOf(note.replace('b', '#'));
+                if (chromIndex === noteIndex) {
+                    return note;
+                }
+            }
+        }
+        
+        return chromaticScale[noteIndex];
+    }
+    
+    // For diminished scales, use proper music theory spelling
+    if (scaleType === 'diminished') {
+        const diminishedSpellings = {
+            'C': ['C', 'D', 'Eb', 'F', 'Gb', 'Ab', 'A', 'B'],
+            'C#': ['C#', 'D#', 'E', 'F#', 'G', 'A', 'A#', 'B#'],
+            'Db': ['Db', 'Eb', 'E', 'Gb', 'G', 'A', 'Bb', 'C'],
+            'D': ['D', 'E', 'F', 'G', 'Ab', 'Bb', 'B', 'C#'],
+            'D#': ['D#', 'E#', 'F#', 'G#', 'A', 'B', 'B#', 'C##'],
+            'Eb': ['Eb', 'F', 'Gb', 'Ab', 'A', 'B', 'C', 'D'],
+            'E': ['E', 'F#', 'G', 'A', 'Bb', 'C', 'C#', 'D#'],
+            'F': ['F', 'G', 'Ab', 'Bb', 'B', 'Db', 'D', 'E'],
+            'F#': ['F#', 'G#', 'A', 'B', 'C', 'D', 'D#', 'E#'],
+            'Gb': ['Gb', 'Ab', 'A', 'B', 'C', 'D', 'Eb', 'F'],
+            'G': ['G', 'A', 'Bb', 'C', 'Db', 'Eb', 'E', 'F#'],
+            'G#': ['G#', 'A#', 'B', 'C#', 'D', 'E', 'E#', 'F##'],
+            'Ab': ['Ab', 'Bb', 'B', 'Db', 'D', 'E', 'F', 'G'],
+            'A': ['A', 'B', 'C', 'D', 'Eb', 'F', 'F#', 'G#'],
+            'A#': ['A#', 'B#', 'C#', 'D#', 'E', 'F#', 'F##', 'G##'],
+            'Bb': ['Bb', 'C', 'Db', 'Eb', 'E', 'Gb', 'G', 'A'],
+            'B': ['B', 'C#', 'D', 'E', 'F', 'G', 'G#', 'A#']
+        };
+
+        const scaleNotes = diminishedSpellings[key];
+        if (scaleNotes) {
             for (let note of scaleNotes) {
                 const chromIndex = chromaticScale.indexOf(note.replace('b', '#'));
                 if (chromIndex === noteIndex) {
@@ -424,6 +724,108 @@ function getProperNoteSpelling(noteIndex, key, scaleType = 'major') {
                 currentIndex = (currentIndex + formula[i]) % 12;
                 if (noteIndex === currentIndex) {
                     return scaleNotes[i + 1];
+                }
+            }
+        }
+        
+        return chromaticScale[noteIndex];
+    }
+    
+    // For Other scales, use proper music theory spelling
+    if (scaleType === 'other') {
+        // Define correct spellings for Other scales
+        const otherScaleSpellings = {
+            // Hungarian Minor: 1, 2, b3, #4, 5, b6, 7
+            'hungarian': {
+                'C': ['C', 'D', 'Eb', 'F#', 'G', 'Ab', 'B'],
+                'C#': ['C#', 'D#', 'E', 'F##', 'G#', 'A', 'B#'],
+                'Db': ['Db', 'Eb', 'E', 'G', 'Ab', 'A', 'C'],
+                'D': ['D', 'E', 'F', 'G#', 'A', 'Bb', 'C#'],
+                'D#': ['D#', 'E#', 'F#', 'G##', 'A#', 'B', 'C##'],
+                'Eb': ['Eb', 'F', 'Gb', 'A', 'Bb', 'B', 'D'],
+                'E': ['E', 'F#', 'G', 'A#', 'B', 'C', 'D#'],
+                'F': ['F', 'G', 'Ab', 'B', 'C', 'Db', 'E'],
+                'F#': ['F#', 'G#', 'A', 'B#', 'C#', 'D', 'E#'],
+                'Gb': ['Gb', 'Ab', 'A', 'C', 'Db', 'D', 'F'],
+                'G': ['G', 'A', 'Bb', 'C#', 'D', 'Eb', 'F#'],
+                'G#': ['G#', 'A#', 'B', 'C##', 'D#', 'E', 'F##'],
+                'Ab': ['Ab', 'Bb', 'B', 'D', 'Eb', 'E', 'G'],
+                'A': ['A', 'B', 'C', 'D#', 'E', 'F', 'G#'],
+                'A#': ['A#', 'B#', 'C#', 'D##', 'E#', 'F#', 'G##'],
+                'Bb': ['Bb', 'C', 'Db', 'E', 'F', 'Gb', 'A'],
+                'B': ['B', 'C#', 'D', 'E#', 'F#', 'G', 'A#']
+            },
+            // Neapolitan Minor: 1, b2, b3, 4, 5, 6, 7
+            'neapolitan': {
+                'C': ['C', 'Db', 'Eb', 'F', 'G', 'A', 'B'],
+                'C#': ['C#', 'D', 'E', 'F#', 'G#', 'A#', 'B#'],
+                'Db': ['Db', 'D', 'E', 'Gb', 'Ab', 'Bb', 'C'],
+                'D': ['D', 'Eb', 'F', 'G', 'A', 'B', 'C#'],
+                'D#': ['D#', 'E', 'F#', 'G#', 'A#', 'B#', 'C##'],
+                'Eb': ['Eb', 'E', 'Gb', 'Ab', 'Bb', 'C', 'D'],
+                'E': ['E', 'F', 'G', 'A', 'B', 'C#', 'D#'],
+                'F': ['F', 'Gb', 'Ab', 'Bb', 'C', 'D', 'E'],
+                'F#': ['F#', 'G', 'A', 'B', 'C#', 'D#', 'E#'],
+                'Gb': ['Gb', 'G', 'A', 'B', 'Db', 'Eb', 'F'],
+                'G': ['G', 'Ab', 'Bb', 'C', 'D', 'E', 'F#'],
+                'G#': ['G#', 'A', 'B', 'C#', 'D#', 'E#', 'F##'],
+                'Ab': ['Ab', 'A', 'B', 'Db', 'Eb', 'F', 'G'],
+                'A': ['A', 'Bb', 'C', 'D', 'E', 'F#', 'G#'],
+                'A#': ['A#', 'B', 'C#', 'D#', 'E#', 'F##', 'G##'],
+                'Bb': ['Bb', 'B', 'Db', 'Eb', 'F', 'G', 'A'],
+                'B': ['B', 'C', 'D', 'E', 'F#', 'G#', 'A#']
+            },
+            // Persian (Double Harmonic): 1, b2, 3, 4, 5, b6, 7
+            'persian': {
+                'C': ['C', 'Db', 'E', 'F', 'G', 'Ab', 'B'],
+                'C#': ['C#', 'D', 'E#', 'F#', 'G#', 'A', 'B#'],
+                'Db': ['Db', 'D', 'F', 'Gb', 'Ab', 'A', 'C'],
+                'D': ['D', 'Eb', 'F#', 'G', 'A', 'Bb', 'C#'],
+                'D#': ['D#', 'E', 'F##', 'G#', 'A#', 'B', 'C##'],
+                'Eb': ['Eb', 'E', 'G', 'Ab', 'Bb', 'B', 'D'],
+                'E': ['E', 'F', 'G#', 'A', 'B', 'C', 'D#'],
+                'F': ['F', 'Gb', 'A', 'Bb', 'C', 'Db', 'E'],
+                'F#': ['F#', 'G', 'A#', 'B', 'C#', 'D', 'E#'],
+                'Gb': ['Gb', 'G', 'Bb', 'B', 'Db', 'D', 'F'],
+                'G': ['G', 'Ab', 'B', 'C', 'D', 'Eb', 'F#'],
+                'G#': ['G#', 'A', 'B#', 'C#', 'D#', 'E', 'F##'],
+                'Ab': ['Ab', 'A', 'C', 'Db', 'Eb', 'E', 'G'],
+                'A': ['A', 'Bb', 'C#', 'D', 'E', 'F', 'G#'],
+                'A#': ['A#', 'B', 'C##', 'D#', 'E#', 'F#', 'G##'],
+                'Bb': ['Bb', 'B', 'D', 'Eb', 'F', 'Gb', 'A'],
+                'B': ['B', 'C', 'D#', 'E', 'F#', 'G', 'A#']
+            }
+        };
+
+        // Helper function to convert note to chromatic index for Other scales
+        function noteToChromatic(note) {
+            const noteMap = {
+                'C': 0, 'B#': 0,
+                'C#': 1, 'Db': 1, 
+                'C##': 2, 'D': 2, 
+                'D#': 3, 'Eb': 3,
+                'D##': 4, 'E': 4, 'Fb': 4, 
+                'E#': 5, 'F': 5,
+                'F#': 6, 'Gb': 6, 
+                'F##': 7, 'G': 7,
+                'G#': 8, 'Ab': 8,
+                'G##': 9, 'A': 9,
+                'A#': 10, 'Bb': 10,
+                'A##': 11, 'B': 11, 'Cb': 11
+            };
+            return noteMap[note] !== undefined ? noteMap[note] : -1;
+        }
+
+        // Get the current scale type from global state or determine it
+        const currentOtherScale = getCurrentOtherScaleType(); // We'll need to implement this
+        const scaleNotes = otherScaleSpellings[currentOtherScale] && otherScaleSpellings[currentOtherScale][key];
+        
+        if (scaleNotes) {
+            for (let i = 0; i < scaleNotes.length; i++) {
+                const scaleNote = scaleNotes[i];
+                const scaleNoteIndex = noteToChromatic(scaleNote);
+                if (scaleNoteIndex === noteIndex) {
+                    return scaleNote;
                 }
             }
         }
@@ -773,8 +1175,8 @@ function isMajorPattern(notes, root) {
 function generateScaleLibrary() {
     const library = {
         major: {},
-        harmonic: {},
-        melodic: {},
+        harmonicMinor: {},
+        melodicMinor: {},
         diminished: {},
         chromatic: {},
         wholeTone: {},
@@ -813,7 +1215,7 @@ function generateScaleLibrary() {
         
         // Harmonic Minor scales and modes
         const harmonicMinorScale = calculateScale(properKey, scaleFormulas.harmonicMinor, 'harmonicMinor');
-        library.harmonic[`${properKey} Harmonic Minor`] = {
+        library.harmonicMinor[`${properKey} Harmonic Minor`] = {
             root: properKey,
             parentScale: `${properKey} Harmonic Minor`,
             scale: harmonicMinorScale,
@@ -826,7 +1228,7 @@ function generateScaleLibrary() {
                 let intervals;
                 if (modeInfo.mode === 0) {
                     intervals = ['1', '2', 'b3', '4', '5', 'b6', '7'];
-                } else {
+        } else {
                     intervals = getIntervals(modeNotes, modeRoot);
                 }
                 
@@ -846,7 +1248,7 @@ function generateScaleLibrary() {
         
         // Melodic Minor scales and modes
         const melodicMinorScale = calculateScale(properKey, scaleFormulas.melodicMinor, 'melodicMinor');
-        library.melodic[`${properKey} Melodic Minor`] = {
+        library.melodicMinor[`${properKey} Melodic Minor`] = {
             root: properKey,
             parentScale: `${properKey} Melodic Minor`,
             scale: melodicMinorScale,
@@ -859,7 +1261,7 @@ function generateScaleLibrary() {
                 let intervals;
                 if (modeInfo.mode === 0) {
                     intervals = ['1', '2', 'b3', '4', '5', '6', '7'];
-                } else {
+    } else {
                     intervals = getIntervals(modeNotes, modeRoot);
                 }
                 
@@ -877,23 +1279,33 @@ function generateScaleLibrary() {
             })
         };
         
-        // Diminished scale
-        const diminishedScale = calculateScale(properKey, scaleFormulas.diminished);
+        // Diminished scale with proper W-H and H-W modes
+        const whDiminishedScale = calculateScale(properKey, scaleFormulas.diminished, 'diminished'); // W-H pattern
+        
         library.diminished[`${properKey} Diminished`] = {
             root: properKey,
             parentScale: `${properKey} Diminished`,
-            scale: diminishedScale,
-            modes: [{
-                id: `${properKey} Diminished (W-H)`,
-                root: properKey,
-                notes: diminishedScale,
-                intervals: getIntervals(diminishedScale, properKey),
-                formula: scaleFormulas.diminished,
-                mood: 'Tense, symmetrical, diminished',
-                description: 'Whole-half diminished pattern',
-                applications: ['Jazz fusion', 'Modern jazz', 'Diminished harmony'],
-                parentScale: `${properKey} Diminished`
-            }]
+            scale: whDiminishedScale,
+            modes: whDiminishedScale.map((note, index) => {
+                const modeNotes = getModeNotes(whDiminishedScale, index, scaleFormulas.diminished);
+                const patternType = index % 2 === 0 ? 'Whole-Half' : 'Half-Whole';
+                
+                return {
+                    id: `${note} ${patternType} Diminished`,
+                    root: note,
+                    notes: modeNotes,
+                    intervals: getIntervals(modeNotes, note),
+                    formula: index % 2 === 0 ? scaleFormulas.diminished : [1, 2, 1, 2, 1, 2, 1, 2],
+                    mood: index % 2 === 0 ? 'Tense, symmetrical, dominant' : 'Tense, symmetrical, auxiliary',
+                    description: index % 2 === 0 ? 
+                        'Whole-half diminished pattern (over dominant 7th chords)' : 
+                        'Half-whole diminished pattern (over diminished and minor 7♭5 chords)',
+                    applications: index % 2 === 0 ? 
+                        ['Jazz fusion', 'Over dominant 7th chords', 'Bebop', 'Modern jazz'] :
+                        ['Jazz fusion', 'Over diminished chords', 'Minor 7♭5 chords', 'Modern jazz'],
+                    parentScale: `${properKey} Diminished`
+                };
+            })
         };
         
         // Chromatic scale (no modes, same for all keys)
@@ -941,87 +1353,47 @@ function generateScaleLibrary() {
     });
     
     // Whole Tone scales - there are only 2 unique whole tone scales in all of music
-    // Each root note belongs to one specific whole tone scale - they are NOT modes of each other
+    // But we generate all 12 keys, each showing the 6 modes from their respective whole tone scale
     
-    // Whole Tone Scale 1: C-D-E-F#-G#-A#
+    // Define the two unique whole tone scales
     const wholeToneScale1 = ['C', 'D', 'E', 'F#', 'G#', 'A#'];
+    const wholeToneScale2 = ['C#', 'D#', 'F', 'G', 'A', 'B'];
     
-    // Whole Tone Scale 2: Db-Eb-F-G-A-B  
-    const wholeToneScale2 = ['Db', 'Eb', 'F', 'G', 'A', 'B'];
-    
-    // Map each root note to its specific whole tone scale
-    const rootToWholeToneScale = {
-        // Whole Tone Scale 1 roots
-        'C': wholeToneScale1,
-        'D': wholeToneScale1, 
-        'E': wholeToneScale1,
-        'F#': wholeToneScale1,
-        'Gb': wholeToneScale1, // F# enharmonic
-        'G#': wholeToneScale1,
-        'Ab': wholeToneScale1, // G# enharmonic
-        'A#': wholeToneScale1,
-        'Bb': wholeToneScale1, // A# enharmonic
-        
-        // Whole Tone Scale 2 roots
-        'C#': wholeToneScale2,
-        'Db': wholeToneScale2, // C# enharmonic
-        'D#': wholeToneScale2,
-        'Eb': wholeToneScale2, // D# enharmonic
-        'F': wholeToneScale2,
-        'G': wholeToneScale2,
-        'A': wholeToneScale2,
-        'B': wholeToneScale2
+    // Map each key to its whole tone scale
+    const keyToWholeToneScale = {
+        'C': wholeToneScale1, 'D': wholeToneScale1, 'E': wholeToneScale1, 
+        'F#': wholeToneScale1, 'Gb': wholeToneScale1, 'G#': wholeToneScale1, 
+        'Ab': wholeToneScale1, 'A#': wholeToneScale1, 'Bb': wholeToneScale1,
+        'C#': wholeToneScale2, 'Db': wholeToneScale2, 'D#': wholeToneScale2, 
+        'Eb': wholeToneScale2, 'F': wholeToneScale2, 'G': wholeToneScale2, 
+        'A': wholeToneScale2, 'B': wholeToneScale2
     };
     
-    // Generate whole tone scale for each key
     chromaticScale.forEach(key => {
         const properKey = keySignatures[key] || key;
-        const scaleNotes = rootToWholeToneScale[properKey];
+        const wholeToneScale = keyToWholeToneScale[properKey];
         
-        if (scaleNotes) {
-            // Find the starting position of the root in its whole tone scale
-            const rootIndex = scaleNotes.indexOf(properKey);
-            
-            // If exact match not found, try enharmonic equivalents
-            let startIndex = rootIndex;
-            if (rootIndex === -1) {
-                // Handle enharmonic equivalents
-                for (let i = 0; i < scaleNotes.length; i++) {
-                    const scaleNote = scaleNotes[i];
-                    const scaleNoteSharp = scaleNote.replace('b', '#');
-                    const properKeySharp = properKey.replace('b', '#');
-                    
-                    if (scaleNoteSharp === properKeySharp) {
-                        startIndex = i;
-                        break;
-                    }
-                }
-            }
-            
-            if (startIndex !== -1) {
-                // Rotate the scale to start from the selected key
-                const rotatedScale = [...scaleNotes.slice(startIndex), ...scaleNotes.slice(0, startIndex)];
-                
-                // Determine which scale group this belongs to
-                const scaleGroup = scaleNotes === wholeToneScale1 ? 1 : 2;
-                
-                library.wholeTone[`${properKey} Whole Tone`] = {
-                    root: properKey,
-                    parentScale: `Whole Tone Scale ${scaleGroup}`,
-                    scale: rotatedScale,
-                    modes: [{
-                        id: `${properKey} Whole Tone Scale`,
-                        root: properKey,
-                        notes: rotatedScale,
-                        intervals: getIntervals(rotatedScale, properKey),
+        if (wholeToneScale) {
+            library.wholeTone[`${properKey} Whole Tone`] = {
+                root: properKey,
+                parentScale: `${properKey} Whole Tone`,
+                scale: wholeToneScale,
+                modes: wholeToneScale.map((note, index) => {
+                    // Create mode starting from each note in the scale
+                    const modeNotes = [...wholeToneScale.slice(index), ...wholeToneScale.slice(0, index)];
+                    return {
+                        id: `${note} Whole Tone Scale`,
+                        root: note,
+                        notes: modeNotes,
+                        intervals: getIntervals(modeNotes, note),
                         formula: scaleFormulas.wholeTone,
                         mood: 'Dreamy, impressionistic, floating',
-                        description: `6-note whole tone scale. Contains only whole steps (2 semitones between each note).`,
+                        description: `6-note whole tone scale starting from ${note}. Contains only whole steps (2 semitones between each note).`,
                         applications: ['Impressionist music', 'Jazz fusion', 'Film scores', 'Ambient'],
-                        parentScale: `Whole Tone Scale ${scaleGroup}`
-                    }]
-                };
-            }
+                        parentScale: `${properKey} Whole Tone`
+                    };
+                })
+            };
         }
     });
     
@@ -1032,6 +1404,7 @@ function generateScaleLibrary() {
 let currentKey = 'C';
 let currentCategory = 'major';
 let currentPentatonicType = 'major';
+let currentOtherType = 'hungarian';
 let currentMode = null;
 let currentPracticeTab = null;
 let alphaTabApi = null;
@@ -1105,13 +1478,13 @@ function setupEventListeners() {
     initializeKeySelector();
 
     // Category tab handlers
-    document.querySelectorAll('.category-tab').forEach(tab => {
+    document.querySelectorAll('.category-tab:not(.color-toggle-tab)').forEach(tab => {
         tab.addEventListener('click', function() {
             const category = this.dataset.category;
             switchCategory(category);
             
-            // Update active tab
-            document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+            // Update active tab (only for non-color-toggle tabs)
+            document.querySelectorAll('.category-tab:not(.color-toggle-tab)').forEach(t => t.classList.remove('active'));
             this.classList.add('active');
         });
     });
@@ -1121,6 +1494,15 @@ function setupEventListeners() {
         currentPentatonicType = this.value; // Update the global currentPentatonicType variable
         if (document.querySelector('.category-tab.active').dataset.category === 'pentatonic') {
             renderPentatonicModes();
+        }
+    });
+
+    // Other type selector change handler
+    document.getElementById('other-type-selector').addEventListener('change', function() {
+        currentOtherType = this.value; // Update the global currentOtherType variable
+        if (document.querySelector('.category-tab.active:not(.color-toggle-tab)').dataset.category === 'other') {
+            updateParentScaleDisplay();
+            renderOtherModes();
         }
     });
 
@@ -1156,30 +1538,70 @@ function setupEventListeners() {
         pentatonicControls.style.display = currentCategory === 'pentatonic' ? 'block' : 'none';
     }
 
+    // Initialize other controls visibility based on current category
+    const otherControls = document.getElementById('other-controls');
+    if (otherControls) {
+        otherControls.style.display = currentCategory === 'other' ? 'block' : 'none';
+    }
+
     // Update parent scale display initially
     updateParentScaleDisplay();
+
+    // Color mode toggle handler - Updated for new tab-style button
+    document.getElementById('color-mode-toggle')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        colorModeEnabled = !colorModeEnabled;
+        
+        // Update button appearance
+        if (colorModeEnabled) {
+            this.classList.add('active');
+            this.textContent = '🎨 Colors';
+        } else {
+            this.classList.remove('active');
+            this.textContent = '🎨 Colors';
+        }
+        
+        // Re-render the current grid to apply/remove colors
+        const activeCategory = document.querySelector('.category-tab.active:not(.color-toggle-tab)').dataset.category;
+        if (activeCategory === 'pentatonic') {
+            renderPentatonicModes();
+        } else {
+            renderModeGrid();
+        }
+        
+        // If in mode detail view, update the theory section
+        const modeDetail = document.getElementById('mode-detail');
+        if (!modeDetail.classList.contains('hidden')) {
+            updateTheoryColors();
+        }
+    });
+
+    // Initialize color toggle button as active since colors are enabled by default
+    const colorToggleBtn = document.getElementById('color-mode-toggle');
+    if (colorToggleBtn) {
+        colorToggleBtn.classList.add('active');
+        colorToggleBtn.textContent = '🎨 Colors';
+    }
 }
 
 function updateParentScaleDisplay() {
     const parentScaleDisplay = document.getElementById('parent-scale-display');
-    if (!parentScaleDisplay) {
-        console.warn('Parent scale display element not found');
-        return;
-    }
+    if (!parentScaleDisplay) return;
     
     try {
-        // Get the parent scale name based on current category and key
-        let parentScaleName = '';
         const properKey = keySignatures[currentKey] || currentKey;
+        let parentScaleName = '';
         
-        switch (currentCategory) {
+        switch(currentCategory) {
             case 'major':
                 parentScaleName = `${properKey} Major`;
                 break;
-            case 'harmonic':
+            case 'harmonicMinor':
                 parentScaleName = `${properKey} Harmonic Minor`;
                 break;
-            case 'melodic':
+            case 'melodicMinor':
                 parentScaleName = `${properKey} Melodic Minor`;
                 break;
             case 'diminished':
@@ -1198,6 +1620,10 @@ function updateParentScaleDisplay() {
             case 'blues':
                 parentScaleName = `${properKey} Blues`;
                 break;
+            case 'other':
+                const otherTypeName = otherScaleTypes[currentOtherType]?.name || 'Other Scale';
+                parentScaleName = `${properKey} ${otherTypeName}`;
+                break;
             default:
                 parentScaleName = `${properKey} Scales`;
         }
@@ -1212,8 +1638,8 @@ function updateParentScaleDisplay() {
 function switchCategory(category) {
     currentCategory = category;
     
-    // Update active tab
-    document.querySelectorAll('.category-tab').forEach(tab => {
+    // Update active tab (only for non-color-toggle tabs)
+    document.querySelectorAll('.category-tab:not(.color-toggle-tab)').forEach(tab => {
         tab.classList.toggle('active', tab.dataset.category === category);
     });
     
@@ -1221,6 +1647,12 @@ function switchCategory(category) {
     const pentatonicControls = document.getElementById('pentatonic-controls');
     if (pentatonicControls) {
         pentatonicControls.style.display = category === 'pentatonic' ? 'block' : 'none';
+    }
+    
+    // Show/hide other selector
+    const otherControls = document.getElementById('other-controls');
+    if (otherControls) {
+        otherControls.style.display = category === 'other' ? 'block' : 'none';
     }
     
     updateParentScaleDisplay();
@@ -1240,6 +1672,12 @@ function renderModeGrid() {
         // Handle pentatonic scales specially
         if (currentCategory === 'pentatonic') {
             renderPentatonicModes();
+            return;
+        }
+        
+        // Handle other scales specially
+        if (currentCategory === 'other') {
+            renderOtherModes();
             return;
         }
         
@@ -1351,6 +1789,55 @@ function renderPentatonicModes() {
     }
 }
 
+function renderOtherModes() {
+    const gridContainer = document.getElementById('mode-grid');
+    if (!gridContainer) {
+        console.warn('Mode grid container not found');
+        return;
+    }
+    
+    try {
+        // Clear the grid container first to prevent accumulation
+        gridContainer.innerHTML = '';
+        
+        const otherScaleType = otherScaleTypes[currentOtherType];
+        
+        if (!otherScaleType) {
+            gridContainer.innerHTML = '<p class="no-content">Invalid other scale type selected</p>';
+            return;
+        }
+        
+        const properKey = keySignatures[currentKey] || currentKey;
+        const otherScale = calculateScale(properKey, otherScaleType.formula, 'other');
+        
+        if (!otherScale || otherScale.length === 0) {
+            gridContainer.innerHTML = '<p class="no-content">Error generating other scale</p>';
+            return;
+        }
+        
+        // Create a single mode for the other scale (no modes like pentatonic)
+        const mode = {
+            id: `${properKey} ${otherScaleType.name}`,
+            root: properKey,
+            notes: otherScale,
+            intervals: getIntervals(otherScale, properKey),
+            formula: otherScaleType.formula,
+            mood: otherScaleType.mood,
+            description: otherScaleType.description,
+            applications: ['World music', 'Exotic harmony', 'Modern composition', 'Jazz', 'Ethnic music'],
+            parentScale: `${properKey} ${otherScaleType.name}`
+        };
+        
+        const card = createModeCard(mode);
+        if (card) {
+            gridContainer.appendChild(card);
+        }
+    } catch (error) {
+        console.error('Error rendering other modes:', error);
+        gridContainer.innerHTML = '<p class="no-content">Error loading other scales. Please refresh the page.</p>';
+    }
+}
+
 function createModeCard(mode) {
     if (!mode || !mode.id) {
         console.error('Invalid mode data:', mode);
@@ -1361,15 +1848,35 @@ function createModeCard(mode) {
         const card = document.createElement('div');
         card.className = 'mode-card';
         
+        // Apply color styling if color mode is enabled
+        if (colorModeEnabled && mode.intervals) {
+            card.classList.add('colored');
+            const scaleColor = calculateScaleColor(mode.intervals);
+            const lightColor = lightenColor(scaleColor, 85);
+            const darkColor = lightenColor(scaleColor, -20);
+            
+            card.style.setProperty('--scale-color', scaleColor);
+            card.style.setProperty('--scale-color-light', lightColor);
+            card.style.setProperty('--scale-color-dark', darkColor);
+        }
+        
         // Ensure all properties exist with fallbacks
         const notes = (mode.notes && Array.isArray(mode.notes)) ? mode.notes.join(' - ') : 'N/A';
-        const intervals = (mode.intervals && Array.isArray(mode.intervals)) ? mode.intervals.join(' - ') : 'N/A';
+        const intervals = (mode.intervals && Array.isArray(mode.intervals)) ? 
+            (colorModeEnabled ? 
+                mode.intervals.map(interval => `<span class="interval-colored" style="background-color: ${getIntervalColor(interval)}">${interval}</span>`).join(' ') :
+                mode.intervals.join(' - ')
+            ) : 'N/A';
         const parentScale = mode.parentScale || 'Unknown';
         const mood = mode.mood || 'Not specified';
         const description = mode.description || 'No description available';
         
+        // Apply color to title if color mode is enabled
+        const titleStyle = colorModeEnabled && mode.intervals ? 
+            `style="color: ${calculateScaleColor(mode.intervals)}; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.1);"` : '';
+        
         card.innerHTML = `
-            <h3 class="mode-card-title">${mode.id}</h3>
+            <h3 class="mode-card-title" ${titleStyle}>${mode.id}</h3>
             <p class="mode-card-parent">From: ${parentScale}</p>
             <p class="mode-card-mood">${mood}</p>
             <p class="mode-card-description">${description}</p>
@@ -1396,6 +1903,10 @@ function createModeCard(mode) {
 
 function openModeDetail(mode) {
     currentMode = mode;
+    
+    // Hide scale library and show mode detail
+    document.getElementById('scale-library').classList.add('hidden');
+    
     renderModeDetails(mode);
     
     // Auto-scroll to the mode detail section to show theory and fretboard
@@ -1411,45 +1922,98 @@ function openModeDetail(mode) {
 }
 
 function renderModeDetails(mode) {
-    if (!mode) return;
+    const container = document.getElementById('mode-detail');
+    if (!container) return;
     
-    // Update header
-    document.getElementById('mode-name').textContent = mode.id;
-    document.getElementById('mode-root').textContent = mode.root;
+    container.style.display = 'block';
+    container.classList.remove('hidden');
     
-    // Update theory section
-    document.getElementById('mode-formula').textContent = mode.intervals.join(' - ');
-    document.getElementById('mode-intervals').textContent = mode.intervals.join(' - ');
-    document.getElementById('mode-notes').textContent = mode.notes.join(' - ');
-    document.getElementById('mode-mood').textContent = mode.mood;
-    document.getElementById('mode-description').textContent = mode.description;
+    // Update intervals display based on color mode
+    const intervalsDisplay = colorModeEnabled && mode.intervals ? 
+        mode.intervals.map(interval => 
+            `<span class="interval-colored" style="background-color: ${getIntervalColor(interval)}; color: white; padding: 2px 6px; border-radius: 3px; margin: 0 2px;">${interval}</span>`
+        ).join(' ') :
+        (mode.intervals ? mode.intervals.join(' - ') : 'N/A');
     
-    // Update applications
-    const applicationsList = document.getElementById('mode-applications');
-    applicationsList.innerHTML = '';
-    mode.applications.forEach(app => {
-        const li = document.createElement('li');
-        li.textContent = app;
-        applicationsList.appendChild(li);
+    // Apply color to title if color mode is enabled
+    const titleStyle = colorModeEnabled && mode.intervals ? 
+        `style="color: ${calculateScaleColor(mode.intervals)}; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.1);"` : '';
+        
+    container.innerHTML = `
+        <div class="mode-detail-header">
+            <h2 ${titleStyle}>${mode.id}</h2>
+            <button id="back-btn" class="back-btn">← Back</button>
+        </div>
+        <div class="theory-section ${colorModeEnabled ? 'colored' : ''}">
+            <div class="theory-value">
+                <strong>Parent Scale:</strong> ${mode.parentScale || 'Unknown'}
+            </div>
+            <div class="theory-value">
+                <strong>Notes:</strong> ${mode.notes ? mode.notes.join(' - ') : 'N/A'}
+            </div>
+            <div class="theory-value">
+                <strong>Intervals:</strong> ${intervalsDisplay}
+            </div>
+            <div class="theory-value">
+                <strong>Mood:</strong> ${mode.mood || 'Not specified'}
+            </div>
+            <div class="theory-value">
+                <strong>Description:</strong> ${mode.description || 'No description available'}
+            </div>
+        </div>
+        <div class="detail-tabs-container">
+            <div class="detail-tabs">
+                <button class="detail-tab active" data-tab="fretboard">Fretboard Pattern</button>
+                <button class="detail-tab" data-tab="practice">Practice</button>
+            </div>
+        </div>
+        <div id="fretboard-container" class="fretboard-container"></div>
+        <div id="practice-container" class="practice-container" style="display: none;"></div>
+    `;
+    
+    // Setup back button
+    document.getElementById('back-btn').addEventListener('click', () => {
+        container.style.display = 'none';
+        container.classList.add('hidden');
+        document.getElementById('scale-library').classList.remove('hidden');
     });
     
-    // Render fretboard patterns using the fretboard library
-    renderScaleFretboard(mode, 'fretboard-container');
+    // Setup tab functionality
+    const tabButtons = container.querySelectorAll('.detail-tab');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const tab = button.getAttribute('data-tab');
+            
+            // Update active tab
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            
+            // Show/hide content
+            if (tab === 'fretboard') {
+                document.getElementById('fretboard-container').style.display = 'block';
+                document.getElementById('practice-container').style.display = 'none';
+            } else if (tab === 'practice') {
+                document.getElementById('fretboard-container').style.display = 'none';
+                document.getElementById('practice-container').style.display = 'block';
+                renderPracticeTabs([]);
+            }
+        });
+    });
     
-    // Render practice tabs (placeholder for now)
-    renderPracticeTabs([]);
-    
-    // Show mode detail view
-    document.getElementById('mode-detail').classList.remove('hidden');
-    document.getElementById('scale-library').classList.add('hidden');
+    // Render fretboard for the current mode
+    if (mode.notes && mode.notes.length > 0) {
+        const rootNote = mode.notes[0];
+        const scaleName = mode.id;
+        renderScaleFretboard({ notes: mode.notes, root: rootNote, name: scaleName });
+    }
 }
 
 function renderScaleFretboard(scale, containerId = 'fretboard-container') {
     const container = document.getElementById(containerId);
     if (!container) {
         console.error('Fretboard container not found:', containerId);
-        return;
-    }
+            return;
+        }
 
     // Create toggle button container
     const toggleContainer = document.createElement('div');
@@ -1574,7 +2138,7 @@ function setOptimalModalSize() {
         modal.style.height = '90vh';
         modal.style.maxWidth = '95vw';
         modal.style.maxHeight = '90vh';
-    } else {
+        } else {
         // Desktop: Optimal size for fretboard viewing
         const optimalWidth = Math.min(viewportWidth * 0.85, 1400);
         const optimalHeight = Math.min(viewportHeight * 0.85, 900);
@@ -1604,7 +2168,7 @@ function handleMobileOrientation() {
             
             // Add orientation change listener
             window.addEventListener('orientationchange', () => {
-                setTimeout(() => {
+            setTimeout(() => {
                     setOptimalModalSize();
                 }, 100);
             });
@@ -1786,7 +2350,7 @@ function suggestRotation() {
     
     document.body.appendChild(message);
     
-    setTimeout(() => {
+        setTimeout(() => {
         if (message.parentNode) {
             message.parentNode.removeChild(message);
         }
@@ -2130,3 +2694,37 @@ function getContextualKeyExplanation(key, category) {
     
     return explanation;
 }
+
+// Helper function to get interval color
+function getIntervalColor(interval) {
+    return intervalColors[interval] || '#E0E0E0'; // Default gray for unknown intervals
+}
+
+// Helper function to lighten or darken a color
+function lightenColor(color, percent) {
+    const rgb = hexToRgb(color);
+    if (!rgb) return color;
+    
+    const factor = percent / 100;
+    
+    if (percent > 0) {
+        // Lighten by mixing with white
+        rgb.r = Math.round(rgb.r + (255 - rgb.r) * factor);
+        rgb.g = Math.round(rgb.g + (255 - rgb.g) * factor);
+        rgb.b = Math.round(rgb.b + (255 - rgb.b) * factor);
+    } else {
+        // Darken by reducing values
+        const darkFactor = 1 + factor;
+        rgb.r = Math.round(rgb.r * darkFactor);
+        rgb.g = Math.round(rgb.g * darkFactor);
+        rgb.b = Math.round(rgb.b * darkFactor);
+    }
+    
+    return rgbToHex(rgb.r, rgb.g, rgb.b);
+}
+
+// Helper function to get current other scale type
+function getCurrentOtherScaleType() {
+    return currentOtherType || 'hungarian';
+}
+

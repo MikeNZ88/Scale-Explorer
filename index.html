@@ -40,16 +40,20 @@
                 </div>
             </div>
 
-            <!-- Category Tabs -->
+            <!-- Category Tabs with Color Toggle -->
             <div class="category-tabs">
                 <button class="category-tab active" data-category="major">Major</button>
-                <button class="category-tab" data-category="harmonic">Harmonic Minor</button>
-                <button class="category-tab" data-category="melodic">Melodic Minor</button>
+                <button class="category-tab" data-category="harmonicMinor">Harmonic Minor</button>
+                <button class="category-tab" data-category="melodicMinor">Melodic Minor</button>
                 <button class="category-tab" data-category="diminished">Diminished</button>
                 <button class="category-tab" data-category="chromatic">Chromatic</button>
                 <button class="category-tab" data-category="wholeTone">Whole Tone</button>
                 <button class="category-tab" data-category="pentatonic">Pentatonic</button>
                 <button class="category-tab" data-category="blues">Blues</button>
+                <button class="category-tab" data-category="other">Other</button>
+                <button id="color-mode-toggle" class="category-tab color-toggle-tab">
+                    🎨 Colors
+                </button>
             </div>
 
             <!-- Pentatonic Type Selector (hidden by default) -->
@@ -60,6 +64,26 @@
                         <option value="major">Major Pentatonic</option>
                         <option value="minor">Minor Pentatonic</option>
                         <option value="egyptian">Egyptian Pentatonic</option>
+                        <option value="hirajoshi">Hirajoshi</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Other Scales Type Selector (hidden by default) -->
+            <div class="other-controls hidden" id="other-controls">
+                <div class="other-selector-wrapper">
+                    <label for="other-type-selector">Scale Type:</label>
+                    <select id="other-type-selector" class="other-type-selector">
+                        <option value="hungarian">Hungarian Minor</option>
+                        <option value="neapolitan">Neapolitan Minor</option>
+                        <option value="persian">Persian (Double Harmonic)</option>
+                        <option value="bebopDominant">Bebop Dominant</option>
+                        <option value="bebopMajor">Bebop Major</option>
+                        <option value="hirajoshi">Hirajoshi</option>
+                        <option value="inSen">In Sen</option>
+                        <option value="augmented">Augmented Scale</option>
+                        <option value="spanish">Spanish Scale</option>
+                        <option value="byzantine">Byzantine Scale</option>
                     </select>
                 </div>
             </div>
