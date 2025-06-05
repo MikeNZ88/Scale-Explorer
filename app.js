@@ -48,12 +48,49 @@ let currentFileName = null;
 // 🎼 COMPREHENSIVE SCALE LIBRARY FOR ALL 12 KEYS
 // Musical theory data with complete scale calculations
 const chromaticScale = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-const flatKeys = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 
-// Key signature preference (which keys use flats vs sharps)
+// Music theory-based key signatures
+// Sharp keys naturally use sharps, flat keys naturally use flats
+const musicTheoryKeys = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+
+// Key signature preference following traditional music theory
 const keySignatures = {
-    'C': 'C', 'C#': 'Db', 'D': 'D', 'D#': 'Eb', 'E': 'E', 'F': 'F', 
-    'F#': 'Gb', 'G': 'G', 'G#': 'Ab', 'A': 'A', 'A#': 'Bb', 'B': 'B'
+    'C': 'C',   // Natural key (no sharps/flats)
+    'C#': 'Db', // Prefer Db (5 flats) over C# (7 sharps)
+    'Db': 'Db', 
+    'D': 'D',   // Sharp key (2 sharps)
+    'D#': 'Eb', // Prefer Eb (3 flats) over D# (9 sharps)
+    'Eb': 'Eb', 
+    'E': 'E',   // Sharp key (4 sharps)
+    'F': 'F',   // Flat key (1 flat)
+    'F#': 'Gb', // Prefer Gb (6 flats) over F# (6 sharps) 
+    'Gb': 'Gb', 
+    'G': 'G',   // Sharp key (1 sharp)
+    'G#': 'Ab', // Prefer Ab (4 flats) over G# (8 sharps)
+    'Ab': 'Ab', 
+    'A': 'A',   // Sharp key (3 sharps)
+    'A#': 'Bb', // Prefer Bb (2 flats) over A# (10 sharps)
+    'Bb': 'Bb', 
+    'B': 'B'    // Sharp key (5 sharps)
+};
+
+// Enharmonic equivalents explanation for educational purposes
+const enharmonicExplanations = {
+    'Db': 'Db is the same pitch as C#, but we use Db because the key signature (5 flats) is more practical than C# (7 sharps)',
+    'Eb': 'Eb is the same pitch as D#, but we use Eb because the key signature (3 flats) is more practical than D# (9 sharps)', 
+    'Gb': 'Gb is the same pitch as F#, but both are equally valid. Gb (6 flats) vs F# (6 sharps) - we chose Gb for consistency',
+    'Ab': 'Ab is the same pitch as G#, but we use Ab because the key signature (4 flats) is more practical than G# (8 sharps)',
+    'Bb': 'Bb is the same pitch as A#, but we use Bb because the key signature (2 flats) is more practical than A# (10 sharps)'
+};
+
+// Which keys naturally use flats vs sharps in traditional music theory
+const naturalKeySignatures = {
+    // Major scales that use flats
+    flats: ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb'],
+    // Major scales that use sharps  
+    sharps: ['G', 'D', 'A', 'E', 'B'],
+    // C major uses neither
+    natural: ['C']
 };
 
 const preferredAccidentals = {
@@ -277,34 +314,54 @@ function getProperNoteSpelling(noteIndex, key, scaleType = 'major') {
         const harmonicMinorSpellings = {
             'C': ['C', 'D', 'Eb', 'F', 'G', 'Ab', 'B'],
             'C#': ['C#', 'D#', 'E', 'F#', 'G#', 'A', 'B#'],
-            'Db': ['Db', 'Eb', 'Fb', 'Gb', 'Ab', 'Bbb', 'C'],
+            'Db': ['Db', 'Eb', 'E', 'Gb', 'Ab', 'A', 'C'],
             'D': ['D', 'E', 'F', 'G', 'A', 'Bb', 'C#'],
-            'D#': ['D#', 'E#', 'F#', 'G#', 'A#', 'B', 'Cx'],
-            'Eb': ['Eb', 'F', 'Gb', 'Ab', 'Bb', 'Cb', 'D'],
+            'D#': ['D#', 'E#', 'F#', 'G#', 'A#', 'B', 'C##'],
+            'Eb': ['Eb', 'F', 'Gb', 'Ab', 'Bb', 'B', 'D'],
             'E': ['E', 'F#', 'G', 'A', 'B', 'C', 'D#'],
             'F': ['F', 'G', 'Ab', 'Bb', 'C', 'Db', 'E'],
             'F#': ['F#', 'G#', 'A', 'B', 'C#', 'D', 'E#'],
-            'Gb': ['Gb', 'Ab', 'Bbb', 'Cb', 'Db', 'Ebb', 'F'],
+            'Gb': ['Gb', 'Ab', 'A', 'B', 'Db', 'D', 'F'],
             'G': ['G', 'A', 'Bb', 'C', 'D', 'Eb', 'F#'],
-            'G#': ['G#', 'A#', 'B', 'C#', 'D#', 'E', 'Fx'],
-            'Ab': ['Ab', 'Bb', 'Cb', 'Db', 'Eb', 'Fb', 'G'],
+            'G#': ['G#', 'A#', 'B', 'C#', 'D#', 'E', 'F##'],
+            'Ab': ['Ab', 'Bb', 'B', 'Db', 'Eb', 'E', 'G'],
             'A': ['A', 'B', 'C', 'D', 'E', 'F', 'G#'],
-            'A#': ['A#', 'B#', 'C#', 'D#', 'E#', 'F#', 'Gx'],
+            'A#': ['A#', 'B#', 'C#', 'D#', 'E#', 'F#', 'G##'],
             'Bb': ['Bb', 'C', 'Db', 'Eb', 'F', 'Gb', 'A'],
             'B': ['B', 'C#', 'D', 'E', 'F#', 'G', 'A#']
         };
         
-        // Map chromatic index to scale degree for harmonic minor
-        const formula = [2, 1, 2, 2, 1, 3, 1]; // harmonic minor intervals
-        const rootIndex = chromaticScale.indexOf(key.replace('b', '#'));
-        let scaleDegree = 0;
-        let currentSum = 0;
-        
-        for (let i = 0; i < formula.length; i++) {
-            if (noteIndex === (rootIndex + currentSum) % 12) {
-                return harmonicMinorSpellings[key] ? harmonicMinorSpellings[key][i] : chromaticScale[noteIndex];
+        // Get the spelling for this key
+        const scaleNotes = harmonicMinorSpellings[key];
+        if (scaleNotes) {
+            // Map chromatic index to scale degree for harmonic minor
+            const formula = [2, 1, 2, 2, 1, 3, 1]; // harmonic minor intervals
+            // Use correct chromatic index for the key
+            let rootIndex = chromaticScale.indexOf(key);
+            if (rootIndex === -1) {
+                // Handle flat keys correctly
+                const flatToSharpMap = {
+                    'Db': 1, 'Eb': 3, 'Gb': 6, 'Ab': 8, 'Bb': 10
+                };
+                rootIndex = flatToSharpMap[key];
+                if (rootIndex === undefined) {
+                    rootIndex = chromaticScale.indexOf(key.replace('b', '#'));
+                }
             }
-            currentSum += formula[i];
+            
+            // Check if this is the root note
+            if (noteIndex === rootIndex) {
+                return scaleNotes[0];
+            }
+            
+            // Calculate the chromatic positions of each scale degree
+            let currentIndex = rootIndex;
+            for (let i = 0; i < formula.length; i++) {
+                currentIndex = (currentIndex + formula[i]) % 12;
+                if (noteIndex === currentIndex) {
+                    return scaleNotes[i + 1];
+                }
+            }
         }
         
         return chromaticScale[noteIndex];
@@ -314,34 +371,55 @@ function getProperNoteSpelling(noteIndex, key, scaleType = 'major') {
         const melodicMinorSpellings = {
             'C': ['C', 'D', 'Eb', 'F', 'G', 'A', 'B'],
             'C#': ['C#', 'D#', 'E', 'F#', 'G#', 'A#', 'B#'],
-            'Db': ['Db', 'Eb', 'Fb', 'Gb', 'Ab', 'Bb', 'C'],
+            'Db': ['Db', 'Eb', 'E', 'Gb', 'Ab', 'Bb', 'C'],
             'D': ['D', 'E', 'F', 'G', 'A', 'B', 'C#'],
-            'D#': ['D#', 'E#', 'F#', 'G#', 'A#', 'B#', 'Cx'],
+            'D#': ['D#', 'E#', 'F#', 'G#', 'A#', 'B#', 'C##'],
             'Eb': ['Eb', 'F', 'Gb', 'Ab', 'Bb', 'C', 'D'],
             'E': ['E', 'F#', 'G', 'A', 'B', 'C#', 'D#'],
             'F': ['F', 'G', 'Ab', 'Bb', 'C', 'D', 'E'],
             'F#': ['F#', 'G#', 'A', 'B', 'C#', 'D#', 'E#'],
-            'Gb': ['Gb', 'Ab', 'Bbb', 'Cb', 'Db', 'Eb', 'F'],
+            'Gb': ['Gb', 'Ab', 'A', 'B', 'Db', 'Eb', 'F'],
             'G': ['G', 'A', 'Bb', 'C', 'D', 'E', 'F#'],
-            'G#': ['G#', 'A#', 'B', 'C#', 'D#', 'E#', 'Fx'],
-            'Ab': ['Ab', 'Bb', 'Cb', 'Db', 'Eb', 'F', 'G'],
+            'G#': ['G#', 'A#', 'B', 'C#', 'D#', 'E#', 'F##'],
+            'Ab': ['Ab', 'Bb', 'B', 'Db', 'Eb', 'F', 'G'],
             'A': ['A', 'B', 'C', 'D', 'E', 'F#', 'G#'],
-            'A#': ['A#', 'B#', 'C#', 'D#', 'E#', 'Fx', 'Gx'],
+            'A#': ['A#', 'B#', 'C#', 'D#', 'E#', 'F##', 'G##'],
             'Bb': ['Bb', 'C', 'Db', 'Eb', 'F', 'G', 'A'],
             'B': ['B', 'C#', 'D', 'E', 'F#', 'G#', 'A#']
         };
         
-        // Map chromatic index to scale degree for melodic minor
-        const formula = [2, 1, 2, 2, 2, 2, 1]; // melodic minor intervals
-        const rootIndex = chromaticScale.indexOf(key.replace('b', '#'));
-        let scaleDegree = 0;
-        let currentSum = 0;
-        
-        for (let i = 0; i < formula.length; i++) {
-            if (noteIndex === (rootIndex + currentSum) % 12) {
-                return melodicMinorSpellings[key] ? melodicMinorSpellings[key][i] : chromaticScale[noteIndex];
+        // Get the spelling for this key
+        const scaleNotes = melodicMinorSpellings[key];
+        if (scaleNotes && scaleNotes.length === 7) {
+            // Calculate which scale degree this chromatic index represents
+            // Use correct chromatic index for the key
+            let rootIndex = chromaticScale.indexOf(key);
+            if (rootIndex === -1) {
+                // Handle flat keys correctly
+                const flatToSharpMap = {
+                    'Db': 1, 'Eb': 3, 'Gb': 6, 'Ab': 8, 'Bb': 10
+                };
+                rootIndex = flatToSharpMap[key];
+                if (rootIndex === undefined) {
+                    rootIndex = chromaticScale.indexOf(key.replace('b', '#'));
+                }
             }
-            currentSum += formula[i];
+            
+            const formula = [2, 1, 2, 2, 2, 2, 1]; // melodic minor intervals
+            
+            // Check if this is the root note
+            if (noteIndex === rootIndex) {
+                return scaleNotes[0];
+            }
+            
+            // Calculate the chromatic positions of each scale degree
+            let currentIndex = rootIndex;
+            for (let i = 0; i < formula.length; i++) {
+                currentIndex = (currentIndex + formula[i]) % 12;
+                if (noteIndex === currentIndex) {
+                    return scaleNotes[i + 1];
+                }
+            }
         }
         
         return chromaticScale[noteIndex];
@@ -437,6 +515,12 @@ function calculateScale(root, formula, scaleType = 'major') {
         return [];
     }
     
+    // Debug logging for specific cases
+    if (root === 'Db' && scaleType === 'melodicMinor') {
+        console.log('🎵 DEBUG: Calculating Db Melodic Minor');
+        console.log('Formula:', formula);
+    }
+    
     // Improved root note normalization to handle both sharp and flat names
     let rootIndex = chromaticScale.indexOf(root);
     
@@ -470,19 +554,34 @@ function calculateScale(root, formula, scaleType = 'major') {
         return [];
     }
     
-    const notes = [getProperNoteSpelling(rootIndex, root, scaleType)];
+    if (root === 'Db' && scaleType === 'melodicMinor') {
+        console.log('🎵 DEBUG: Root index for Db:', rootIndex);
+    }
+    
+    // Always use the original root name as the first note
+    const notes = [root];
     let currentIndex = rootIndex;
     
     for (let i = 0; i < formula.length - 1; i++) {
         currentIndex = (currentIndex + formula[i]) % 12;
-        notes.push(getProperNoteSpelling(currentIndex, root, scaleType));
+        const nextNote = getProperNoteSpelling(currentIndex, root, scaleType);
+        
+        if (root === 'Db' && scaleType === 'melodicMinor') {
+            console.log(`🎵 DEBUG: Step ${i + 1}: chromatic index ${currentIndex} -> note "${nextNote}"`);
+        }
+        
+        notes.push(nextNote);
+    }
+    
+    if (root === 'Db' && scaleType === 'melodicMinor') {
+        console.log('🎵 DEBUG: Final notes:', notes);
     }
     
     return notes;
 }
 
-// Function to get mode from parent scale
-function getModeNotes(parentScale, modeIndex) {
+// Function to calculate mode from parent scale formula
+function getModeNotes(parentScale, modeIndex, parentFormula, scaleType = 'major') {
     if (!parentScale || !Array.isArray(parentScale) || parentScale.length === 0) {
         console.error('getModeNotes: Invalid parent scale', parentScale);
         return [];
@@ -492,8 +591,20 @@ function getModeNotes(parentScale, modeIndex) {
         console.error('getModeNotes: Invalid mode index', modeIndex, 'for scale length', parentScale.length);
         return parentScale.slice(); // Return copy of original scale
     }
+
+    // For mode 0, return the original parent scale
+    if (modeIndex === 0) {
+        return parentScale.slice();
+    }
+
+    // For all other modes, simply rotate the parent scale notes
+    // This preserves the original parent scale's note spellings
+    const rotatedNotes = [
+        ...parentScale.slice(modeIndex), 
+        ...parentScale.slice(0, modeIndex)
+    ];
     
-    return [...parentScale.slice(modeIndex), ...parentScale.slice(0, modeIndex)];
+    return rotatedNotes;
 }
 
 // Function to get interval names
@@ -507,7 +618,6 @@ function getIntervals(notes, root) {
     function noteToIndex(note) {
         if (!note || typeof note !== 'string') return -1;
         
-        // Direct mapping of all possible note names to chromatic indices
         const noteMap = {
             'C': 0, 'B#': 0,
             'C#': 1, 'Db': 1,
@@ -535,32 +645,34 @@ function getIntervals(notes, root) {
         
         return noteMap[note] !== undefined ? noteMap[note] : -1;
     }
-    
-    // For whole tone scales, always return the characteristic whole tone intervals
-    if (notes.length === 6) {
-        // Check if this is a whole tone scale by verifying all intervals are whole steps
-        const isWholeToneScale = notes.every((note, index) => {
-            if (index === 0) return true; // Skip root
-            const prevNote = notes[index - 1];
-            const currentIndex = noteToIndex(note);
-            const prevIndex = noteToIndex(prevNote);
-            if (currentIndex === -1 || prevIndex === -1) return false;
-            const interval = (currentIndex - prevIndex + 12) % 12;
-            return interval === 2; // Whole step = 2 semitones
-        });
-        
-        if (isWholeToneScale) {
-            return ['1', '2', '3', '#4', '#5', '#6'];
-        }
-    }
-    
+
     const rootIndex = noteToIndex(root);
-    
     if (rootIndex === -1) {
         console.error('getIntervals: Invalid root note', root);
         return notes.map(() => '?');
     }
-    
+
+    // For whole tone scales, always return the characteristic whole tone intervals
+    if (notes.length === 6) {
+        return ['1', '2', '3', '#4', '#5', '#6'];
+    }
+
+    // For harmonic minor scales, use the known interval pattern
+    if (notes.length === 7 && isHarmonicMinorPattern(notes, root)) {
+        return ['1', '2', 'b3', '4', '5', 'b6', '7'];
+    }
+
+    // For melodic minor scales, use the known interval pattern
+    if (notes.length === 7 && isMelodicMinorPattern(notes, root)) {
+        return ['1', '2', 'b3', '4', '5', '6', '7'];
+    }
+
+    // For major scales, use the known interval pattern
+    if (notes.length === 7 && isMajorPattern(notes, root)) {
+        return ['1', '2', '3', '4', '5', '6', '7'];
+    }
+
+    // For other scale lengths or unidentified 7-note scales, use chromatic distance method
     const intervalNames = ['1', 'b2', '2', 'b3', '3', '4', 'b5', '5', 'b6', '6', 'b7', '7'];
     
     return notes.map(note => {
@@ -574,6 +686,81 @@ function getIntervals(notes, root) {
         let interval = (noteIndex - rootIndex + 12) % 12;
         return intervalNames[interval] || '?';
     });
+}
+
+// Helper function to detect if a scale follows the harmonic minor pattern
+function isHarmonicMinorPattern(notes, root) {
+    if (notes.length !== 7) return false;
+    
+    function noteToIndex(note) {
+        const noteMap = {
+            'C': 0, 'B#': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3,
+            'E': 4, 'Fb': 4, 'F': 5, 'E#': 5, 'F#': 6, 'Gb': 6, 'G': 7,
+            'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11, 'Cb': 11,
+            'Cx': 2, 'C##': 2, 'Dx': 4, 'D##': 4, 'Ex': 6, 'E##': 6,
+            'Fx': 8, 'F##': 8, 'Gx': 10, 'G##': 10, 'Ax': 0, 'A##': 0,
+            'Bx': 1, 'B##': 1, 'Dbb': 0, 'Ebb': 2, 'Fbb': 3,
+            'Gbb': 5, 'Abb': 7, 'Bbb': 9, 'Cbb': 10
+        };
+        return noteMap[note] !== undefined ? noteMap[note] : -1;
+    }
+    
+    const rootIndex = noteToIndex(root);
+    const intervals = notes.map(note => (noteToIndex(note) - rootIndex + 12) % 12);
+    
+    // Harmonic minor pattern: 0, 2, 3, 5, 7, 8, 11 (1, 2, b3, 4, 5, b6, 7)
+    const harmonicMinorPattern = [0, 2, 3, 5, 7, 8, 11];
+    return JSON.stringify(intervals) === JSON.stringify(harmonicMinorPattern);
+}
+
+// Helper function to detect if a scale follows the melodic minor pattern
+function isMelodicMinorPattern(notes, root) {
+    if (notes.length !== 7) return false;
+    
+    function noteToIndex(note) {
+        const noteMap = {
+            'C': 0, 'B#': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3,
+            'E': 4, 'Fb': 4, 'F': 5, 'E#': 5, 'F#': 6, 'Gb': 6, 'G': 7,
+            'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11, 'Cb': 11,
+            'Cx': 2, 'C##': 2, 'Dx': 4, 'D##': 4, 'Ex': 6, 'E##': 6,
+            'Fx': 8, 'F##': 8, 'Gx': 10, 'G##': 10, 'Ax': 0, 'A##': 0,
+            'Bx': 1, 'B##': 1, 'Dbb': 0, 'Ebb': 2, 'Fbb': 3,
+            'Gbb': 5, 'Abb': 7, 'Bbb': 9, 'Cbb': 10
+        };
+        return noteMap[note] !== undefined ? noteMap[note] : -1;
+    }
+    
+    const rootIndex = noteToIndex(root);
+    const intervals = notes.map(note => (noteToIndex(note) - rootIndex + 12) % 12);
+    
+    // Melodic minor pattern: 0, 2, 3, 5, 7, 9, 11 (1, 2, b3, 4, 5, 6, 7)
+    const melodicMinorPattern = [0, 2, 3, 5, 7, 9, 11];
+    return JSON.stringify(intervals) === JSON.stringify(melodicMinorPattern);
+}
+
+// Helper function to detect if a scale follows the major pattern
+function isMajorPattern(notes, root) {
+    if (notes.length !== 7) return false;
+    
+    function noteToIndex(note) {
+        const noteMap = {
+            'C': 0, 'B#': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3,
+            'E': 4, 'Fb': 4, 'F': 5, 'E#': 5, 'F#': 6, 'Gb': 6, 'G': 7,
+            'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11, 'Cb': 11,
+            'Cx': 2, 'C##': 2, 'Dx': 4, 'D##': 4, 'Ex': 6, 'E##': 6,
+            'Fx': 8, 'F##': 8, 'Gx': 10, 'G##': 10, 'Ax': 0, 'A##': 0,
+            'Bx': 1, 'B##': 1, 'Dbb': 0, 'Ebb': 2, 'Fbb': 3,
+            'Gbb': 5, 'Abb': 7, 'Bbb': 9, 'Cbb': 10
+        };
+        return noteMap[note] !== undefined ? noteMap[note] : -1;
+    }
+    
+    const rootIndex = noteToIndex(root);
+    const intervals = notes.map(note => (noteToIndex(note) - rootIndex + 12) % 12);
+    
+    // Major pattern: 0, 2, 4, 5, 7, 9, 11 (1, 2, 3, 4, 5, 6, 7)
+    const majorPattern = [0, 2, 4, 5, 7, 9, 11];
+    return JSON.stringify(intervals) === JSON.stringify(majorPattern);
 }
 
 // Generate comprehensive scale library
@@ -601,7 +788,7 @@ function generateScaleLibrary() {
             parentScale: `${properKey} Major`,
             scale: majorScale,
             modes: majorModes.map(modeInfo => {
-                const modeNotes = getModeNotes(majorScale, modeInfo.mode);
+                const modeNotes = getModeNotes(majorScale, modeInfo.mode, scaleFormulas.major);
                 // The root of the mode is the note at the mode position in the original scale
                 const modeRoot = majorScale[modeInfo.mode];
                 return {
@@ -625,14 +812,23 @@ function generateScaleLibrary() {
             parentScale: `${properKey} Harmonic Minor`,
             scale: harmonicMinorScale,
             modes: harmonicMinorModes.map(modeInfo => {
-                const modeNotes = getModeNotes(harmonicMinorScale, modeInfo.mode);
+                const modeNotes = getModeNotes(harmonicMinorScale, modeInfo.mode, scaleFormulas.harmonicMinor, 'harmonicMinor');
                 // The root of the mode is the note at the mode position in the original scale
                 const modeRoot = harmonicMinorScale[modeInfo.mode];
+                
+                // For the first mode (index 0), use harmonic minor intervals
+                let intervals;
+                if (modeInfo.mode === 0) {
+                    intervals = ['1', '2', 'b3', '4', '5', 'b6', '7'];
+                } else {
+                    intervals = getIntervals(modeNotes, modeRoot);
+                }
+                
                 return {
                     id: `${modeRoot} ${modeInfo.name}`,
                     root: modeRoot,
                     notes: modeNotes,
-                    intervals: getIntervals(modeNotes, modeRoot),
+                    intervals: intervals,
                     formula: scaleFormulas.harmonicMinor,
                     mood: modeInfo.mood,
                     description: modeInfo.description,
@@ -649,14 +845,23 @@ function generateScaleLibrary() {
             parentScale: `${properKey} Melodic Minor`,
             scale: melodicMinorScale,
             modes: melodicMinorModes.map(modeInfo => {
-                const modeNotes = getModeNotes(melodicMinorScale, modeInfo.mode);
+                const modeNotes = getModeNotes(melodicMinorScale, modeInfo.mode, scaleFormulas.melodicMinor, 'melodicMinor');
                 // The root of the mode is the note at the mode position in the original scale
                 const modeRoot = melodicMinorScale[modeInfo.mode];
+                
+                // For the first mode (index 0), use melodic minor intervals
+                let intervals;
+                if (modeInfo.mode === 0) {
+                    intervals = ['1', '2', 'b3', '4', '5', '6', '7'];
+                } else {
+                    intervals = getIntervals(modeNotes, modeRoot);
+                }
+                
                 return {
                     id: `${modeRoot} ${modeInfo.name}`,
                     root: modeRoot,
                     notes: modeNotes,
-                    intervals: getIntervals(modeNotes, modeRoot),
+                    intervals: intervals,
                     formula: scaleFormulas.melodicMinor,
                     mood: modeInfo.mood,
                     description: modeInfo.description,
@@ -711,7 +916,7 @@ function generateScaleLibrary() {
             parentScale: `${properKey} Blues`,
             scale: bluesScale,
             modes: bluesScaleModes.map(modeInfo => {
-                const modeNotes = getModeNotes(bluesScale, modeInfo.mode);
+                const modeNotes = getModeNotes(bluesScale, modeInfo.mode, scaleFormulas.blues);
                 // The root of the mode is the note at the mode position in the original scale
                 const modeRoot = bluesScale[modeInfo.mode];
                 return {
@@ -882,104 +1087,60 @@ function initializeScaleLibrary() {
 }
 
 function setupEventListeners() {
-    // Key selector
-    const keySelector = document.getElementById('key-selector');
-    if (keySelector) {
-        keySelector.addEventListener('change', (e) => {
-            currentKey = e.target.value;
-            try {
-                updateParentScaleDisplay();
-                renderModeGrid();
-            } catch (error) {
-                console.error('Error updating key selection:', error);
-            }
-        });
-    } else {
-        console.warn('Key selector not found');
-    }
-    
-    // Pentatonic type selector
-    const pentatonicSelector = document.getElementById('pentatonic-type-selector');
-    if (pentatonicSelector) {
-        pentatonicSelector.addEventListener('change', (e) => {
-            currentPentatonicType = e.target.value;
-            if (currentCategory === 'pentatonic') {
-                try {
-                    renderModeGrid();
-                } catch (error) {
-                    console.error('Error updating pentatonic type:', error);
-                }
-            }
-        });
-    }
-    
-    // Category tabs
+    // Key selector change handler
+    document.getElementById('key-selector').addEventListener('change', function() {
+        currentKey = this.value; // Update the global currentKey variable
+        updateParentScaleDisplay();
+        const category = document.querySelector('.category-tab.active').dataset.category;
+        switchCategory(category);
+    });
+
+    // Initialize key selector with music theory-based keys
+    initializeKeySelector();
+
+    // Category tab handlers
     document.querySelectorAll('.category-tab').forEach(tab => {
-        tab.addEventListener('click', (e) => {
-            e.preventDefault();
-            const category = tab.dataset.category;
-            if (category) {
-                try {
-                    switchCategory(category);
-                } catch (error) {
-                    console.error('Error switching category:', error);
-                }
-            }
+        tab.addEventListener('click', function() {
+            const category = this.dataset.category;
+            switchCategory(category);
+            
+            // Update active tab
+            document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
         });
     });
-    
-    // Navigation buttons
-    const backToGridBtn = document.getElementById('back-to-grid');
-    if (backToGridBtn) {
-        backToGridBtn.addEventListener('click', () => {
-            try {
-                const modeDetail = document.getElementById('mode-detail');
-                const scaleGrid = document.getElementById('scale-grid');
-                if (modeDetail) modeDetail.classList.add('hidden');
-                if (scaleGrid) scaleGrid.classList.remove('hidden');
-            } catch (error) {
-                console.error('Error navigating back to grid:', error);
-            }
-        });
-    }
-    
-    const backToModeBtn = document.getElementById('back-to-mode');
-    if (backToModeBtn) {
-        backToModeBtn.addEventListener('click', () => {
-            try {
-                const tabPlayer = document.getElementById('tab-player');
-                const modeDetail = document.getElementById('mode-detail');
-                if (tabPlayer) tabPlayer.classList.add('hidden');
-                if (modeDetail) modeDetail.classList.remove('hidden');
-            } catch (error) {
-                console.error('Error navigating back to mode:', error);
-            }
-        });
-    }
-    
-    // File upload
-    const fileInput = document.getElementById('file-input');
-    if (fileInput) {
-        fileInput.addEventListener('change', handleFileUpload);
-    }
-    
-    // Modal controls
-    const modal = document.getElementById('scale-modal');
-    const closeModal = document.getElementById('close-modal');
-    if (closeModal && modal) {
-        closeModal.addEventListener('click', () => {
-            modal.classList.add('hidden');
-        });
-        
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.classList.add('hidden');
-            }
-        });
-    }
-    
-    // Player controls
+
+    // Pentatonic type selector change handler
+    document.getElementById('pentatonic-type-selector').addEventListener('change', function() {
+        currentPentatonicType = this.value; // Update the global currentPentatonicType variable
+        if (document.querySelector('.category-tab.active').dataset.category === 'pentatonic') {
+            renderPentatonicModes();
+        }
+    });
+
+    // Back navigation handlers
+    document.getElementById('back-to-grid')?.addEventListener('click', function() {
+        document.getElementById('mode-detail').classList.add('hidden');
+        document.getElementById('scale-library').classList.remove('hidden');
+        renderModeGrid(); // Re-render the grid to show cards
+    });
+
+    document.getElementById('back-to-mode')?.addEventListener('click', function() {
+        document.getElementById('tab-player').classList.add('hidden');
+        document.getElementById('mode-detail').classList.remove('hidden');
+    });
+
+    // Modal close handler
+    document.getElementById('close-modal')?.addEventListener('click', closeFretboardModal);
+
+    // File upload handler
+    document.getElementById('file-input')?.addEventListener('change', handleFileUpload);
+
+    // Setup player controls if they exist
     setupPlayerControls();
+
+    // Update parent scale display initially
+    updateParentScaleDisplay();
 }
 
 function updateParentScaleDisplay() {
@@ -1138,7 +1299,7 @@ function renderPentatonicModes() {
         
         pentatonicType.modes.forEach(modeInfo => {
             try {
-                const modeNotes = getModeNotes(pentatonicScale, modeInfo.mode);
+                const modeNotes = getModeNotes(pentatonicScale, modeInfo.mode, pentatonicType.formula);
                 if (modeNotes && modeNotes.length > 0) {
                     // The root of the mode is the note at the mode position in the original scale
                     const modeRoot = pentatonicScale[modeInfo.mode];
@@ -1510,4 +1671,207 @@ function handleFileUpload(event) {
     // File upload handling would go here
     // This is a placeholder for future file upload functionality
     console.log('File upload handled - placeholder');
+}
+
+// Function to initialize key selector with music theory-based keys
+function initializeKeySelector() {
+    const keySelector = document.getElementById('key-selector');
+    if (!keySelector) return;
+    
+    // Clear existing options
+    keySelector.innerHTML = '';
+    
+    // Add music theory-based keys
+    musicTheoryKeys.forEach(key => {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = key;
+        keySelector.appendChild(option);
+    });
+    
+    // Set default to C
+    keySelector.value = 'C';
+    currentKey = 'C';
+    
+    // Add event listener to update explanation when key changes
+    keySelector.addEventListener('change', updateKeyExplanation);
+    
+    // Add the explanation section separately from the dropdown
+    addKeyExplanationSection();
+    
+    // Initialize explanation for default key
+    updateKeyExplanation();
+}
+
+// Function to add the key explanation section to the page
+function addKeyExplanationSection() {
+    // Find the key selector section
+    const keySelectorSection = document.querySelector('.key-selector-section');
+    if (!keySelectorSection) return;
+    
+    // Check if explanation section already exists
+    if (document.getElementById('key-explanation-section')) return;
+    
+    // Create the explanation section after the key selector section
+    const explanationSection = document.createElement('div');
+    explanationSection.id = 'key-explanation-section';
+    explanationSection.className = 'key-explanation-section';
+    explanationSection.innerHTML = `
+        <div id="key-explanation" class="key-explanation">
+            <div class="key-explanation-header">
+                <span class="icon">🎼</span>
+                <h4>Music Theory Spelling System</h4>
+            </div>
+            <div class="key-explanation-content">
+                Loading theoretical explanation...
+            </div>
+        </div>
+    `;
+    
+    // Insert after the key selector section
+    keySelectorSection.parentNode.insertBefore(explanationSection, keySelectorSection.nextSibling);
+}
+
+// Function to update the key explanation based on selected key
+function updateKeyExplanation() {
+    const keySelector = document.getElementById('key-selector');
+    const currentKey = keySelector ? keySelector.value : 'C';
+    const currentCategory = getCurrentCategory();
+    
+    const explanation = getContextualKeyExplanation(currentKey, currentCategory);
+    
+    const keyExplanation = document.getElementById('key-explanation');
+    if (keyExplanation) {
+        keyExplanation.className = `key-explanation ${explanation.type}`;
+        keyExplanation.innerHTML = `
+            <div class="key-explanation-header">
+                <span class="icon">${getExplanationIcon(explanation.type)}</span>
+                <h4>Music Theory Spelling System</h4>
+            </div>
+            <div class="key-explanation-content">
+                ${explanation.text}
+            </div>
+        `;
+    }
+}
+
+// Helper function to get appropriate icon for explanation type
+function getExplanationIcon(type) {
+    switch (type) {
+        case 'traditional': return '🎼';
+        case 'symmetric': return '🔄';
+        case 'pentatonic': return '🎸';
+        default: return '📝';
+    }
+}
+
+// Helper function to get current category
+function getCurrentCategory() {
+    const activeTab = document.querySelector('.category-tab.active');
+    if (activeTab) {
+        const tabText = activeTab.textContent.toLowerCase().trim();
+        if (tabText.includes('harmonic')) return 'harmonic-minor';
+        if (tabText.includes('melodic')) return 'melodic-minor';
+        if (tabText.includes('diminished')) return 'diminished';
+        if (tabText.includes('chromatic')) return 'chromatic';
+        if (tabText.includes('whole')) return 'whole-tone';
+        if (tabText.includes('pentatonic')) return 'pentatonic';
+        if (tabText.includes('blues')) return 'blues';
+        return 'major';
+    }
+    return 'major';
+}
+
+// Function to get contextual explanation based on key and scale category
+function getContextualKeyExplanation(key, category) {
+    const isFlat = key.includes('b');
+    const isSharp = key.includes('#');
+    const keyName = key.replace('b', '♭').replace('#', '♯');
+    
+    let explanation = {
+        text: '',
+        type: 'traditional'
+    };
+    
+    // Core theoretical foundation
+    const coreTheory = `<div class="theory-foundation">
+        <strong>Theoretical Foundation:</strong> Keys follow traditional music theory where <strong>sharp keys</strong> (G, D, A, E, B) use sharps, and <strong>flat keys</strong> (F, B♭, E♭, A♭, D♭, G♭) use flats consistently throughout their scales.
+    </div>`;
+    
+    // Key-specific explanation
+    let keySpecific = '';
+    let scaleApplication = '';
+    let enharmonicNote = '';
+    
+    // Determine key type and enharmonic information
+    const keyTypes = {
+        'C': { type: 'natural', enharmonic: null },
+        'G': { type: 'sharp', enharmonic: null },
+        'D': { type: 'sharp', enharmonic: null },
+        'A': { type: 'sharp', enharmonic: null },
+        'E': { type: 'sharp', enharmonic: null },
+        'B': { type: 'sharp', enharmonic: 'C♭' },
+        'F': { type: 'flat', enharmonic: null },
+        'Bb': { type: 'flat', enharmonic: 'A♯' },
+        'Eb': { type: 'flat', enharmonic: 'D♯' },
+        'Ab': { type: 'flat', enharmonic: 'G♯' },
+        'Db': { type: 'flat', enharmonic: 'C♯' },
+        'Gb': { type: 'flat', enharmonic: 'F♯' }
+    };
+    
+    const keyInfo = keyTypes[key] || { type: 'unknown', enharmonic: null };
+    
+    if (keyInfo.type === 'natural') {
+        keySpecific = `<strong>${keyName}</strong> is the natural key with no sharps or flats in its key signature.`;
+    } else if (keyInfo.type === 'sharp') {
+        keySpecific = `<strong>${keyName}</strong> is a sharp key, using only sharp accidentals (♯) throughout its scales for consistent note spelling.`;
+        if (keyInfo.enharmonic) {
+            enharmonicNote = ` While enharmonically equivalent to ${keyInfo.enharmonic}, we use ${keyName} as the standard theoretical spelling.`;
+        }
+    } else if (keyInfo.type === 'flat') {
+        keySpecific = `<strong>${keyName}</strong> is a flat key, using only flat accidentals (♭) throughout its scales for consistent note spelling.`;
+        if (keyInfo.enharmonic) {
+            enharmonicNote = ` While enharmonically equivalent to ${keyInfo.enharmonic}, we use ${keyName} as the standard theoretical spelling to avoid excessive sharps.`;
+        }
+    }
+    
+    // Scale application explanation
+    if (category === 'major') {
+        scaleApplication = `This applies directly to major scales where ${keyName} follows its traditional key signature.`;
+        explanation.type = 'traditional';
+    } else if (category === 'harmonic-minor' || category === 'melodic-minor') {
+        scaleApplication = `For ${category.replace('-', ' ')} scales, we apply the same accidental consistency as the traditional ${keyName} key, even though these modes don't follow standard major/minor key signatures. This maintains readable patterns and theoretical consistency.`;
+        explanation.type = 'traditional';
+    } else if (category === 'diminished' || category === 'chromatic' || category === 'whole-tone') {
+        scaleApplication = `For ${category.replace('-', ' ')} scales, we borrow the accidental pattern from traditional ${keyName} key theory. Although these symmetric scales don't have conventional key signatures, using consistent ${keyInfo.type === 'flat' ? 'flat' : keyInfo.type === 'sharp' ? 'sharp' : 'natural'} spellings maintains readability and theoretical logic.`;
+        explanation.type = 'symmetric';
+    } else if (category === 'pentatonic' || category === 'blues') {
+        scaleApplication = `For ${category} scales, we follow the traditional ${keyName} key conventions. This aligns with how these scales are typically notated in folk, blues, and popular music traditions.`;
+        explanation.type = 'pentatonic';
+    } else {
+        scaleApplication = `We apply traditional ${keyName} key spelling conventions to maintain theoretical consistency across all scale types.`;
+        explanation.type = 'traditional';
+    }
+    
+    // Simplification note
+    const simplificationNote = `<div class="simplification-note">
+        <strong>Simplification:</strong> We avoid double accidentals (like C♭♭ for B♭, or F♯♯ for G) to keep the notation clear and accessible. While these exist in advanced theory, simple single accidentals are more practical for learning and playing.
+    </div>`;
+    
+    // Combine all parts
+    explanation.text = `
+        ${coreTheory}
+        
+        <div class="key-specific">
+            ${keySpecific}${enharmonicNote}
+        </div>
+        
+        <div class="scale-application">
+            <strong>Application:</strong> ${scaleApplication}
+        </div>
+        
+        ${simplificationNote}
+    `;
+    
+    return explanation;
 }
