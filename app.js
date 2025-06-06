@@ -2052,12 +2052,20 @@ function renderScaleFretboard(scale, containerId = 'fretboard-container') {
     // Make fretboard clickable for modal
     const svgElement = fretboardContainer.querySelector('.fretboard-svg');
     if (svgElement) {
+        console.log('Adding click handler to fretboard SVG');
         svgElement.style.cursor = 'pointer';
-        svgElement.onclick = () => openFretboardModal(scale);
+        svgElement.onclick = () => {
+            console.log('Fretboard SVG clicked');
+            openFretboardModal(scale);
+        };
+    } else {
+        console.warn('No .fretboard-svg element found in container');
     }
 }
 
 function openFretboardModal(scale) {
+    console.log('Opening fretboard modal for scale:', scale);
+    
     let modal = document.getElementById('fretboard-modal');
     
     if (!modal) {
@@ -2065,6 +2073,7 @@ function openFretboardModal(scale) {
         modal.id = 'fretboard-modal';
         modal.className = 'modal fretboard-modal';
         document.body.appendChild(modal);
+        console.log('Created new modal element');
     }
     
     // Get the display title, handling both scale.name and scale.id
@@ -2106,17 +2115,24 @@ function openFretboardModal(scale) {
         </div>
     `;
     
+    // Ensure modal is visible
+    modal.style.display = 'flex';
     modal.classList.remove('hidden');
+    console.log('Modal should now be visible');
     
     // Set optimal size for the modal
-    setOptimalModalSize();
+    setTimeout(() => {
+        setOptimalModalSize();
+    }, 10);
     
     // Handle mobile orientation
     handleMobileOrientation();
     
     // Make modal draggable and resizable
-    makeFretboardModalDraggable();
-    makeFretboardModalResizable();
+    setTimeout(() => {
+        makeFretboardModalDraggable();
+        makeFretboardModalResizable();
+    }, 10);
     
     // Setup additional modal controls
     setupModalControls();
@@ -2130,7 +2146,7 @@ function openFretboardModal(scale) {
 }
 
 function setOptimalModalSize() {
-    const modal = document.getElementById('fretboard-modal-content');
+    const modal = document.querySelector('#fretboard-modal .modal-content');
     if (!modal) return;
     
     const viewportWidth = window.innerWidth;
@@ -2165,25 +2181,17 @@ function handleMobileOrientation() {
     const isMobile = window.innerWidth <= 768;
     if (!isMobile) return;
     
-    // Suggest landscape orientation for better fretboard viewing
-    if (window.orientation !== undefined) {
-        const orientationBtn = document.getElementById('modal-rotate-btn');
-        if (orientationBtn) {
-            orientationBtn.style.display = 'block';
-            
-            // Add orientation change listener
-            window.addEventListener('orientationchange', () => {
-            setTimeout(() => {
-                    setOptimalModalSize();
-                }, 100);
-            });
-        }
-    }
+    // Add orientation change listener
+    window.addEventListener('orientationchange', () => {
+        setTimeout(() => {
+            setOptimalModalSize();
+        }, 100);
+    });
 }
 
 function makeFretboardModalDraggable() {
-    const modal = document.getElementById('fretboard-modal-content');
-    const header = document.getElementById('modal-header');
+    const modal = document.querySelector('#fretboard-modal .modal-content');
+    const header = document.querySelector('#fretboard-modal .modal-header');
     
     if (!modal || !header) return;
     
@@ -2247,8 +2255,8 @@ function makeFretboardModalDraggable() {
 }
 
 function makeFretboardModalResizable() {
-    const modal = document.getElementById('fretboard-modal-content');
-    const resizeHandle = document.getElementById('resize-handle');
+    const modal = document.querySelector('#fretboard-modal .modal-content');
+    const resizeHandle = document.querySelector('#fretboard-modal .modal-resize-handle');
     
     if (!modal || !resizeHandle) return;
     
@@ -2304,25 +2312,12 @@ function makeFretboardModalResizable() {
 }
 
 function setupModalControls() {
-    const fullscreenBtn = document.getElementById('modal-fullscreen-btn');
-    const rotateBtn = document.getElementById('modal-rotate-btn');
-    
-    if (fullscreenBtn) {
-        fullscreenBtn.addEventListener('click', toggleModalFullscreen);
-    }
-    
-    if (rotateBtn) {
-        rotateBtn.addEventListener('click', suggestRotation);
-        
-        // Hide on desktop
-        if (window.innerWidth > 768) {
-            rotateBtn.style.display = 'none';
-        }
-    }
+    // Modal controls are handled by onclick attributes in the HTML
+    // No additional setup needed
 }
 
 function toggleModalFullscreen() {
-    const modal = document.getElementById('fretboard-modal-content');
+    const modal = document.querySelector('#fretboard-modal .modal-content');
     if (!modal) return;
     
     const isFullscreen = modal.classList.contains('fullscreen');
@@ -2370,7 +2365,7 @@ function closeFretboardModal() {
         document.body.style.overflow = 'auto';
         
         // Reset modal size and position for next time
-        const modalContent = document.getElementById('fretboard-modal-content');
+        const modalContent = modal.querySelector('.modal-content');
         if (modalContent) {
             modalContent.classList.remove('fullscreen');
             modalContent.style.transform = '';
