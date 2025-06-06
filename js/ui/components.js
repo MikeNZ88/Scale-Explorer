@@ -278,11 +278,21 @@ function createFretboard(scale) {
 // Helper function to get scale type from category
 function getScaleTypeFromCategory(category) {
     switch (category) {
-        case 'major': return 'major';
-        case 'harmonic-minor': return 'harmonic-minor';
-        case 'melodic-minor': return 'melodic-minor';
+        case 'major-modes': return 'major';
+        case 'harmonic-minor-modes': return 'harmonic-minor';
+        case 'harmonic-major-modes': return 'harmonic-major';
+        case 'melodic-minor-modes': return 'melodic-minor';
+        case 'hungarian-minor-modes': return 'hungarian-minor';
+        case 'neapolitan-minor-modes': return 'neapolitan-minor';
+        case 'neapolitan-major-modes': return 'neapolitan-major';
+        case 'diminished-modes': return 'diminished';
         case 'pentatonic': return 'pentatonic';
-        case 'other': return 'other';
+        case 'japanese-pentatonic': return 'pentatonic';
+        case 'blues-modes': return 'blues';
+        case 'blues-scales': return 'blues';
+        case 'whole-tone': return 'whole-tone';
+        case 'chromatic-scale': return 'chromatic';
+        case 'augmented-scale': return 'augmented';
         default: return 'major';
     }
 }
@@ -762,6 +772,7 @@ function displayScale(scale, intervals, formula, scaleType, key, category) {
     displayNotes(scale);
     displayIntervals(intervals);
     displayFormula(formula);
+    displayChords(scale, scaleType);
     updateScaleColor(intervals);
     updateParentScale(scaleType, key, category);
     updateModeName();
@@ -905,11 +916,31 @@ function createRelatedModes(currentMode, category, currentKey) {
         // Harmonic minor modes  
         'harmonic-minor': 0, 'locrian-natural-6': 2, 'ionian-sharp-5': 3, 'dorian-sharp-4': 5, 
         'phrygian-dominant': 7, 'lydian-sharp-2': 8, 'altered-dominant': 11,
+        // Harmonic major modes
+        'harmonic-major': 0, 'dorian-b5': 2, 'phrygian-b4': 3, 'lydian-b3': 5, 'mixolydian-b2': 7, 
+        'lydian-augmented-sharp-2': 8, 'locrian-double-flat-7': 11,
         // Melodic minor modes
         'melodic-minor': 0, 'dorian-b2': 2, 'lydian-augmented': 3, 'lydian-dominant': 5,
         'mixolydian-b6': 7, 'locrian-natural-2': 9, 'super-locrian': 11,
-        // Pentatonic modes
-        'major-pentatonic': 0, 'minor-pentatonic': 3, 'egyptian': 5, 'blues-major': 7, 'blues-minor': 10
+        // Hungarian minor modes
+        'hungarian-minor': 0, 'oriental': 2, 'ionian-augmented-sharp-2': 3, 'locrian-double-flat-3-double-flat-7': 5,
+        'double-harmonic-major': 7, 'lydian-sharp-2-sharp-6': 8, 'ultra-locrian': 11,
+        // Neapolitan minor modes
+        'neapolitan-minor': 0, 'leading-whole-tone': 1, 'lydian-augmented-dominant': 3, 'lydian-dominant-flat-6': 5,
+        'major-locrian': 7, 'half-diminished-flat-2': 8, 'altered-diminished': 11,
+        // Neapolitan major modes
+        'neapolitan-major': 0, 'leading-whole-tone-major': 1, 'lydian-augmented-major': 3, 'lydian-dominant-major': 5,
+        'major-locrian-major': 7, 'half-diminished-major': 9, 'altered-major': 11,
+        // Diminished modes
+        'diminished': 0, 'half-diminished': 1,
+        // Major Pentatonic modes (correct offsets)
+        'major-pentatonic': 0, 'suspended-pentatonic': 2, 'man-gong': 4, 'ritusen': 7, 'minor-pentatonic': 9,
+        // Japanese Pentatonic scales (independent scales, not modes)
+        'hirojoshi-pentatonic': 0, 'iwato-scale': 0,
+        // Blues scales
+        'blues-major': 0, 'blues-minor': 3,
+        // Other scales
+        'whole-tone': 0, 'chromatic': 0, 'augmented': 0, 'bebop-major': 0
     };
     
     const currentModeOffset = modeOffsets[currentMode] || 0;
@@ -953,10 +984,13 @@ function createRelatedModes(currentMode, category, currentKey) {
     
     // Display parent scale information
     const parentScaleName = getParentScaleName(category, parentRoot);
-    parentScaleInfo.innerHTML = `
-        <strong>Parent Scale:</strong> ${parentScaleName}
-        <br><small>All modes derive from the same parent scale, starting on different degrees</small>
+    const parentInfo = `
+        <div class="parent-scale-info">
+            <strong>These modes are derived from:</strong> ${parentScaleName}
+            <br><small>All modes derive from the same scale, starting on different degrees</small>
+        </div>
     `;
+    parentScaleInfo.innerHTML = parentInfo;
 }
 
 function getParentScaleName(category, parentRoot) {
@@ -964,17 +998,714 @@ function getParentScaleName(category, parentRoot) {
     if (!categoryData) return `${parentRoot} Scale`;
     
     switch (category) {
-        case 'major':
+        case 'major-modes':
             return `${parentRoot} Major`;
-        case 'harmonic-minor':
+        case 'harmonic-minor-modes':
             return `${parentRoot} Harmonic Minor`;
-        case 'melodic-minor':
+        case 'harmonic-major-modes':
+            return `${parentRoot} Harmonic Major`;
+        case 'melodic-minor-modes':
             return `${parentRoot} Melodic Minor`;
+        case 'hungarian-minor-modes':
+            return `${parentRoot} Hungarian Minor`;
+        case 'neapolitan-minor-modes':
+            return `${parentRoot} Neapolitan Minor`;
+        case 'neapolitan-major-modes':
+            return `${parentRoot} Neapolitan Major`;
+        case 'diminished-modes':
+            return `${parentRoot} Diminished`;
         case 'pentatonic':
-            return `${parentRoot} Pentatonic`;
+            return `${parentRoot} Major Pentatonic`;
+        case 'japanese-pentatonic':
+            return `${parentRoot} Japanese Pentatonic`;
+        case 'blues-modes':
+        case 'blues-scales':
+            return `${parentRoot} Blues`;
         default:
             return `${parentRoot} ${categoryData.name}`;
     }
+}
+
+// Search functionality
+let searchResults = [];
+let selectedSuggestionIndex = -1;
+
+function initializeSearch() {
+    console.log('Initializing search functionality...');
+    const searchInput = document.getElementById('mode-search');
+    const suggestionsContainer = document.getElementById('search-suggestions');
+    
+    if (!searchInput || !suggestionsContainer) {
+        console.error('Search elements not found:', { searchInput, suggestionsContainer });
+        return;
+    }
+    
+    console.log('Search elements found, adding event listeners...');
+    searchInput.addEventListener('input', handleSearchInput);
+    searchInput.addEventListener('keydown', handleSearchKeydown);
+    searchInput.addEventListener('blur', hideSuggestions);
+    searchInput.addEventListener('focus', showSuggestionsIfResults);
+    console.log('Search functionality initialized successfully');
+}
+
+function handleSearchInput(e) {
+    const query = e.target.value.trim();
+    
+    if (query.length < 2) {
+        hideSuggestions();
+        return;
+    }
+    
+    searchResults = searchModes(query);
+    displaySearchSuggestions(searchResults);
+    selectedSuggestionIndex = -1;
+}
+
+function handleSearchKeydown(e) {
+    const suggestionsContainer = document.getElementById('search-suggestions');
+    
+    if (suggestionsContainer.classList.contains('hidden')) {
+        return;
+    }
+    
+    switch (e.key) {
+        case 'ArrowDown':
+            e.preventDefault();
+            selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, searchResults.length - 1);
+            updateSuggestionHighlight();
+            break;
+        case 'ArrowUp':
+            e.preventDefault();
+            selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, -1);
+            updateSuggestionHighlight();
+            break;
+        case 'Enter':
+            e.preventDefault();
+            if (selectedSuggestionIndex >= 0 && selectedSuggestionIndex < searchResults.length) {
+                selectSearchResult(searchResults[selectedSuggestionIndex]);
+            }
+            break;
+        case 'Escape':
+            hideSuggestions();
+            e.target.blur();
+            break;
+    }
+}
+
+function searchModes(query) {
+    const results = [];
+    const queryLower = query.toLowerCase();
+    const queryWords = queryLower.split(/\s+/).filter(word => word.length > 0);
+    
+    // Notes for root matching
+    const notes = ['C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B'];
+    
+    // Find root note in query
+    const rootNote = queryWords.find(word => 
+        notes.some(note => note.toLowerCase() === word.toLowerCase())
+    );
+    
+    // Search through all categories
+    Object.entries(MusicConstants.scaleCategories).forEach(([categoryKey, categoryData]) => {
+        if (!categoryData.modes) return;
+        
+        categoryData.modes.forEach(mode => {
+            const modeData = MusicConstants.modeMetadata[mode];
+            const modeNumbers = MusicConstants.modeNumbers[mode];
+            
+            if (!modeData || !modeNumbers) {
+                return;
+            }
+            
+            const modeName = modeNumbers.properName || mode;
+            const modeNameLower = modeName.toLowerCase();
+            const categoryName = categoryData.name.toLowerCase();
+            
+            // Calculate match score
+            let score = 0;
+            let matchedText = '';
+            
+            // Check if any query word matches the mode name
+            const modeWordMatch = queryWords.find(word => 
+                modeNameLower.includes(word.toLowerCase()) && word.length > 1
+            );
+            
+            // HIGH PRIORITY: Root note + mode combination
+            if (rootNote && modeWordMatch) {
+                score = 1000; // Highest priority
+                matchedText = `${rootNote.toUpperCase()} ${modeName}`;
+                
+                // Add result for the specific root note
+                results.push({
+                    root: rootNote.toUpperCase(),
+                    mode: mode,
+                    modeName: modeName,
+                    category: categoryKey,
+                    categoryName: categoryData.name,
+                    description: modeData.description || '',
+                    mood: modeData.mood || '',
+                    score: score,
+                    matchedText: matchedText
+                });
+                
+            } else if (modeWordMatch) {
+                // MEDIUM PRIORITY: Mode name match only
+                score = 500;
+                matchedText = modeName;
+                
+                // Add result for all notes if just searching by mode name
+                notes.forEach(note => {
+                    results.push({
+                        root: note,
+                        mode: mode,
+                        modeName: modeName,
+                        category: categoryKey,
+                        categoryName: categoryData.name,
+                        description: modeData.description || '',
+                        mood: modeData.mood || '',
+                        score: score,
+                        matchedText: `${note} ${modeName}`
+                    });
+                });
+                
+            } else {
+                // LOW PRIORITY: Partial matches
+                queryWords.forEach(word => {
+                    if (word.length > 1) { // Ignore single letter matches unless they're note names
+                        if (modeNameLower.includes(word.toLowerCase())) {
+                            score += 100;
+                        }
+                        if (categoryName.includes(word.toLowerCase())) {
+                            score += 25;
+                        }
+                    }
+                });
+                
+                if (score > 0) {
+                    notes.forEach(note => {
+                        results.push({
+                            root: note,
+                            mode: mode,
+                            modeName: modeName,
+                            category: categoryKey,
+                            categoryName: categoryData.name,
+                            description: modeData.description || '',
+                            mood: modeData.mood || '',
+                            score: score,
+                            matchedText: modeName
+                        });
+                    });
+                }
+            }
+        });
+    });
+    
+    // Sort by score (highest first) and limit results
+    const sortedResults = results
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 20);
+        
+    return sortedResults;
+}
+
+function displaySearchSuggestions(results) {
+    const suggestionsContainer = document.getElementById('search-suggestions');
+    
+    if (results.length === 0) {
+        hideSuggestions();
+        return;
+    }
+    
+    suggestionsContainer.innerHTML = '';
+    
+    results.forEach((result, index) => {
+        const suggestion = document.createElement('div');
+        suggestion.className = 'search-suggestion';
+        suggestion.dataset.index = index;
+        
+        suggestion.innerHTML = `
+            <div class="suggestion-main">
+                <div class="suggestion-title">${result.root} ${result.modeName}</div>
+                <div class="suggestion-subtitle">${result.description}</div>
+            </div>
+            <div class="suggestion-category">${result.categoryName}</div>
+        `;
+        
+        suggestion.addEventListener('mousedown', (e) => {
+            e.preventDefault(); // Prevent the blur event from firing
+            selectSearchResult(result);
+        });
+        suggestion.addEventListener('mouseenter', () => {
+            selectedSuggestionIndex = index;
+            updateSuggestionHighlight();
+        });
+        
+        suggestionsContainer.appendChild(suggestion);
+    });
+    
+    suggestionsContainer.classList.remove('hidden');
+}
+
+function updateSuggestionHighlight() {
+    const suggestions = document.querySelectorAll('.search-suggestion');
+    suggestions.forEach((suggestion, index) => {
+        suggestion.classList.toggle('highlighted', index === selectedSuggestionIndex);
+    });
+}
+
+function selectSearchResult(result) {
+    console.log('Selecting search result:', result);
+    
+    // Immediately clear search and hide suggestions to prevent timing issues
+    const searchInput = document.getElementById('mode-search');
+    const suggestionsContainer = document.getElementById('search-suggestions');
+    
+    if (searchInput) {
+        searchInput.value = '';
+    }
+    
+    if (suggestionsContainer) {
+        suggestionsContainer.classList.add('hidden');
+        selectedSuggestionIndex = -1;
+    }
+    
+    // Use the AppController's setState method with a callback to ensure everything updates
+    if (window.AppController && typeof AppController.setState === 'function') {
+        console.log('Using AppController.setState to update state');
+        console.log('Setting state to:', { key: result.root, category: result.category, mode: result.mode });
+        
+        // Update state and force scale update
+        AppController.setState({
+            key: result.root,
+            category: result.category,
+            mode: result.mode
+        });
+        
+        // Force an additional update after a short delay to ensure everything is set
+        setTimeout(() => {
+            console.log('Forcing additional scale update...');
+            if (typeof AppController.updateScale === 'function') {
+                AppController.updateScale();
+            }
+        }, 100);
+        
+    } else {
+        console.error('AppController.setState not available, falling back to manual updates');
+        
+        // Fallback to manual UI updates
+        const rootSelect = document.getElementById('key-select');
+        const categorySelect = document.getElementById('category-select');
+        const modeSelect = document.getElementById('mode-select');
+        
+        // Set root note first
+        if (rootSelect) {
+            rootSelect.value = result.root;
+            const changeEvent = new Event('change', { bubbles: true });
+            rootSelect.dispatchEvent(changeEvent);
+        }
+        
+        // Set category and wait for it to fully update
+        if (categorySelect) {
+            categorySelect.value = result.category;
+            const changeEvent = new Event('change', { bubbles: true });
+            categorySelect.dispatchEvent(changeEvent);
+            
+            // Wait for mode options to populate, then set mode
+            const waitForModeOptions = (attempts = 0) => {
+                if (attempts > 20) { // Give up after 1 second
+                    console.error('Timeout waiting for mode options');
+                    return;
+                }
+                
+                if (modeSelect) {
+                    const modeOption = modeSelect.querySelector(`option[value="${result.mode}"]`);
+                    if (modeOption) {
+                        modeSelect.value = result.mode;
+                        const changeEvent = new Event('change', { bubbles: true });
+                        modeSelect.dispatchEvent(changeEvent);
+                    } else {
+                        setTimeout(() => waitForModeOptions(attempts + 1), 50);
+                    }
+                }
+            };
+            
+            setTimeout(waitForModeOptions, 100);
+        }
+    }
+    
+    console.log('Search result selection completed');
+}
+
+function showSuggestionsIfResults() {
+    if (searchResults.length > 0) {
+        document.getElementById('search-suggestions').classList.remove('hidden');
+    }
+}
+
+function hideSuggestions() {
+    setTimeout(() => {
+        document.getElementById('search-suggestions').classList.add('hidden');
+        selectedSuggestionIndex = -1;
+    }, 150); // Small delay to allow for click events
+}
+
+function displayChords(scale, scaleType) {
+    const chordsSection = document.querySelector('.chords-section');
+    const chordsList = document.getElementById('chords-list');
+    
+    if (!scale || scale.length < 3 || !chordsSection || !chordsList) return;
+    
+    // Check if this scale type should display chords
+    if (!MusicTheory.shouldDisplayChords(scaleType, scale.length)) {
+        chordsSection.style.display = 'none';
+        return;
+    }
+    
+    // Show the chords section
+    chordsSection.style.display = 'block';
+    
+    // Check if this scale uses characteristic chord analysis instead of traditional analysis
+    const characteristicChords = MusicTheory.getCharacteristicChords(scale, scaleType);
+    
+    if (characteristicChords) {
+        // Display characteristic chords for exotic scales
+        displayCharacteristicChords(scale, scaleType, characteristicChords);
+    } else {
+        // Use traditional degree-by-degree analysis for diatonic scales
+        displayTraditionalChords(scale, scaleType);
+    }
+}
+
+function displayCharacteristicChords(scale, scaleType, characteristicChords) {
+    const chordsList = document.getElementById('chords-list');
+    const chordsSection = document.querySelector('.chords-section');
+    const chordControls = document.querySelector('.chord-controls');
+    
+    if (!chordsList || !chordsSection) return;
+    
+    // Hide traditional chord controls and update section title
+    if (chordControls) chordControls.style.display = 'none';
+    const sectionTitle = chordsSection.querySelector('h3');
+    if (sectionTitle) sectionTitle.textContent = 'Chords from the Scale';
+    
+    // Clear existing content
+    chordsList.innerHTML = '';
+    
+    // Display chords organized by type
+    displayChordsFromScale(chordsList, characteristicChords);
+    
+    // Display scale applications
+    displayScaleApplications(chordsList, scaleType);
+}
+
+function displayChordsFromScale(container, characteristicChords) {
+    // Create main chords section
+    const chordsFromScaleSection = document.createElement('div');
+    chordsFromScaleSection.className = 'chords-from-scale-section';
+    chordsFromScaleSection.innerHTML = `
+        <div class="section-header">
+            <h3>Chords Formed FROM the Scale</h3>
+            <p class="section-description">These chords are constructed using only notes from the scale</p>
+        </div>
+    `;
+    
+    const chordsContainer = document.createElement('div');
+    chordsContainer.className = 'chord-types-container';
+    
+    // Organize chords by type
+    const organizedChords = organizeChordsByType(characteristicChords);
+    
+    // Create sections for each chord type
+    Object.entries(organizedChords).forEach(([chordType, chords]) => {
+        const typeSection = document.createElement('div');
+        typeSection.className = 'chord-type-section';
+        
+        typeSection.innerHTML = `
+            <h4 class="chord-type-title">${chordType}</h4>
+            <div class="chord-type-chords">
+                ${chords.map(chord => `
+                    <span class="characteristic-chord" title="${chord.description || ''}">${chord.name}</span>
+                `).join('')}
+            </div>
+        `;
+        
+        chordsContainer.appendChild(typeSection);
+    });
+    
+    chordsFromScaleSection.appendChild(chordsContainer);
+    container.appendChild(chordsFromScaleSection);
+}
+
+function organizeChordsByType(characteristicChords) {
+    const organized = {
+        'Triads': [],
+        'Seventh Chords': [],
+        'Extended & Other': []
+    };
+    
+    // Process triads
+    if (characteristicChords.triads) {
+        characteristicChords.triads.forEach(group => {
+            if (group.chords) {
+                group.chords.forEach(chord => {
+                    organized['Triads'].push({
+                        name: chord,
+                        description: group.description
+                    });
+                });
+            }
+        });
+    }
+    
+    // Process sevenths
+    if (characteristicChords.sevenths) {
+        characteristicChords.sevenths.forEach(group => {
+            if (group.chords) {
+                group.chords.forEach(chord => {
+                    organized['Seventh Chords'].push({
+                        name: chord,
+                        description: group.description
+                    });
+                });
+            }
+        });
+    }
+    
+    // Process extended/other chords
+    if (characteristicChords.extended) {
+        characteristicChords.extended.forEach(group => {
+            if (group.chords) {
+                group.chords.forEach(chord => {
+                    organized['Extended & Other'].push({
+                        name: chord,
+                        description: group.description
+                    });
+                });
+            }
+        });
+    }
+    
+    // Remove empty categories
+    Object.keys(organized).forEach(key => {
+        if (organized[key].length === 0) {
+            delete organized[key];
+        }
+    });
+    
+    return organized;
+}
+
+function displayScaleApplications(container, scaleType) {
+    console.log('displayScaleApplications called with scaleType:', scaleType);
+    
+    const applicationData = getScaleApplicationData(scaleType);
+    console.log('Application data found:', applicationData);
+    
+    if (!applicationData) {
+        console.log('No application data found for scale type:', scaleType);
+        return;
+    }
+    
+    const applicationsSection = document.createElement('div');
+    applicationsSection.className = 'scale-applications-section';
+    
+    applicationsSection.innerHTML = `
+        <div class="section-header">
+            <h3>Scale Applications</h3>
+            <p class="section-description">Common uses and contexts for this scale</p>
+        </div>
+        <div class="applications-content">
+            <div class="application-context">
+                <h4>Used Over:</h4>
+                <p>${applicationData.usedOver}</p>
+            </div>
+            <div class="application-example">
+                <h4>Example Progression:</h4>
+                <div class="progression-example">
+                    <span class="progression">${applicationData.exampleProgression}</span>
+                    <span class="usage-note">Scale works over: <strong>${applicationData.specificChord}</strong></span>
+                </div>
+            </div>
+            <div class="application-styles">
+                <h4>Common In:</h4>
+                <p>${applicationData.commonIn}</p>
+            </div>
+        </div>
+    `;
+    
+    console.log('Adding applications section to container');
+    container.appendChild(applicationsSection);
+}
+
+function getScaleApplicationData(scaleType) {
+    console.log('getScaleApplicationData called with:', scaleType);
+    
+    const applications = {
+        'diminished': {
+            usedOver: 'Dominant 7th chords, especially altered dominants in jazz progressions',
+            exampleProgression: 'Dm7 - G7 - Cmaj7',
+            specificChord: 'G7',
+            commonIn: 'Jazz improvisation, classical harmony, bebop'
+        },
+        'pentatonic-major': {
+            usedOver: 'Major chords, sus chords, and related progressions',
+            exampleProgression: 'C - Am - F - G',
+            specificChord: 'C major',
+            commonIn: 'Folk music, rock solos, country, Celtic music'
+        },
+        'pentatonic-minor': {
+            usedOver: 'Minor chords, blues progressions, and modal contexts',
+            exampleProgression: 'Am - F - C - G',
+            specificChord: 'Am',
+            commonIn: 'Blues, rock, jazz fusion, world music'
+        },
+        'blues': {
+            usedOver: '12-bar blues progressions and dominant 7th chords',
+            exampleProgression: 'C7 - F7 - C7 - G7',
+            specificChord: 'All dominant 7th chords',
+            commonIn: 'Blues, jazz, rock, soul, R&B'
+        },
+        'whole-tone': {
+            usedOver: 'Augmented chords and dominant 7♯11 chords',
+            exampleProgression: 'Cmaj7 - C7♯11 - Fmaj7',
+            specificChord: 'C7♯11',
+            commonIn: 'Impressionist classical, jazz ballads, film scoring'
+        }
+    };
+    
+    // Handle scale type variations
+    let scaleData = applications[scaleType];
+    console.log('Direct lookup result:', scaleData);
+    
+    if (!scaleData) {
+        console.log('Trying alternative scale type matching...');
+        if (scaleType.includes('pentatonic')) {
+            scaleData = scaleType.includes('minor') ? applications['pentatonic-minor'] : applications['pentatonic-major'];
+            console.log('Pentatonic match found:', scaleData ? 'yes' : 'no');
+        } else if (scaleType.includes('whole')) {
+            scaleData = applications['whole-tone'];
+            console.log('Whole tone match found:', scaleData ? 'yes' : 'no');
+        } else if (scaleType.includes('blues')) {
+            scaleData = applications['blues'];
+            console.log('Blues match found:', scaleData ? 'yes' : 'no');
+        } else if (scaleType.includes('diminished')) {
+            scaleData = applications['diminished'];
+            console.log('Diminished match found:', scaleData ? 'yes' : 'no');
+        }
+    }
+    
+    console.log('Final scaleData:', scaleData);
+    return scaleData;
+}
+
+function displayTraditionalChords(scale, scaleType) {
+    const chordsList = document.getElementById('chords-list');
+    const chordsSection = document.querySelector('.chords-section');
+    
+    // Update section title
+    const sectionTitle = chordsSection.querySelector('h3');
+    sectionTitle.textContent = 'Diatonic Chords';
+    
+    // Show traditional chord type buttons
+    const chordControls = document.querySelector('.chord-controls');
+    chordControls.style.display = 'block';
+    
+    // Calculate both triads and 7th chords
+    const triads = MusicTheory.calculateTriads(scale, scaleType);
+    const seventhChords = MusicTheory.calculateSeventhChords(scale, scaleType);
+    
+    // If no chords can be calculated, hide the section
+    if (triads.length === 0 && seventhChords.length === 0) {
+        chordsSection.style.display = 'none';
+        return;
+    }
+    
+    // Store chord data for switching between types
+    chordsList.dataset.triads = JSON.stringify(triads);
+    chordsList.dataset.seventhChords = JSON.stringify(seventhChords);
+    
+    // Display triads by default
+    displayChordType('triads', triads);
+    
+    // Add event listeners for chord type buttons
+    const chordButtons = document.querySelectorAll('.chord-type-btn');
+    chordButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            // Update active state
+            chordButtons.forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+            
+            // Display the selected chord type
+            const chordType = e.target.dataset.type;
+            if (chordType === 'triads') {
+                displayChordType('triads', triads);
+            } else if (chordType === 'sevenths') {
+                displayChordType('sevenths', seventhChords);
+            }
+        });
+    });
+}
+
+function displayChordType(type, chords) {
+    const chordsList = document.getElementById('chords-list');
+    if (!chordsList || !chords) return;
+    
+    chordsList.innerHTML = '';
+    
+    // Add a note about exotic chords if any are present
+    const hasNonStandardChords = chords.some(chord => chord.isNonStandard);
+    if (hasNonStandardChords) {
+        const noteElement = document.createElement('div');
+        noteElement.className = 'chord-note';
+        noteElement.innerHTML = `
+            <p><strong>Note:</strong> This scale contains non-standard chord intervals. Some chords may have unusual qualities due to the unique interval structure of this scale.</p>
+        `;
+        chordsList.appendChild(noteElement);
+    }
+    
+    chords.forEach((chord, index) => {
+        const chordElement = document.createElement('div');
+        chordElement.className = `chord-item ${chord.isNonStandard ? 'non-standard' : ''}`;
+        
+        const functionColor = MusicTheory.getChordColor(chord.function, chord.quality);
+        
+        // Add a tooltip for non-standard chords
+        const tooltip = chord.isNonStandard ? 
+            `title="Non-standard chord: ${chord.intervals.map(i => MusicTheory.getIntervalName(i)).join(', ')}"` : '';
+        
+        chordElement.innerHTML = `
+            <div class="chord-degree" style="background-color: ${functionColor}">
+                <span class="degree-number">${chord.degree}</span>
+                <span class="roman-numeral">${chord.roman}</span>
+            </div>
+            <div class="chord-info" ${tooltip}>
+                <div class="chord-name ${chord.isNonStandard ? 'exotic' : ''}">${chord.name}</div>
+                <div class="chord-notes">${chord.notes.join(' - ')}</div>
+                <div class="chord-quality ${chord.isNonStandard ? 'exotic' : ''}">${chord.quality}</div>
+                <div class="chord-function">${chord.function}</div>
+                ${chord.isNonStandard ? '<div class="chord-exotic-note">⚡ Exotic</div>' : ''}
+            </div>
+        `;
+        
+        // Add click handler for future chord playback or visualization
+        chordElement.addEventListener('click', () => {
+            console.log('Chord clicked:', chord);
+            highlightChordOnFretboard(chord);
+        });
+        
+        chordsList.appendChild(chordElement);
+    });
+}
+
+function highlightChordOnFretboard(chord) {
+    // Future enhancement: highlight chord notes on the fretboard
+    console.log('Highlighting chord on fretboard:', chord.name, chord.notes);
+    
+    // For now, just log the chord information
+    // This could be expanded to:
+    // 1. Highlight chord tones on the existing fretboard
+    // 2. Show chord fingerings
+    // 3. Open a modal with chord diagrams
 }
 
 // Export all functions
@@ -994,5 +1725,6 @@ window.UIComponents = {
     updateScaleColor,
     updateParentScale,
     updateModeName,
-    createRelatedModes
+    createRelatedModes,
+    initializeSearch
 };

@@ -67,6 +67,125 @@ body {
     margin-bottom: 1rem;
 }
 
+/* === SEARCH BAR === */
+.search-section {
+    margin-bottom: 2rem;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 1.5rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.search-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.search-container label {
+    display: block;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.search-input-container {
+    position: relative;
+}
+
+#mode-search {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    font-size: 1.1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    background: white;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+#mode-search:focus {
+    outline: none;
+    border-color: var(--primary-orange);
+    box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+}
+
+#mode-search::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+.search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 2px solid var(--border-color);
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.search-suggestions.hidden {
+    display: none;
+}
+
+.search-suggestion {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f3f4f6;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.search-suggestion:hover,
+.search-suggestion.highlighted {
+    background-color: #f9fafb;
+}
+
+.search-suggestion:last-child {
+    border-bottom: none;
+}
+
+.suggestion-main {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.suggestion-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.suggestion-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.suggestion-category {
+    font-size: 0.75rem;
+    color: var(--primary-orange);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.25rem 0.5rem;
+    background: rgba(217, 119, 6, 0.1);
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
 /* === KEY SELECTOR SECTION === */
 .key-selector-section {
     margin-bottom: 2.5rem;
@@ -402,7 +521,7 @@ body {
     .key-selector-section {
         padding: 0.375rem;
         margin-bottom: 0.375rem;
-        border-radius: 8px;
+    border-radius: 8px;
     }
     
     .key-controls {
@@ -940,8 +1059,8 @@ body {
 }
 
 .file-input {
-    display: none;
-}
+        display: none;
+    }
 
 .upload-btn {
     background: linear-gradient(135deg, #667eea, #764ba2);
@@ -971,7 +1090,7 @@ body {
 .player-controls {
     display: flex;
     align-items: center;
-    justify-content: center;
+        justify-content: center;
     gap: 1rem;
     margin-bottom: 2rem;
     padding: 1rem;
@@ -1294,7 +1413,7 @@ body {
     .modal-control-btn {
         width: 28px;
         height: 28px;
-        font-size: 12px;
+    font-size: 12px;
     }
     
     .fretboard-modal .modal-body {
@@ -2318,7 +2437,7 @@ body {
 
 .scale-title {
     display: flex;
-    flex-direction: column;
+        flex-direction: column;
     align-items: center;
     gap: 5px;
     margin: 0;
@@ -2350,7 +2469,7 @@ body {
 
 .scale-content {
     display: flex;
-    flex-direction: column;
+        flex-direction: column;
     gap: 25px;
 }
 
@@ -2421,4 +2540,737 @@ body {
     border-left: 4px solid #F39C12;
     color: #DC6C27;
     font-weight: 600;
+}
+
+/* === CHORD DISPLAY STYLES === */
+.chords-section {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.chord-controls {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    justify-content: center;
+}
+
+.chord-type-btn {
+    padding: 0.5rem 1.25rem;
+    background: var(--border-color);
+    color: var(--text-secondary);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.chord-type-btn:hover {
+    background: var(--primary-orange-light);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.chord-type-btn.active {
+    background: var(--primary-orange);
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.chords-container {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+}
+
+.chords-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.chord-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.chord-item:hover {
+    background: #f1f5f9;
+    border-color: var(--primary-orange);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.chord-degree {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+}
+
+.degree-number {
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.roman-numeral {
+    font-size: 0.8rem;
+    opacity: 0.9;
+    line-height: 1;
+    margin-top: 2px;
+}
+
+.chord-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.chord-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.chord-notes {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.chord-quality {
+    font-size: 0.8rem;
+    color: var(--primary-orange);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1;
+}
+
+.chord-function {
+    font-size: 0.7rem;
+    color: #666;
+    font-style: italic;
+}
+
+.chord-note {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+}
+
+.chord-note p {
+    margin: 0;
+    color: #856404;
+}
+
+.chord-note strong {
+    color: #533301;
+}
+
+.chord-item.non-standard {
+    border-left: 3px solid #e67e22;
+    background: linear-gradient(135deg, #fff 0%, #fef9e7 100%);
+}
+
+.chord-item.non-standard:hover {
+    border-left-color: #d35400;
+    background: linear-gradient(135deg, #fef9e7 0%, #fdf2e9 100%);
+}
+
+.chord-name.exotic {
+    color: #e67e22;
+    font-weight: 600;
+}
+
+.chord-quality.exotic {
+    color: #d35400;
+    font-style: italic;
+}
+
+.chord-exotic-note {
+    font-size: 0.7rem;
+    color: #e67e22;
+    font-weight: 600;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* === RESPONSIVE CHORD DISPLAY === */
+@media (max-width: 768px) {
+    .chords-list {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .chord-item {
+        padding: 0.75rem;
+        gap: 0.75rem;
+    }
+    
+    .chord-degree {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .degree-number {
+        font-size: 1rem;
+    }
+    
+    .roman-numeral {
+        font-size: 0.7rem;
+    }
+    
+    .chord-name {
+        font-size: 1rem;
+    }
+    
+    .chord-notes {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .chord-controls {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .chord-type-btn {
+        width: 100%;
+        padding: 0.75rem 1rem;
+    }
+    
+    .chords-container {
+        padding: 0.75rem;
+    }
+    
+    .chord-item {
+        padding: 0.5rem;
+        gap: 0.5rem;
+    }
+    
+    .chord-degree {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .degree-number {
+        font-size: 0.9rem;
+    }
+    
+    .roman-numeral {
+        font-size: 0.65rem;
+    }
+}
+
+/* === CHARACTERISTIC CHORDS STYLES === */
+.scale-applications {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid #e2e8f0;
+}
+
+.applications-header {
+    margin-bottom: 1rem;
+}
+
+.applications-header h4 {
+    color: var(--primary-orange);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.applications-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.application-item {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+.application-item strong {
+    color: var(--primary-orange-dark);
+    font-weight: 600;
+}
+
+.characteristic-chords-header {
+    margin: 2rem 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-orange);
+}
+
+.characteristic-chords-header h4 {
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.chord-group {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 12px;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    clear: both;
+    overflow: hidden;
+}
+
+.chord-group h4 {
+    margin: 0 0 0.5rem 0;
+    color: #495057;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 0.5rem;
+    display: block;
+    width: 100%;
+}
+
+.chord-group-description {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-bottom: 1rem;
+    font-style: italic;
+    line-height: 1.4;
+    display: block;
+    width: 100%;
+}
+
+.characteristic-chord {
+    display: inline-block;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    padding: 0.6rem 1.2rem;
+    margin: 0.3rem 0.4rem 0.3rem 0;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+    vertical-align: top;
+    min-width: 80px;
+    text-align: center;
+}
+
+.characteristic-chord:hover {
+    background: linear-gradient(135deg, var(--primary-orange-dark), var(--warm-brown));
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(217, 119, 6, 0.4);
+}
+
+.characteristic-chord.emphasis {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    box-shadow: 0 2px 4px rgba(220,53,69,0.3);
+}
+
+.characteristic-chord.emphasis:hover {
+    background: linear-gradient(135deg, #c82333, #bd2130);
+    box-shadow: 0 4px 8px rgba(220,53,69,0.4);
+}
+
+/* Improved scale context sections */
+.scale-context-section {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    border: 1px solid #ffeaa7;
+    border-radius: 12px;
+    clear: both;
+    overflow: hidden;
+}
+
+.scale-context-section h3 {
+    margin: 0 0 1rem 0;
+    color: #856404;
+    font-size: 1.3rem;
+    border-bottom: 2px solid #856404;
+    padding-bottom: 0.5rem;
+}
+
+.chord-source-explanation, 
+.chord-context-explanation {
+    font-size: 0.95rem;
+    color: #533f03;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+    font-style: italic;
+    display: block;
+    width: 100%;
+}
+
+/* Context chords layout */
+.context-chords {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-top: 1rem;
+    clear: both;
+}
+
+.context-chord {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    padding: 0.7rem 1.3rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(40,167,69,0.3);
+    text-align: center;
+    min-width: 90px;
+    cursor: pointer;
+}
+
+.context-chord:hover {
+    background: linear-gradient(135deg, #20c997, #17a2b8);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(40,167,69,0.4);
+}
+
+/* Applications section */
+.scale-applications {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    border: 1px solid #bbdefb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    clear: both;
+    overflow: hidden;
+}
+
+.scale-applications h3 {
+    margin: 0 0 1rem 0;
+    color: #1565c0;
+    font-size: 1.2rem;
+    border-bottom: 2px solid #1565c0;
+    padding-bottom: 0.5rem;
+}
+
+.application-item {
+    margin-bottom: 0.8rem;
+    padding: 0.5rem 0;
+    line-height: 1.5;
+    color: #0d47a1;
+}
+
+.application-item strong {
+    color: #1565c0;
+    font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .chord-group {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .characteristic-chord {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        margin: 0.2rem 0.3rem 0.2rem 0;
+        min-width: 70px;
+    }
+    
+    .context-chords {
+        gap: 0.5rem;
+    }
+    
+    .context-chord {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+        min-width: 80px;
+    }
+    
+    .scale-context-section,
+    .scale-applications {
+        padding: 1rem;
+        margin: 1.5rem 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .chord-group {
+        padding: 0.8rem;
+        margin-bottom: 1rem;
+    }
+    
+    .characteristic-chord {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+        margin: 0.2rem 0.2rem 0.2rem 0;
+        min-width: 60px;
+    }
+    
+    .context-chord {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.8rem;
+        min-width: 70px;
+    }
+    
+    .context-chords {
+        gap: 0.4rem;
+    }
+}
+
+/* Clean layout for chords from scale */
+.chords-from-scale-section {
+    margin-bottom: 2.5rem;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #dee2e6;
+}
+
+.chords-from-scale-section .section-header h3 {
+    color: #495057;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    border-bottom: 2px solid var(--primary-orange);
+    padding-bottom: 0.5rem;
+}
+
+.chords-from-scale-section .section-description {
+    color: #6c757d;
+    font-size: 0.95rem;
+    margin: 0 0 1.5rem 0;
+    font-style: italic;
+}
+
+.chord-types-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.chord-type-section {
+    background: white;
+    border-radius: 8px;
+    padding: 1.2rem;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.chord-type-title {
+    color: #343a40;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.chord-type-chords {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.characteristic-chord {
+    background: linear-gradient(135deg, var(--primary-orange), var(--primary-orange-dark));
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(217, 119, 6, 0.3);
+    border: none;
+    text-decoration: none;
+}
+
+.characteristic-chord:hover {
+    background: linear-gradient(135deg, var(--primary-orange-dark), var(--warm-brown));
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(217, 119, 6, 0.4);
+}
+
+/* Scale Applications Section */
+.scale-applications-section {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #ffeaa7;
+    margin-top: 2rem;
+}
+
+.scale-applications-section .section-header h3 {
+    color: #856404;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    border-bottom: 2px solid #856404;
+    padding-bottom: 0.5rem;
+}
+
+.scale-applications-section .section-description {
+    color: #533f03;
+    font-size: 0.95rem;
+    margin: 0 0 1.5rem 0;
+    font-style: italic;
+}
+
+.applications-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.application-context,
+.application-example,
+.application-styles {
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid rgba(133, 100, 4, 0.2);
+}
+
+.application-context h4,
+.application-example h4,
+.application-styles h4 {
+    color: #856404;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+.application-context p,
+.application-styles p {
+    color: #533f03;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.progression-example {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.progression {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    padding: 0.8rem 1.2rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 1rem;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(40,167,69,0.2);
+}
+
+.usage-note {
+    color: #533f03;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+.usage-note strong {
+    color: #856404;
+    font-weight: 600;
+}
+
+/* Responsive Design for new sections */
+@media (max-width: 768px) {
+    .chords-from-scale-section,
+    .scale-applications-section {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .chord-types-container {
+        gap: 1rem;
+    }
+    
+    .chord-type-section {
+        padding: 1rem;
+    }
+    
+    .chord-type-chords {
+        gap: 0.4rem;
+    }
+    
+    .characteristic-chord {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .applications-content {
+        gap: 1rem;
+    }
+    
+    .application-context,
+    .application-example,
+    .application-styles {
+        padding: 0.8rem;
+    }
+    
+    .progression {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .chords-from-scale-section,
+    .scale-applications-section {
+        padding: 0.8rem;
+        margin-bottom: 1rem;
+    }
+    
+    .chord-types-container {
+        gap: 0.8rem;
+    }
+    
+    .chord-type-section {
+        padding: 0.8rem;
+    }
+    
 } 

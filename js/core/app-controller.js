@@ -4,7 +4,7 @@
 // Application state
 let currentState = {
     key: 'C',
-    category: 'major',
+    category: 'major-modes',
     mode: 'major',
     scaleType: 'major',
     colorsVisible: true
@@ -121,13 +121,21 @@ function updateScale() {
 
 function getScaleType(category) {
     const typeMap = {
-        'major': 'major',
-        'harmonic-minor': 'harmonic-minor',
-        'melodic-minor': 'melodic-minor',
+        'major-modes': 'major',
+        'harmonic-minor-modes': 'harmonic-minor',
+        'harmonic-major-modes': 'harmonic-major',
+        'melodic-minor-modes': 'melodic-minor',
+        'hungarian-minor-modes': 'hungarian-minor',
+        'neapolitan-minor-modes': 'neapolitan-minor',
+        'neapolitan-major-modes': 'neapolitan-major',
+        'diminished-modes': 'diminished',
         'pentatonic': 'pentatonic-major',
-        'blues': 'blues',
+        'japanese-pentatonic': 'pentatonic',
+        'blues-modes': 'blues',
+        'blues-scales': 'blues',
         'whole-tone': 'whole-tone',
-        'diminished': 'diminished'
+        'chromatic-scale': 'chromatic',
+        'augmented-scale': 'augmented'
     };
     
     return typeMap[category] || 'major';
@@ -313,13 +321,39 @@ function setState(newState) {
     if (categorySelect && currentState.category !== categorySelect.value) {
         categorySelect.value = currentState.category;
         populateModeSelect();
+        
+        // Wait for mode options to be populated before setting mode
+        const waitForModeOptions = (attempts = 0) => {
+            if (attempts > 20) { // Give up after 1 second
+                console.error('Timeout waiting for mode options in setState');
+                updateScale(); // Update anyway
+                return;
+            }
+            
+            if (modeSelect) {
+                const modeOption = modeSelect.querySelector(`option[value="${currentState.mode}"]`);
+                if (modeOption) {
+                    modeSelect.value = currentState.mode;
+                    updateScale();
+                } else {
+                    setTimeout(() => waitForModeOptions(attempts + 1), 50);
+                }
+            } else {
+                updateScale();
+            }
+        };
+        
+        setTimeout(waitForModeOptions, 50);
+    } else {
+        // Category didn't change, just update mode directly
+        if (modeSelect && currentState.mode !== modeSelect.value) {
+            const modeOption = modeSelect.querySelector(`option[value="${currentState.mode}"]`);
+            if (modeOption) {
+                modeSelect.value = currentState.mode;
+            }
+        }
+        updateScale();
     }
-    
-    if (modeSelect && currentState.mode !== modeSelect.value) {
-        modeSelect.value = currentState.mode;
-    }
-    
-    updateScale();
 }
 
 // Export functions

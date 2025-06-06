@@ -15,6 +15,19 @@
             <p class="subtitle">Master scales through keys, modes, and harmonic relationships</p>
         </header>
 
+        <!-- Search Bar -->
+        <div class="search-section">
+            <div class="search-container">
+                <label for="mode-search">Search Modes:</label>
+                <div class="search-input-container">
+                    <input type="text" id="mode-search" placeholder="e.g., C phrygian dominant, A minor pentatonic..." autocomplete="off">
+                    <div class="search-suggestions hidden" id="search-suggestions">
+                        <!-- Suggestions will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Scale Controls -->
         <div class="scale-controls">
             <div class="control-group">
@@ -36,7 +49,7 @@
             </div>
 
             <div class="control-group">
-                <label for="category-select">Scale Category:</label>
+                <label for="category-select">Scale Type:</label>
                 <select id="category-select">
                     <!-- Options will be populated by JavaScript -->
                 </select>
@@ -87,6 +100,19 @@
                     <h3>Formula</h3>
                     <div class="formula">
                         <!-- Formula will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="scale-section chords-section">
+                    <h3>Diatonic Chords</h3>
+                    <div class="chord-controls">
+                        <button class="chord-type-btn active" data-type="triads">Triads</button>
+                        <button class="chord-type-btn" data-type="sevenths">7th Chords</button>
+                    </div>
+                    <div class="chords-container">
+                        <div class="chords-list" id="chords-list">
+                            <!-- Chords will be populated by JavaScript -->
+                        </div>
                     </div>
                 </div>
 

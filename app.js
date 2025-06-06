@@ -15,6 +15,14 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         console.error('AppController module not loaded');
     }
+    
+    // Initialize search functionality
+    if (window.UIComponents && window.UIComponents.initializeSearch) {
+        UIComponents.initializeSearch();
+        console.log('Search functionality initialized');
+    } else {
+        console.error('Search functionality not available');
+    }
 });
 
 // Legacy compatibility layer
@@ -167,12 +175,12 @@ function processFiles(files) {
 }
 
 function loadFile(file) {
-    if (api) {
+        if (api) {
         try {
             api.load(file);
             document.getElementById('tab-player').classList.remove('hidden');
             console.log('File loaded:', file.name);
-        } catch (error) {
+            } catch (error) {
             console.error('Error loading file:', error);
         }
     }
