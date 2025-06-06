@@ -15,147 +15,129 @@
             <p class="subtitle">Master scales through keys, modes, and harmonic relationships</p>
         </header>
 
-        <!-- Scale Library -->
-        <div class="scale-library" id="scale-library">
-            <!-- Key Selector -->
-            <div class="key-selector-section">
-                <div class="key-controls">
-                    <div class="key-selector-wrapper">
-                        <label for="key-selector">Root Note:</label>
-                        <select id="key-selector" class="key-selector">
-                            <!-- Options will be populated by JavaScript -->
-                        </select>
-                    </div>
-                </div>
-                
-                <!-- Music Theory Note -->
-                <div class="music-theory-note">
-                    <small>Keys follow traditional music theory: sharp keys (G, D, A, E, B) use sharps, flat keys (F, Bb, Eb, Ab, Db, Gb) use flats. Enharmonic equivalents like F#/Gb are shown as their most common theoretical spelling.</small>
-                </div>
-                
-                <!-- Parent Scale Display -->
-                <div class="parent-scale-section">
-                    <div class="parent-scale-title">Parent Scale</div>
-                    <div class="parent-scale-display" id="parent-scale-display">C Major</div>
-                </div>
+        <!-- Scale Controls -->
+        <div class="scale-controls">
+            <div class="control-group">
+                <label for="key-select">Root Note:</label>
+                <select id="key-select">
+                    <option value="C">C</option>
+                    <option value="Db">Db</option>
+                    <option value="D">D</option>
+                    <option value="Eb">Eb</option>
+                    <option value="E">E</option>
+                    <option value="F">F</option>
+                    <option value="F#">F#</option>
+                    <option value="G">G</option>
+                    <option value="Ab">Ab</option>
+                    <option value="A">A</option>
+                    <option value="Bb">Bb</option>
+                    <option value="B">B</option>
+                </select>
             </div>
 
-            <!-- Category Tabs with Color Toggle -->
-            <div class="category-tabs">
-                <button class="category-tab active" data-category="major">Major</button>
-                <button class="category-tab" data-category="harmonicMinor">Harmonic Minor</button>
-                <button class="category-tab" data-category="melodicMinor">Melodic Minor</button>
-                <button class="category-tab" data-category="diminished">Diminished</button>
-                <button class="category-tab" data-category="chromatic">Chromatic</button>
-                <button class="category-tab" data-category="wholeTone">Whole Tone</button>
-                <button class="category-tab" data-category="pentatonic">Pentatonic</button>
-                <button class="category-tab" data-category="blues">Blues</button>
-                <button class="category-tab" data-category="other">Other</button>
-                <button id="color-mode-toggle" class="category-tab color-toggle-tab">
-                    🎨 Colors
-                </button>
+            <div class="control-group">
+                <label for="category-select">Scale Category:</label>
+                <select id="category-select">
+                    <!-- Options will be populated by JavaScript -->
+                </select>
             </div>
 
-            <!-- Pentatonic Type Selector (hidden by default) -->
-            <div class="pentatonic-controls hidden" id="pentatonic-controls">
-                <div class="pentatonic-selector-wrapper">
-                    <label for="pentatonic-type-selector">Pentatonic Type:</label>
-                    <select id="pentatonic-type-selector" class="pentatonic-type-selector">
-                        <option value="major">Major Pentatonic</option>
-                        <option value="minor">Minor Pentatonic</option>
-                        <option value="egyptian">Egyptian Pentatonic</option>
-                        <option value="hirajoshi">Hirajoshi</option>
-                    </select>
-                </div>
+            <div class="control-group">
+                <label for="mode-select">Mode:</label>
+                <select id="mode-select">
+                    <!-- Options will be populated by JavaScript -->
+                </select>
             </div>
 
-            <!-- Other Scales Type Selector (hidden by default) -->
-            <div class="other-controls hidden" id="other-controls">
-                <div class="other-selector-wrapper">
-                    <label for="other-type-selector">Scale Type:</label>
-                    <select id="other-type-selector" class="other-type-selector">
-                        <option value="hungarian">Hungarian Minor</option>
-                        <option value="neapolitan">Neapolitan Minor</option>
-                        <option value="persian">Persian (Double Harmonic)</option>
-                        <option value="bebopDominant">Bebop Dominant</option>
-                        <option value="bebopMajor">Bebop Major</option>
-                        <option value="hirajoshi">Hirajoshi</option>
-                        <option value="inSen">In Sen</option>
-                        <option value="augmented">Augmented Scale</option>
-                        <option value="spanish">Spanish Scale</option>
-                        <option value="byzantine">Byzantine Scale</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Scale Grid -->
-            <div class="scale-grid" id="scale-grid">
-                <div class="mode-grid" id="mode-grid">
-                    <!-- Mode cards will be dynamically generated here -->
-                </div>
+            <div class="control-group">
+                <label for="color-toggle">
+                    <input type="checkbox" id="color-toggle" checked>
+                    <span class="color-toggle-container">
+                        <span class="color-toggle-label">🎨 Colors</span>
+                    </span>
+                </label>
             </div>
         </div>
 
-        <!-- Mode Detail View (hidden by default) -->
-        <div class="mode-detail hidden" id="mode-detail">
-            <div class="navigation">
-                <button class="nav-btn" id="back-to-top">
-                    ↑ Back to Modes
-                </button>
+        <!-- Scale Display -->
+        <div class="scale-card">
+            <div class="scale-header">
+                <h2 class="scale-title">
+                    <span class="parent-scale">C Major</span>
+                    <span class="mode-name">Ionian</span>
+                </h2>
             </div>
 
-            <div class="mode-header">
-                <h2 class="mode-title" id="mode-name"></h2>
-                <p class="mode-root" id="mode-root"></p>
-            </div>
+            <div class="scale-content">
+                <div class="scale-section">
+                    <h3>Notes</h3>
+                    <div class="notes">
+                        <!-- Notes will be populated by JavaScript -->
+                    </div>
+                </div>
 
-            <div class="mode-content">
-                <div class="theory-section">
-                    <h3 class="section-title">📚 Theory</h3>
-                    <div class="theory-grid" id="theory-grid">
-                        <div class="theory-item">
-                            <div class="theory-label">Formula:</div>
-                            <div class="theory-value" id="mode-formula"></div>
+                <div class="scale-section">
+                    <h3>Intervals</h3>
+                    <div class="intervals">
+                        <!-- Intervals will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="scale-section">
+                    <h3>Formula</h3>
+                    <div class="formula">
+                        <!-- Formula will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="scale-section mode-info" style="display: none;">
+                    <h3>Mode Information</h3>
+                    <div class="mode-details">
+                        <div class="mode-mood">
+                            <strong>Mood:</strong> <span></span>
                         </div>
-                        <div class="theory-item">
-                            <div class="theory-label">Intervals:</div>
-                            <div class="theory-value" id="mode-intervals"></div>
+                        <div class="mode-description">
+                            <strong>Description:</strong> <span></span>
                         </div>
-                        <div class="theory-item">
-                            <div class="theory-label">Notes:</div>
-                            <div class="theory-value" id="mode-notes"></div>
-                        </div>
-                        <div class="theory-item">
-                            <div class="theory-label">Mood:</div>
-                            <div class="theory-value" id="mode-mood"></div>
-                        </div>
-                        <div class="theory-item">
-                            <div class="theory-label">Description:</div>
-                            <div class="theory-value" id="mode-description"></div>
-                        </div>
-                        <div class="theory-item">
-                            <div class="theory-label">Applications:</div>
-                            <div class="theory-value">
-                                <ul id="mode-applications"></ul>
+                        <div class="mode-applications">
+                            <strong>Applications:</strong>
+                            <div class="application-tags">
+                                <!-- Application tags will be populated by JavaScript -->
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="fretboard-section">
-                    <h3 class="section-title">🎸 Fretboard Pattern</h3>
-                    <div class="fretboard-container" id="fretboard-container">
-                        <!-- Fretboard will be rendered here -->
+                <div class="scale-section related-modes">
+                    <h4>Related Modes</h4>
+                    <div class="mode-buttons">
+                        <!-- Mode buttons will be populated by JavaScript -->
+                    </div>
+                    <div class="parent-scale-info">
+                        <!-- Parent scale information will be populated by JavaScript -->
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="practice-section">
-                <h3 class="section-title">🎵 Practice Tabs</h3>
-                <div class="practice-tabs" id="practice-tabs">
-                    <!-- Practice tabs will be populated here -->
-                </div>
+        <!-- Fretboard Display -->
+        <div class="fretboard-section">
+            <h3>Fretboard Pattern</h3>
+            <p class="fretboard-hint">Click the fretboard to open the detailed modal view</p>
+            <div class="fretboard-container">
+                <!-- Fretboard will be rendered here -->
             </div>
+        </div>
+
+        <!-- File Upload Section (for future audio features) -->
+        <div class="upload-section" id="upload-section" style="display: none;">
+            <div class="upload-icon">📁</div>
+            <h3>Upload Guitar Pro Files</h3>
+            <p>Drag and drop your .gp, .gpx, or .gp5 files here</p>
+            <input type="file" id="file-input" class="file-input" accept=".gp,.gpx,.gp5,.gp4,.gp3" multiple>
+            <button class="upload-btn" onclick="document.getElementById('file-input').click()">
+                Choose Files
+            </button>
         </div>
 
         <!-- Tab Player (hidden by default) -->
@@ -172,35 +154,31 @@
                 <!-- Tab notation will be displayed here -->
             </div>
         </div>
-
-        <!-- File Upload Section -->
-        <div class="upload-section" id="upload-section">
-            <div class="upload-icon">📁</div>
-            <h3>Upload Guitar Pro Files</h3>
-            <p>Drag and drop your .gp, .gpx, or .gp5 files here</p>
-            <input type="file" id="file-input" class="file-input" accept=".gp,.gpx,.gp5,.gp4,.gp3" multiple>
-            <button class="upload-btn" onclick="document.getElementById('file-input').click()">
-                Choose Files
-            </button>
-        </div>
     </div>
 
-    <!-- Modal for Scale Details -->
-    <div class="modal hidden" id="scale-modal">
+    <!-- Fretboard Modal -->
+    <div class="modal hidden" id="fretboard-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modal-title">Scale Details</h3>
-                <button class="close-btn" id="close-modal">×</button>
+                <h2>Detailed Fretboard View</h2>
+                <button class="close-modal" onclick="UIComponents.closeFretboardModal()">×</button>
             </div>
-            <div class="modal-body" id="modal-body">
-                <!-- Modal content will be populated here -->
+            <div class="modal-fretboard">
+                <!-- Modal fretboard content will be populated by JavaScript -->
             </div>
         </div>
     </div>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/alphaTab.js"></script>
-    <script src="fretboard.js"></script>
+    
+    <!-- Core modules in dependency order -->
+    <script src="js/core/constants.js"></script>
+    <script src="js/core/music-theory.js"></script>
+    <script src="js/ui/components.js"></script>
+    <script src="js/core/app-controller.js"></script>
+
+    <!-- Main app initialization -->
     <script src="app.js"></script>
 </body>
 </html>
