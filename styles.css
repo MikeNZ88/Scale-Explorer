@@ -904,95 +904,89 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: linear-gradient(135deg, #E8743B, #DC6C27);
-    padding: 15px 20px;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #f8fafc;
     border-radius: 12px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+    gap: 1rem;
     flex-wrap: wrap;
-    gap: 15px;
 }
 
 .fret-navigation {
     display: flex;
     align-items: center;
-    gap: 15px;
-}
-
-.fretboard-controls .nav-btn {
-    background: linear-gradient(135deg, #F39C12, #E67E22);
-    border: none;
-    border-radius: 8px;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 16px;
-    color: white;
-    font-weight: bold;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
-    padding: 0;
-}
-
-.fretboard-controls .nav-btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, #E67E22, #D35400);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(243, 156, 18, 0.4);
-}
-
-.fretboard-controls .nav-btn:active:not(:disabled) {
-    transform: translateY(0);
-}
-
-.fretboard-controls .nav-btn:disabled {
-    background: #94a3b8;
-    cursor: not-allowed;
-    box-shadow: none;
-    transform: none;
-}
-
-.fret-range {
-    font-weight: 600;
-    font-size: 1rem;
-    color: white;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-    min-width: 120px;
-    text-align: center;
+    gap: 0.75rem;
 }
 
 .fret-range-selector {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 0.5rem;
 }
 
-.fret-range-selector label {
-    font-weight: 600;
-    color: white;
-    font-size: 0.95rem;
+.display-toggle {
+    display: flex;
+    align-items: center;
 }
 
-.fret-range-selector select {
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 2px solid #E67E22;
+.nav-btn, .toggle-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #d1d5db;
     background: white;
-    color: #DC6C27;
+    border-radius: 8px;
+    cursor: pointer;
     font-weight: 500;
     transition: all 0.2s ease;
-    outline: none;
 }
 
-.fret-range-selector select:focus {
-    border-color: #F39C12;
-    box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.2);
+.nav-btn:hover:not(:disabled), .toggle-btn:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
 }
 
-.fret-range-selector select:hover {
-    border-color: #F39C12;
+.nav-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.toggle-btn {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+.toggle-btn:hover {
+    background: #2563eb;
+    border-color: #2563eb;
+}
+
+.fret-range {
+    font-weight: 600;
+    color: #374151;
+    min-width: 100px;
+    text-align: center;
+}
+
+#fret-range-select {
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .fretboard-controls {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .fret-navigation, .fret-range-selector, .display-toggle {
+        width: 100%;
+        justify-content: center;
+    }
 }
 
 /* Practice tabs section */
@@ -1127,17 +1121,18 @@ body {
 
 /* === ENHANCED MODAL STYLES === */
 .modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    backdrop-filter: blur(4px);
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0, 0, 0, 0.8) !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    z-index: 1000 !important;
+    backdrop-filter: blur(4px) !important;
+    padding: 0.125rem !important;
 }
 
 .modal.hidden {
@@ -1145,15 +1140,216 @@ body {
 }
 
 .modal-content {
-    background: white;
-    border-radius: 20px;
-    max-width: 90vw;
-    max-height: 90vh;
-    overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    position: relative;
-    display: flex;
-    flex-direction: column;
+    background: white !important;
+    border-radius: 8px !important;
+    max-width: 98vw !important;
+    max-height: 98vh !important;
+    overflow: hidden !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 96vw !important;
+    height: 92vh !important;
+    min-width: 280px !important;
+    min-height: 300px !important;
+}
+
+/* === FRETBOARD MODAL SPECIFIC STYLES === */
+#fretboard-modal .modal-content {
+    width: 96vw !important;
+    height: 92vh !important;
+    max-width: 98vw !important;
+    max-height: 98vh !important;
+    min-width: 280px !important;
+    min-height: 300px !important;
+}
+
+#fretboard-modal .modal-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 0.5rem 0.75rem !important;
+    background: #f8fafc !important;
+    color: #1f2937 !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    border-radius: 8px 8px 0 0 !important;
+    cursor: move !important;
+    user-select: none !important;
+    flex-shrink: 0 !important;
+    min-height: 40px !important;
+}
+
+#fretboard-modal .modal-header h2 {
+    color: #1f2937 !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    flex-grow: 1 !important;
+}
+
+.close-modal {
+    background: #f3f4f6 !important;
+    border: 1px solid #d1d5db !important;
+    color: #6b7280 !important;
+    font-size: 1.1rem !important;
+    cursor: pointer !important;
+    width: 1.75rem !important;
+    height: 1.75rem !important;
+    border-radius: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+}
+
+.close-modal:hover {
+    background: #e5e7eb !important;
+    color: #374151 !important;
+}
+
+.close-modal:active {
+    transform: scale(0.95) !important;
+}
+
+.modal-fretboard {
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: auto !important;
+    background: #ffffff !important;
+    padding: 0.25rem !important;
+    min-height: 0 !important;
+}
+
+/* Mobile Landscape - Fill Screen */
+@media (max-width: 768px) and (orientation: landscape) {
+    .modal {
+        padding: 0 !important;
+    }
+    
+    #fretboard-modal .modal-content {
+        width: 100vw !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        border-radius: 0 !important;
+    }
+    
+    #fretboard-modal .modal-header {
+        padding: 0.25rem 0.5rem !important;
+        min-height: 32px !important;
+        border-radius: 0 !important;
+    }
+    
+    #fretboard-modal .modal-header h2 {
+        font-size: 0.875rem !important;
+    }
+    
+    .modal-fretboard {
+        padding: 0.125rem !important;
+    }
+    
+    .close-modal {
+        width: 1.5rem !important;
+        height: 1.5rem !important;
+        font-size: 1rem !important;
+    }
+}
+
+/* Mobile Portrait - Fill Screen */
+@media (max-width: 768px) and (orientation: portrait) {
+    .modal {
+        padding: 0 !important;
+    }
+    
+    #fretboard-modal .modal-content {
+        width: 100vw !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        border-radius: 0 !important;
+    }
+    
+    #fretboard-modal .modal-header {
+        padding: 0.375rem 0.5rem !important;
+        min-height: 36px !important;
+        border-radius: 0 !important;
+    }
+    
+    #fretboard-modal .modal-header h2 {
+        font-size: 0.9rem !important;
+    }
+    
+    .modal-fretboard {
+        padding: 0.25rem !important;
+    }
+    
+    .close-modal {
+        width: 1.5rem !important;
+        height: 1.5rem !important;
+        font-size: 1rem !important;
+    }
+}
+
+/* Very Small Mobile Screens - Fill Screen */
+@media (max-width: 480px) {
+    .modal {
+        padding: 0 !important;
+    }
+    
+    #fretboard-modal .modal-content {
+        width: 100vw !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        border-radius: 0 !important;
+    }
+    
+    #fretboard-modal .modal-header {
+        padding: 0.25rem 0.375rem !important;
+        border-radius: 0 !important;
+        min-height: 30px !important;
+    }
+    
+    #fretboard-modal .modal-header h2 {
+        font-size: 0.8rem !important;
+    }
+    
+    .modal-fretboard {
+        padding: 0.125rem !important;
+    }
+    
+    .close-modal {
+        width: 1.25rem !important;
+        height: 1.25rem !important;
+        font-size: 0.9rem !important;
+    }
+}
+
+/* Desktop Large Screens */
+@media (min-width: 1200px) {
+    #fretboard-modal .modal-content {
+        width: 90vw !important;
+        height: 85vh !important;
+        max-width: 1200px !important;
+        max-height: 700px !important;
+    }
+}
+
+/* Modal Resize Handle */
+.modal-resize-handle {
+    position: absolute !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+    background: linear-gradient(-45deg, transparent 30%, #cbd5e1 30%, #cbd5e1 70%, transparent 70%) !important;
+    cursor: se-resize !important;
+    border-radius: 0 0 8px 0 !important;
+}
+
+/* Remove rotation suggestion - not needed */
+.rotation-suggestion {
+    display: none !important;
 }
 
 /* === ENHANCED FRETBOARD MODAL SPECIFIC STYLES === */
@@ -1537,69 +1733,68 @@ body {
 .fretboard-toggle-container {
     display: flex;
     justify-content: center;
-    margin-bottom: 1rem;
-    padding: 0.5rem;
-    background: var(--cream-light);
-    border-radius: 8px;
+    align-items: center;
+    margin: 1rem 0;
+    gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .fretboard-toggle-wrapper {
     display: flex;
-    gap: 0.5rem;
-    background: white;
-    border-radius: 6px;
+    background: var(--cream-light);
+    border-radius: 8px;
     padding: 0.25rem;
-    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .fretboard-toggle-btn {
-    background: transparent;
-    border: none;
     padding: 0.5rem 1rem;
-    border-radius: 4px;
-    font-size: 0.875rem;
-    font-weight: 600;
+    border: none;
+    background: transparent;
     color: var(--text-secondary);
     cursor: pointer;
+    border-radius: 6px;
+    font-weight: 500;
     transition: all 0.2s ease;
 }
 
 .fretboard-toggle-btn:hover {
-    color: var(--primary-orange);
     background: rgba(217, 119, 6, 0.1);
+    color: var(--primary-orange);
 }
 
 .fretboard-toggle-btn.active {
     background: var(--primary-orange);
     color: white;
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 2px 4px rgba(217, 119, 6, 0.3);
 }
 
 .fretboard-display-container {
-    background: white;
-    border-radius: 8px;
+    margin-top: 1rem;
     padding: 1rem;
-    box-shadow: var(--shadow-sm);
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
 }
 
-/* Modal toggle styles */
 .modal-toggle {
-    margin-bottom: 1.5rem;
+    margin-top: 0.5rem;
 }
 
 .modal-toggle .fretboard-toggle-btn {
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
 }
 
 @media (max-width: 768px) {
     .fretboard-toggle-wrapper {
-        flex-direction: column;
-        gap: 0.25rem;
+        width: 100%;
+        justify-content: center;
     }
     
     .fretboard-toggle-btn {
-        padding: 0.75rem;
+        flex: 1;
         text-align: center;
     }
 }
@@ -2094,12 +2289,10 @@ body {
 }
 
 .theory-section {
-    background: rgba(255, 255, 255, 0.8);
-    border-radius: 12px;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
 }
 
 .theory-value {
@@ -2196,9 +2389,14 @@ body {
     box-shadow: 0 4px 12px rgba(243, 156, 18, 0.4);
 }
 
+.modal-nav-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
 .modal-nav-btn:disabled {
     background: #94a3b8;
     cursor: not-allowed;
+    box-shadow: none;
     transform: none;
 }
 
@@ -2208,6 +2406,18 @@ body {
     font-size: 1rem;
     min-width: 120px;
     text-align: center;
+}
+
+.modal-fret-range-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-fret-range-selector label {
+    font-weight: 600;
+    color: white;
+    font-size: 0.95rem;
 }
 
 .modal-fret-range-selector select {
@@ -3273,4 +3483,45 @@ body {
         padding: 0.8rem;
     }
     
+}
+
+/* Fretboard section - now positioned at top */
+.fretboard-section {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.fretboard-section h3 {
+    color: var(--primary-orange-dark);
+    margin: 0 0 0.5rem 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    border-bottom: 2px solid var(--primary-orange);
+    padding-bottom: 0.5rem;
+}
+
+.fretboard-hint {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin: 0 0 1rem 0;
+    font-style: italic;
+}
+
+.fretboard-container {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid #e9ecef;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.fretboard-container:hover {
+    border-color: var(--primary-orange);
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.15);
+    transform: translateY(-1px);
 } 

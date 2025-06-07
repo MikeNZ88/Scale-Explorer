@@ -9,7 +9,8 @@ console.log('MusicConstants available:', typeof window.MusicConstants);
 let fretboardState = {
     startFret: 0,
     fretRange: 12, // 12 or 24
-    maxFrets: 24
+    maxFrets: 24,
+    showIntervals: false // Add toggle state
 };
 
 // Modal fretboard state (separate from main fretboard)
@@ -57,6 +58,9 @@ function createFretboard(scale) {
                 <option value="24" ${fretboardState.fretRange === 24 ? 'selected' : ''}>24 Frets</option>
             </select>
         </div>
+        <div class="display-toggle">
+            <button id="toggle-display" class="toggle-btn">${fretboardState.showIntervals ? 'Show Notes' : 'Show Intervals'}</button>
+        </div>
     `;
     fretboardContainer.appendChild(controlsDiv);
     
@@ -78,6 +82,12 @@ function createFretboard(scale) {
     document.getElementById('fret-range-select').addEventListener('change', (e) => {
         fretboardState.fretRange = parseInt(e.target.value);
         fretboardState.startFret = 0; // Reset to beginning when changing range
+        createFretboard(scale);
+    });
+    
+    // Add toggle functionality
+    document.getElementById('toggle-display').addEventListener('click', () => {
+        fretboardState.showIntervals = !fretboardState.showIntervals;
         createFretboard(scale);
     });
     
@@ -105,9 +115,9 @@ function createFretboard(scale) {
         const x = 80 + (fret * fretWidth);
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         line.setAttribute('x1', x);
-        line.setAttribute('y1', 40);
+        line.setAttribute('y1', 45); // Start just above the strings
         line.setAttribute('x2', x);
-        line.setAttribute('y2', 240);
+        line.setAttribute('y2', 225); // End just below the strings (strings are at y=60 to y=210)
         line.setAttribute('stroke', actualFret === 0 ? '#000' : '#999');
         line.setAttribute('stroke-width', actualFret === 0 ? '4' : '2');
         svg.appendChild(line);
@@ -191,6 +201,12 @@ function createFretboard(scale) {
             
             for (let fret = 0; fret <= displayFrets; fret++) {
                 const actualFret = fretboardState.startFret + fret;
+                
+                // Skip open frets if we're not starting from fret 0
+                if (actualFret === 0 && fretboardState.startFret > 0) {
+                    continue;
+                }
+                
                 const chromaticIndex = (noteToIndex(openNote) + actualFret) % 12;
                 const chromaticNoteName = MusicConstants.chromaticScale[chromaticIndex];
                 
@@ -244,7 +260,8 @@ function createFretboard(scale) {
                     text.setAttribute('fill', 'white');
                     text.setAttribute('font-size', '10');
                     text.setAttribute('font-weight', 'bold');
-                    text.textContent = displayNote;
+                    // Show intervals or notes based on toggle state
+                    text.textContent = fretboardState.showIntervals ? interval : displayNote;
                     svg.appendChild(text);
                 }
             }
@@ -331,82 +348,15 @@ function openFretboardModal(scale) {
     
     console.log('✅ Modal fretboard div found');
     
-    // Clear existing content and add controls
+    // Clear existing content
     fretboardDiv.innerHTML = '';
     
-    // Create modal fretboard controls
-    const controlsDiv = document.createElement('div');
-    controlsDiv.className = 'modal-fretboard-controls';
-    controlsDiv.innerHTML = `
-        <div class="modal-fret-navigation">
-            <button id="modal-fret-left" class="modal-nav-btn" ${modalFretboardState.startFret === 0 ? 'disabled' : ''}>←</button>
-            <span class="modal-fret-range">Frets ${modalFretboardState.startFret}-${modalFretboardState.startFret + modalFretboardState.fretRange}</span>
-            <button id="modal-fret-right" class="modal-nav-btn" ${modalFretboardState.startFret + modalFretboardState.fretRange >= modalFretboardState.maxFrets ? 'disabled' : ''}>→</button>
-        </div>
-        <div class="modal-fret-range-selector">
-            <label>View: </label>
-            <select id="modal-fret-range-select">
-                <option value="12" ${modalFretboardState.fretRange === 12 ? 'selected' : ''}>12 Frets</option>
-                <option value="15" ${modalFretboardState.fretRange === 15 ? 'selected' : ''}>15 Frets</option>
-                <option value="24" ${modalFretboardState.fretRange === 24 ? 'selected' : ''}>24 Frets</option>
-            </select>
-        </div>
-        <div class="modal-display-toggle">
-            <button id="toggle-display" class="toggle-btn">Show Intervals</button>
-        </div>
-    `;
-    fretboardDiv.appendChild(controlsDiv);
+    // Create simplified modal fretboard (larger version of main fretboard)
+    renderModalFretboard(fretboardDiv, scale);
     
-    console.log('✅ Controls added to modal');
+    console.log('✅ Modal fretboard rendered');
     
-    // Add event listeners for modal controls
-    document.getElementById('modal-fret-left').addEventListener('click', () => {
-        if (modalFretboardState.startFret > 0) {
-            modalFretboardState.startFret = Math.max(0, modalFretboardState.startFret - 6);
-            renderModalFretboard(fretboardDiv, scale, false);
-        }
-    });
-    
-    document.getElementById('modal-fret-right').addEventListener('click', () => {
-        if (modalFretboardState.startFret + modalFretboardState.fretRange < modalFretboardState.maxFrets) {
-            modalFretboardState.startFret = Math.min(modalFretboardState.maxFrets - modalFretboardState.fretRange, modalFretboardState.startFret + 6);
-            renderModalFretboard(fretboardDiv, scale, false);
-        }
-    });
-    
-    document.getElementById('modal-fret-range-select').addEventListener('change', (e) => {
-        modalFretboardState.fretRange = parseInt(e.target.value);
-        modalFretboardState.startFret = 0; // Reset to beginning when changing range
-        renderModalFretboard(fretboardDiv, scale, false);
-    });
-    
-    // Add toggle functionality AFTER controls are created
-    const toggleBtn = document.getElementById('toggle-display');
-    let showingIntervals = false;
-    
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', function() {
-            showingIntervals = !showingIntervals;
-            toggleBtn.textContent = showingIntervals ? 'Show Notes' : 'Show Intervals';
-            renderModalFretboard(fretboardDiv, scale, showingIntervals);
-        });
-        console.log('✅ Toggle functionality added');
-    } else {
-        console.error('❌ Toggle button not found');
-    }
-    
-    console.log('✅ Event listeners added');
-    
-    // Render the fretboard
-    console.log('Rendering modal fretboard...');
-    renderModalFretboard(fretboardDiv, scale, false);
-    
-    console.log('Modal should now be visible. Final check:');
-    console.log('Modal display:', modal.style.display);
-    console.log('Modal visibility:', getComputedStyle(modal).visibility);
-    console.log('Modal z-index:', getComputedStyle(modal).zIndex);
-    
-    // Set optimal size and make draggable
+    // Apply utilities for modal functionality
     try {
         setOptimalModalSize();
         handleMobileOrientation();
@@ -414,70 +364,54 @@ function openFretboardModal(scale) {
         makeResizable(modal);
         console.log('✅ Modal utilities applied');
     } catch (error) {
-        console.error('Error applying modal utilities:', error);
+        console.error('❌ Error applying modal utilities:', error);
     }
-    
-    console.log('===== MODAL OPENING COMPLETE =====');
 }
 
-function renderModalFretboard(container, scale, showIntervals = false) {
-    // Find the fretboard container (skip the controls)
-    let fretboardContainer = container.querySelector('.modal-fretboard-svg-container');
-    if (!fretboardContainer) {
-        fretboardContainer = document.createElement('div');
-        fretboardContainer.className = 'modal-fretboard-svg-container';
-        container.appendChild(fretboardContainer);
-    }
-    fretboardContainer.innerHTML = '';
+function renderModalFretboard(container, scale) {
+    // Create a larger version of the main fretboard
+    container.innerHTML = '';
     
-    // Update controls
-    const leftBtn = document.getElementById('modal-fret-left');
-    const rightBtn = document.getElementById('modal-fret-right');
-    const rangeSpan = container.querySelector('.modal-fret-range');
-    const rangeSelect = document.getElementById('modal-fret-range-select');
+    // Use the same state as the main fretboard
+    const displayFrets = fretboardState.fretRange;
+    const endFret = fretboardState.startFret + displayFrets;
     
-    if (leftBtn) leftBtn.disabled = modalFretboardState.startFret === 0;
-    if (rightBtn) rightBtn.disabled = modalFretboardState.startFret + modalFretboardState.fretRange >= modalFretboardState.maxFrets;
-    if (rangeSpan) rangeSpan.textContent = `Frets ${modalFretboardState.startFret}-${modalFretboardState.startFret + modalFretboardState.fretRange}`;
-    if (rangeSelect) rangeSelect.value = modalFretboardState.fretRange;
-    
-    // Calculate display range
-    const displayFrets = modalFretboardState.fretRange;
-    const endFret = modalFretboardState.startFret + displayFrets;
-    
-    // Fixed string order: high E on top (string 0) to low E on bottom (string 5)
+    // String notes (high E to low E)
     const stringNotes = ['E', 'B', 'G', 'D', 'A', 'E'];
     
     // Create larger SVG for modal
-    const fretWidth = displayFrets <= 12 ? 60 : displayFrets <= 15 ? 50 : 40;
-    const svgWidth = 100 + (displayFrets * fretWidth);
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('viewBox', `0 0 ${svgWidth} 400`);
+    const fretWidth = displayFrets <= 12 ? 80 : 60; // Larger frets for modal
+    const svgWidth = 120 + (displayFrets * fretWidth);
+    const svgHeight = 400; // Taller for modal
+    svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
     svg.setAttribute('width', '100%');
-    svg.setAttribute('height', '400');
-    svg.style.background = '#1a1a1a';
+    svg.setAttribute('height', '100%');
+    svg.style.background = '#f8fafc';
+    svg.style.border = '2px solid #e2e8f0';
+    svg.style.borderRadius = '12px';
     
     // Draw fret lines
     for (let fret = 0; fret <= displayFrets; fret++) {
-        const actualFret = modalFretboardState.startFret + fret;
-        const x = 60 + (fret * fretWidth);
+        const actualFret = fretboardState.startFret + fret;
+        const x = 100 + (fret * fretWidth);
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         line.setAttribute('x1', x);
-        line.setAttribute('y1', 40);
+        line.setAttribute('y1', 65); // Start just above the strings
         line.setAttribute('x2', x);
-        line.setAttribute('y2', 360);
-        line.setAttribute('stroke', actualFret === 0 ? '#fff' : '#555');
-        line.setAttribute('stroke-width', actualFret === 0 ? '6' : '2');
+        line.setAttribute('y2', 295); // End just below the strings (strings are at y=80 to y=280)
+        line.setAttribute('stroke', actualFret === 0 ? '#000' : '#999');
+        line.setAttribute('stroke-width', actualFret === 0 ? '5' : '3');
         svg.appendChild(line);
         
         // Fret numbers
         if (fret > 0) {
             const fretNumber = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            fretNumber.setAttribute('x', 60 + ((fret - 0.5) * fretWidth));
-            fretNumber.setAttribute('y', 30);
+            fretNumber.setAttribute('x', 100 + ((fret - 0.5) * fretWidth));
+            fretNumber.setAttribute('y', 40);
             fretNumber.setAttribute('text-anchor', 'middle');
-            fretNumber.setAttribute('fill', '#999');
-            fretNumber.setAttribute('font-size', displayFrets <= 12 ? '14' : displayFrets <= 15 ? '12' : '10');
+            fretNumber.setAttribute('fill', '#374151');
+            fretNumber.setAttribute('font-size', '18');
             fretNumber.setAttribute('font-weight', 'bold');
             fretNumber.textContent = actualFret;
             svg.appendChild(fretNumber);
@@ -486,115 +420,117 @@ function renderModalFretboard(container, scale, showIntervals = false) {
     
     // Draw strings
     for (let string = 0; string < 6; string++) {
-        const y = 70 + (string * 50);
+        const y = 80 + (string * 40);
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', 60);
+        line.setAttribute('x1', 100);
         line.setAttribute('y1', y);
-        line.setAttribute('x2', 60 + (displayFrets * fretWidth));
+        line.setAttribute('x2', 100 + (displayFrets * fretWidth));
         line.setAttribute('y2', y);
-        line.setAttribute('stroke', '#777');
+        line.setAttribute('stroke', '#6b7280');
         line.setAttribute('stroke-width', '3');
         svg.appendChild(line);
         
         // String labels
         const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        label.setAttribute('x', 30);
-        label.setAttribute('y', y + 5);
+        label.setAttribute('x', 70);
+        label.setAttribute('y', y + 6);
         label.setAttribute('text-anchor', 'middle');
-        label.setAttribute('fill', 'white');
-        label.setAttribute('font-size', '16');
+        label.setAttribute('fill', '#374151');
+        label.setAttribute('font-size', '18');
         label.setAttribute('font-weight', 'bold');
         label.textContent = stringNotes[string];
         svg.appendChild(label);
     }
     
-    // Draw fret markers for standard positions
+    // Draw fret markers
     const markerFrets = [3, 5, 7, 9, 12, 15, 17, 19, 21, 24];
     markerFrets.forEach(markerFret => {
-        if (markerFret > modalFretboardState.startFret && markerFret <= endFret) {
-            const fretPosition = markerFret - modalFretboardState.startFret;
-            const x = 60 + ((fretPosition - 0.5) * fretWidth);
+        if (markerFret > fretboardState.startFret && markerFret <= endFret) {
+            const fretPosition = markerFret - fretboardState.startFret;
+            const x = 100 + ((fretPosition - 0.5) * fretWidth);
             
             if (markerFret === 12 || markerFret === 24) {
                 // Double dots for octaves
                 const marker1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 marker1.setAttribute('cx', x);
-                marker1.setAttribute('cy', 145);
+                marker1.setAttribute('cy', 140);
                 marker1.setAttribute('r', '8');
-                marker1.setAttribute('fill', '#666');
+                marker1.setAttribute('fill', '#d1d5db');
                 svg.appendChild(marker1);
                 
                 const marker2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 marker2.setAttribute('cx', x);
-                marker2.setAttribute('cy', 245);
+                marker2.setAttribute('cy', 220);
                 marker2.setAttribute('r', '8');
-                marker2.setAttribute('fill', '#666');
+                marker2.setAttribute('fill', '#d1d5db');
                 svg.appendChild(marker2);
             } else {
                 // Single dot for other markers
                 const marker = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 marker.setAttribute('cx', x);
-                marker.setAttribute('cy', 195);
+                marker.setAttribute('cy', 180);
                 marker.setAttribute('r', '8');
-                marker.setAttribute('fill', '#666');
+                marker.setAttribute('fill', '#d1d5db');
                 svg.appendChild(marker);
             }
         }
     });
     
-    // Place notes/intervals on fretboard
+    // Place notes on fretboard
     if (scale && scale.length > 0) {
-        const scaleRoot = scale[0];
-        const intervals = MusicTheory.getIntervals(scale, scaleRoot);
-        
         for (let string = 0; string < 6; string++) {
             const openNote = stringNotes[string];
-            const openNoteIndex = noteToIndex(openNote);
             
             for (let fret = 0; fret <= displayFrets; fret++) {
-                const actualFret = modalFretboardState.startFret + fret;
-                const noteIndex = (openNoteIndex + actualFret) % 12;
-                const chromaticNoteName = MusicConstants.chromaticScale[noteIndex];
+                const actualFret = fretboardState.startFret + fret;
                 
-                // Check if this note is in the scale using proper spelling
+                // Skip open frets if we're not starting from fret 0
+                if (actualFret === 0 && fretboardState.startFret > 0) {
+                    continue;
+                }
+                
+                const chromaticIndex = (noteToIndex(openNote) + actualFret) % 12;
+                const chromaticNoteName = MusicConstants.chromaticScale[chromaticIndex];
+                
                 let displayNote = null;
-                let scaleIndex = -1;
+                
+                // Check if this note is in the scale
                 for (let i = 0; i < scale.length; i++) {
-                    if (MusicTheory && typeof MusicTheory.areEnharmonicEquivalents === 'function') {
-                        if (MusicTheory.areEnharmonicEquivalents(chromaticNoteName, scale[i])) {
-                            displayNote = scale[i]; // Use the properly spelled scale note
-                            scaleIndex = i;
+                    const scaleNote = scale[i];
+                    
+                    if (typeof MusicTheory !== 'undefined' && 
+                        typeof MusicTheory.areEnharmonicEquivalents === 'function') {
+                        if (MusicTheory.areEnharmonicEquivalents(chromaticNoteName, scaleNote)) {
+                            displayNote = scaleNote;
                             break;
                         }
                     } else {
-                        // Fallback to direct comparison if function not available
-                        if (chromaticNoteName === scale[i]) {
-                            displayNote = scale[i];
-                            scaleIndex = i;
+                        if (chromaticNoteName === scaleNote) {
+                            displayNote = scaleNote;
                             break;
                         }
                     }
                 }
                 
-                if (displayNote && scaleIndex !== -1) {
-                    // Improved positioning: move fret 0 notes further to the left
-                    const x = fret === 0 ? 35 : 60 + ((fret - 0.5) * fretWidth);
-                    const y = 70 + (string * 50);
+                if (displayNote) {
+                    // Position notes
+                    const x = fret === 0 ? 40 : 100 + ((fret - 0.5) * fretWidth);
+                    const y = 80 + (string * 40);
                     
-                    const interval = intervals[scaleIndex] || '1';
+                    // Get interval and color
+                    const scaleIndex = scale.indexOf(displayNote);
+                    const interval = MusicTheory.getIntervals(scale, scale[0])[scaleIndex] || '1';
                     const color = MusicTheory.getIntervalColor(interval);
                     
-                    // Note circle
                     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                     circle.setAttribute('cx', x);
                     circle.setAttribute('cy', y);
-                    circle.setAttribute('r', '18');
+                    circle.setAttribute('r', '16');
                     circle.setAttribute('fill', color);
                     circle.setAttribute('stroke', 'white');
-                    circle.setAttribute('stroke-width', '2');
+                    circle.setAttribute('stroke-width', '3');
                     svg.appendChild(circle);
                     
-                    // Improved text visibility with white text
                     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                     text.setAttribute('x', x);
                     text.setAttribute('y', y + 5);
@@ -602,14 +538,15 @@ function renderModalFretboard(container, scale, showIntervals = false) {
                     text.setAttribute('fill', 'white');
                     text.setAttribute('font-size', '12');
                     text.setAttribute('font-weight', 'bold');
-                    text.textContent = showIntervals ? interval : displayNote;
+                    // Use the same display mode as the main fretboard
+                    text.textContent = fretboardState.showIntervals ? interval : displayNote;
                     svg.appendChild(text);
                 }
             }
         }
     }
     
-    fretboardContainer.appendChild(svg);
+    container.appendChild(svg);
 }
 
 function closeFretboardModal() {
