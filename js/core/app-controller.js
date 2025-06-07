@@ -134,7 +134,7 @@ function getScaleType(category) {
         'neapolitan-minor-modes': 'neapolitan-minor',
         'neapolitan-major-modes': 'neapolitan-major',
         'diminished-modes': 'diminished',
-        'pentatonic': 'pentatonic-major',
+        'pentatonic': 'pentatonic',
         'japanese-pentatonic': 'pentatonic',
         'blues-modes': 'blues',
         'blues-scales': 'blues',

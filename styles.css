@@ -2980,4 +2980,128 @@ body {
     }
 }
 
+/* Characteristic chords styling */
+.characteristic-chord {
+    display: inline-block;
+    background-color: #FF8C00;
+    color: white;
+    padding: 8px 12px;
+    margin: 4px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    box-shadow: 0 2px 4px rgba(255, 140, 0, 0.2);
+}
+
+.characteristic-chord:hover {
+    background-color: #FF7F00;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(255, 140, 0, 0.3);
+}
+
+/* Chord Type Descriptions */
+.chord-type-description {
+    font-size: 13px;
+    color: #666;
+    margin: 5px 0 10px 0;
+    font-style: italic;
+    line-height: 1.4;
+}
+
+/* Emphasized Chord Types */
+.chord-type-title.emphasized {
+    color: #E74C3C;
+    font-weight: bold;
+    position: relative;
+}
+
+.chord-type-title.emphasized::after {
+    content: " ★";
+    color: #F39C12;
+    font-size: 16px;
+}
+
+/* Chord Type Sections */
+.chord-type-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #4A90E2;
+}
+
+.chord-type-title {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #2C3E50;
+}
+
+.chord-type-chords {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* Scale Applications Section */
+.scale-applications-section {
+    margin-top: 25px;
+    padding: 20px;
+    background-color: #f0f8ff;
+    border-radius: 10px;
+    border: 2px solid #4A90E2;
+}
+
+.applications-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.application-context,
+.application-example,
+.application-context-note,
+.application-styles {
+    padding: 12px;
+    background-color: white;
+    border-radius: 6px;
+    border-left: 3px solid #4A90E2;
+}
+
+.application-context h4,
+.application-example h4,
+.application-context-note h4,
+.application-styles h4 {
+    margin: 0 0 8px 0;
+    color: #2C3E50;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.progression-example {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.progression {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    color: #E74C3C;
+    background-color: #f8f9fa;
+    padding: 5px 8px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.usage-note {
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+}
+
 /* ... existing code ... */

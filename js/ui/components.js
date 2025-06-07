@@ -1538,38 +1538,72 @@ function hideSuggestions() {
 }
 
 function displayChords(scale, scaleType) {
+    console.log('=== displayChords DEBUG START ===');
+    console.log('Scale:', scale);
+    console.log('Scale Type:', scaleType);
+    console.log('Scale Length:', scale?.length);
+    
     const chordsSection = document.querySelector('.chords-section');
     const chordsList = document.getElementById('chords-list');
     
-    if (!scale || scale.length < 3 || !chordsSection || !chordsList) return;
+    console.log('DOM elements found:', { chordsSection: !!chordsSection, chordsList: !!chordsList });
+    
+    if (!scale || scale.length < 3 || !chordsSection || !chordsList) {
+        console.log('Early return due to missing requirements:', { 
+            scale: scale, 
+            scaleLength: scale?.length, 
+            chordsSection: !!chordsSection, 
+            chordsList: !!chordsList 
+        });
+        return;
+    }
     
     // Check if this scale type should display chords
-    if (!MusicTheory.shouldDisplayChords(scaleType, scale.length)) {
+    const shouldDisplay = MusicTheory.shouldDisplayChords(scaleType, scale.length);
+    console.log('shouldDisplayChords result:', shouldDisplay);
+    
+    if (!shouldDisplay) {
+        console.log('Hiding chords section - scale type should not display chords');
         chordsSection.style.display = 'none';
         return;
     }
     
     // Show the chords section
     chordsSection.style.display = 'block';
+    console.log('Chords section shown');
     
     // Check if this scale uses characteristic chord analysis instead of traditional analysis
+    console.log('Calling getCharacteristicChords with:', { scale, scaleType });
     const characteristicChords = MusicTheory.getCharacteristicChords(scale, scaleType);
+    console.log('getCharacteristicChords returned:', characteristicChords);
+    console.log('Type of result:', typeof characteristicChords);
     
     if (characteristicChords) {
+        console.log('Using characteristic chords display');
         // Display characteristic chords for exotic scales
         displayCharacteristicChords(scale, scaleType, characteristicChords);
     } else {
+        console.log('Using traditional chords display');
         // Use traditional degree-by-degree analysis for diatonic scales
         displayTraditionalChords(scale, scaleType);
     }
+    console.log('=== displayChords DEBUG END ===');
 }
 
 function displayCharacteristicChords(scale, scaleType, characteristicChords) {
+    console.log('=== displayCharacteristicChords DEBUG START ===');
+    console.log('Parameters:', { scale, scaleType, characteristicChords });
+    
     const chordsList = document.getElementById('chords-list');
     const chordsSection = document.querySelector('.chords-section');
     const chordControls = document.querySelector('.chord-controls');
     
-    if (!chordsList || !chordsSection) return;
+    console.log('DOM elements:', { chordsList: !!chordsList, chordsSection: !!chordsSection, chordControls: !!chordControls });
+    
+    if (!chordsList || !chordsSection) {
+        console.log('Missing required DOM elements, returning early');
+        return;
+    }
     
     // Hide traditional chord controls and update section title
     if (chordControls) chordControls.style.display = 'none';
@@ -1578,9 +1612,12 @@ function displayCharacteristicChords(scale, scaleType, characteristicChords) {
     
     // Clear existing content
     chordsList.innerHTML = '';
+    console.log('Cleared chords list, about to call displayChordsFromScale');
     
     // Display chords organized by type
     displayChordsFromScale(chordsList, characteristicChords);
+    
+    console.log('Called displayChordsFromScale, chords list innerHTML length:', chordsList.innerHTML.length);
     
     // Update audio controls with characteristic chord data
     if (window.audioControls && characteristicChords) {
@@ -1614,12 +1651,11 @@ function displayCharacteristicChords(scale, scaleType, characteristicChords) {
         
         window.audioControls.updateChords(audioChords);
     }
-    
-    // Display scale applications
-    displayScaleApplications(chordsList, scaleType);
 }
 
 function displayChordsFromScale(container, characteristicChords) {
+    console.log('displayChordsFromScale called with:', characteristicChords);
+    
     // Create main chords section
     const chordsFromScaleSection = document.createElement('div');
     chordsFromScaleSection.className = 'chords-from-scale-section';
@@ -1633,28 +1669,56 @@ function displayChordsFromScale(container, characteristicChords) {
     const chordsContainer = document.createElement('div');
     chordsContainer.className = 'chord-types-container';
     
-    // Organize chords by type
-    const organizedChords = organizeChordsByType(characteristicChords);
-    
-    // Create sections for each chord type
-    Object.entries(organizedChords).forEach(([chordType, chords]) => {
-        const typeSection = document.createElement('div');
-        typeSection.className = 'chord-type-section';
+    // Check if we have the new structure with 'chords' array
+    if (characteristicChords && characteristicChords.chords) {
+        console.log('Using new chord structure with chords array');
         
-        typeSection.innerHTML = `
-            <h4 class="chord-type-title">${chordType}</h4>
-            <div class="chord-type-chords">
-                ${chords.map(chord => `
-                    <span class="characteristic-chord" title="${chord.description || ''}">${chord.name}</span>
-                `).join('')}
-            </div>
-        `;
+        // Display each chord type section
+        characteristicChords.chords.forEach(chordGroup => {
+            const typeSection = document.createElement('div');
+            typeSection.className = 'chord-type-section';
+            
+            const isEmphasized = chordGroup.emphasis ? ' emphasized' : '';
+            
+            typeSection.innerHTML = `
+                <h4 class="chord-type-title${isEmphasized}">${chordGroup.type}</h4>
+                <p class="chord-type-description">${chordGroup.description}</p>
+                <div class="chord-type-chords">
+                    ${chordGroup.chords.map(chord => `
+                        <span class="characteristic-chord" title="${chordGroup.description}">${chord}</span>
+                    `).join('')}
+                </div>
+            `;
+            
+            chordsContainer.appendChild(typeSection);
+        });
+    } else {
+        console.log('Using legacy chord structure, calling organizeChordsByType');
+        // Fallback to old structure
+        const organizedChords = organizeChordsByType(characteristicChords);
         
-        chordsContainer.appendChild(typeSection);
-    });
+        // Create sections for each chord type
+        Object.entries(organizedChords).forEach(([chordType, chords]) => {
+            const typeSection = document.createElement('div');
+            typeSection.className = 'chord-type-section';
+            
+            typeSection.innerHTML = `
+                <h4 class="chord-type-title">${chordType}</h4>
+                <div class="chord-type-chords">
+                    ${chords.map(chord => `
+                        <span class="characteristic-chord" title="${chord.description || ''}">${chord.name}</span>
+                    `).join('')}
+                </div>
+            `;
+            
+            chordsContainer.appendChild(typeSection);
+        });
+    }
     
     chordsFromScaleSection.appendChild(chordsContainer);
     container.appendChild(chordsFromScaleSection);
+    
+    console.log('displayChordsFromScale completed, container innerHTML length:', container.innerHTML.length);
 }
 
 function organizeChordsByType(characteristicChords) {
@@ -1733,19 +1797,23 @@ function displayScaleApplications(container, scaleType) {
     applicationsSection.innerHTML = `
         <div class="section-header">
             <h3>Scale Applications</h3>
-            <p class="section-description">Common uses and contexts for this scale</p>
+            <p class="section-description">When and how to use this scale (chord context, not melody)</p>
         </div>
         <div class="applications-content">
             <div class="application-context">
-                <h4>Used Over:</h4>
+                <h4>Works Over:</h4>
                 <p>${applicationData.usedOver}</p>
             </div>
             <div class="application-example">
-                <h4>Example Progression:</h4>
+                <h4>Example:</h4>
                 <div class="progression-example">
                     <span class="progression">${applicationData.exampleProgression}</span>
-                    <span class="usage-note">Scale works over: <strong>${applicationData.specificChord}</strong></span>
+                    <span class="usage-note">${applicationData.specificChord}</span>
                 </div>
+            </div>
+            <div class="application-context-note">
+                <h4>Context:</h4>
+                <p>${applicationData.context}</p>
             </div>
             <div class="application-styles">
                 <h4>Common In:</h4>
@@ -1763,34 +1831,39 @@ function getScaleApplicationData(scaleType) {
     
     const applications = {
         'diminished': {
-            usedOver: 'Dominant 7th chords, especially altered dominants in jazz progressions',
-            exampleProgression: 'Dm7 - G7 - Cmaj7',
-            specificChord: 'G7',
-            commonIn: 'Jazz improvisation, classical harmony, bebop'
+            usedOver: 'Dominant 7th chords (especially altered dominants), diminished chords',
+            exampleProgression: 'Dm7 - G7alt - Cmaj7',
+            specificChord: 'Works over the G7alt chord only',
+            commonIn: 'Jazz improvisation, classical harmony, bebop',
+            context: 'Use over specific dominant chords, not entire progressions'
         },
         'pentatonic-major': {
-            usedOver: 'Major chords, sus chords, and related progressions',
+            usedOver: 'Major key progressions, major and minor chords within the key',
             exampleProgression: 'C - Am - F - G',
-            specificChord: 'C major',
-            commonIn: 'Folk music, rock solos, country, Celtic music'
+            specificChord: 'Works over the entire progression (all chords are in C major)',
+            commonIn: 'Folk music, rock solos, country, Celtic music',
+            context: 'Works over entire progressions in major keys'
         },
         'pentatonic-minor': {
-            usedOver: 'Minor chords, blues progressions, and modal contexts',
+            usedOver: 'Minor key progressions, blues progressions, minor and dominant chords',
             exampleProgression: 'Am - F - C - G',
-            specificChord: 'Am',
-            commonIn: 'Blues, rock, jazz fusion, world music'
+            specificChord: 'Works over entire progression, especially strong over Am and C',
+            commonIn: 'Blues, rock, jazz fusion, world music',
+            context: 'Works over entire minor key progressions and blues changes'
         },
         'blues': {
-            usedOver: '12-bar blues progressions and dominant 7th chords',
+            usedOver: '12-bar blues, dominant 7th chords, minor blues progressions',
             exampleProgression: 'C7 - F7 - C7 - G7',
-            specificChord: 'All dominant 7th chords',
-            commonIn: 'Blues, jazz, rock, soul, R&B'
+            specificChord: 'Works over all dominant 7th chords in blues progressions',
+            commonIn: 'Blues, jazz, rock, soul, R&B',
+            context: 'Works over entire blues progressions and individual dominant chords'
         },
         'whole-tone': {
-            usedOver: 'Augmented chords and dominant 7♯11 chords',
+            usedOver: 'Augmented chords, dominant 7♯11 chords, impressionist harmony',
             exampleProgression: 'Cmaj7 - C7♯11 - Fmaj7',
-            specificChord: 'C7♯11',
-            commonIn: 'Impressionist classical, jazz ballads, film scoring'
+            specificChord: 'Works over the C7♯11 chord only',
+            commonIn: 'Impressionist classical, jazz ballads, film scoring',
+            context: 'Use over specific altered chords, creates floating, ambiguous sound'
         }
     };
     
@@ -1815,7 +1888,6 @@ function getScaleApplicationData(scaleType) {
         }
     }
     
-    console.log('Final scaleData:', scaleData);
     return scaleData;
 }
 

@@ -1493,25 +1493,65 @@ function getCharacteristicChords(scale, scaleType) {
     // For scales that don't follow traditional degree-by-degree analysis
     // Return the characteristic chord types they naturally produce
     
+    console.log('=== getCharacteristicChords DEBUG START ===');
     console.log('getCharacteristicChords called with:', { scale, scaleType, scaleLength: scale?.length });
     
-    // More robust detection patterns
-    if (scaleType === 'diminished' || scaleType === 'half-whole-diminished' || scaleType === 'whole-half-diminished' || scaleType.includes('diminished')) {
+    // Enhanced detection patterns with more comprehensive matching
+    
+    // Diminished scales (8-note scales)
+    if (scaleType === 'diminished' || scaleType === 'half-whole-diminished' || scaleType === 'whole-half-diminished' || 
+        scaleType.includes('diminished') || (scale && scale.length === 8)) {
+        console.log('Detected diminished scale, calling getDiminishedScaleChords');
         return getDiminishedScaleChords(scale);
     }
     
-    if (scaleType === 'pentatonic-major' || scaleType === 'pentatonic-minor' || scaleType.includes('pentatonic')) {
-        return getPentatonicScaleChords(scale, scaleType);
+    // Blues scales (6-note scales) - CHECK BEFORE PENTATONIC
+    console.log('Checking blues conditions:');
+    console.log('scaleType === "blues":', scaleType === 'blues');
+    console.log('scaleType.includes("blues"):', scaleType.includes('blues'));
+    console.log('scale && scale.length === 6:', scale && scale.length === 6);
+    
+    if (scaleType === 'blues' || scaleType === 'blues-major' || scaleType === 'blues-minor' || 
+        scaleType.includes('blues') || (scale && scale.length === 6 && isBluesPattern(scale, scale[0]))) {
+        console.log('Detected blues scale, calling getBluesScaleChords');
+        return getBluesScaleChords(scale, scaleType);
     }
     
-    // Enhanced whole tone detection
+    // Whole tone scales (6-note scales with whole tone pattern)
     if (scaleType === 'whole-tone' || scaleType === 'whole_tone' || scaleType.includes('whole') || 
         (scale && scale.length === 6 && isWholeToneScale(scale))) {
+        console.log('Detected whole tone scale, calling getWholeToneScaleChords');
         return getWholeToneScaleChords(scale);
     }
     
-    if (scaleType === 'blues' || scaleType === 'blues-major' || scaleType === 'blues-minor' || scaleType.includes('blues')) {
-        return getBluesScaleChords(scale, scaleType);
+    // Pentatonic scales (5-note scales) - CHECK AFTER BLUES
+    console.log('Checking pentatonic conditions:');
+    console.log('scaleType === "major-pentatonic":', scaleType === 'major-pentatonic');
+    console.log('scaleType === "minor-pentatonic":', scaleType === 'minor-pentatonic');
+    console.log('scaleType === "pentatonic":', scaleType === 'pentatonic');
+    console.log('scaleType.includes("pentatonic"):', scaleType.includes('pentatonic'));
+    console.log('scale && scale.length === 5:', scale && scale.length === 5);
+    
+    if (scaleType === 'major-pentatonic' || scaleType === 'minor-pentatonic' || scaleType === 'pentatonic' ||
+        scaleType.includes('pentatonic') || (scale && scale.length === 5)) {
+        console.log('Detected pentatonic scale, calling getPentatonicScaleChords');
+        const result = getPentatonicScaleChords(scale, scaleType);
+        console.log('getPentatonicScaleChords returned:', result);
+        return result;
+    }
+    
+    // Augmented scales (6-note symmetrical scales)
+    if (scaleType === 'augmented' || scaleType.includes('augmented') || 
+        (scale && scale.length === 6 && isAugmentedScale(scale))) {
+        console.log('Detected augmented scale, calling getAugmentedScaleChords');
+        return getAugmentedScaleChords(scale);
+    }
+    
+    // Chromatic scale (12-note scale)
+    if (scaleType === 'chromatic' || scaleType.includes('chromatic') || 
+        (scale && scale.length === 12)) {
+        console.log('Detected chromatic scale, calling getChromaticScaleChords');
+        return getChromaticScaleChords(scale);
     }
     
     // Return null for scales that should use traditional analysis
@@ -1550,205 +1590,434 @@ function isWholeToneScale(scale) {
 }
 
 function getDiminishedScaleChords(scale) {
+    console.log('getDiminishedScaleChords called with scale:', scale);
+    
     const root = scale[0];
+    
+    // Diminished scale has 8 notes, alternating whole-half or half-whole steps
+    // This creates specific chord patterns
     
     return {
         triads: [
             {
-                type: 'Diminished Triads',
-                description: 'Four diminished triads, each a minor 3rd apart',
-                chords: [
-                    `${root}°`, `${scale[2]}°`, `${scale[4]}°`, `${scale[6]}°`
-                ]
+                type: 'Diminished Triads (Built from Scale)',
+                description: 'Four diminished triads, each a minor 3rd apart - built using scale notes',
+                chords: scale.length >= 7 ? [
+                    `${scale[0]}°`, `${scale[2]}°`, `${scale[4]}°`, `${scale[6]}°`
+                ] : [`${scale[0]}°`, `${scale[2]}°`]
             },
             {
-                type: 'Major Triads', 
-                description: 'Four major triads, each a minor 3rd apart',
-                chords: [
+                type: 'Major Triads (Built from Scale)', 
+                description: 'Four major triads, each a minor 3rd apart - built using scale notes',
+                chords: scale.length >= 8 ? [
                     `${scale[1]}`, `${scale[3]}`, `${scale[5]}`, `${scale[7] || scale[0]}`
-                ]
+                ] : [`${scale[1]}`, `${scale[3] || scale[1]}`]
             }
         ],
         sevenths: [
             {
-                type: 'Diminished 7th Chords',
-                description: 'The signature chord - fully diminished seventh',
-                chords: [`${root}°7`],
+                type: 'Diminished 7th Chords (Built from Scale)',
+                description: 'Fully diminished seventh chords using scale notes',
+                chords: scale.length >= 7 ? [
+                    `${scale[0]}°7`, `${scale[2]}°7`, `${scale[4]}°7`, `${scale[6]}°7`
+                ] : [`${scale[0]}°7`],
                 emphasis: true
             },
             {
-                type: 'Dominant 7♭9 Chords',
-                description: 'Extremely common in jazz improvisation',
-                chords: [`${scale[1]}7♭9`, `${scale[3]}7♭9`, `${scale[5]}7♭9`]
-            },
-            {
-                type: 'Dominant 7♯9♯11 Chords',
-                description: 'Advanced jazz harmony - altered dominants',
-                chords: [`${scale[1]}7♯9♯11`]
-            },
-            {
-                type: 'Minor 6 Chords',
-                description: 'Found within the scale structure',
-                chords: [`${scale[2]}m6`, `${scale[6]}m6`]
+                type: 'Dominant 7♭9 Chords (Built from Scale)',
+                description: 'Dominant 7♭9 chords built from scale notes',
+                chords: scale.length >= 8 ? [
+                    `${scale[1]}7♭9`, `${scale[3]}7♭9`, `${scale[5]}7♭9`, `${scale[7] || scale[0]}7♭9`
+                ] : [`${scale[1]}7♭9`]
             }
         ]
     };
 }
 
+// Helper function to build chords using only notes from the scale
+function buildChordsFromScale(scale) {
+    const scaleNotes = [...scale];
+    const chords = [];
+    
+    // Build triads using scale notes only
+    for (let i = 0; i < scaleNotes.length; i++) {
+        const root = scaleNotes[i];
+        
+        // Try to build triads by stacking thirds within the scale
+        for (let j = i + 1; j < scaleNotes.length; j++) {
+            for (let k = j + 1; k < scaleNotes.length; k++) {
+                const third = scaleNotes[j];
+                const fifth = scaleNotes[k];
+                
+                // Check if this forms a reasonable triad interval
+                const rootToThird = getIntervalBetweenNotes(root, third);
+                const rootToFifth = getIntervalBetweenNotes(root, fifth);
+                
+                // Accept major/minor thirds (3-4 semitones) and reasonable fifths (6-8 semitones)
+                if ((rootToThird >= 3 && rootToThird <= 4) && (rootToFifth >= 6 && rootToFifth <= 8)) {
+                    const chordType = rootToThird === 3 ? 'm' : '';
+                    chords.push({
+                        root: root,
+                        chord: `${root}${chordType}`,
+                        notes: [root, third, fifth],
+                        type: 'triad'
+                    });
+                }
+            }
+        }
+        
+        // Always include power chords (root + fifth)
+        for (let j = i + 1; j < scaleNotes.length; j++) {
+            const fifth = scaleNotes[j];
+            const interval = getIntervalBetweenNotes(root, fifth);
+            if (interval >= 6 && interval <= 8) { // Perfect or augmented fifth
+                chords.push({
+                    root: root,
+                    chord: `${root}5`,
+                    notes: [root, fifth],
+                    type: 'power'
+                });
+                break; // Take first suitable fifth
+            }
+        }
+        
+        // Add suspended chords using scale notes
+        for (let j = i + 1; j < scaleNotes.length; j++) {
+            const second = scaleNotes[j];
+            const interval = getIntervalBetweenNotes(root, second);
+            if (interval === 2) { // Major second
+                chords.push({
+                    root: root,
+                    chord: `${root}sus2`,
+                    notes: [root, second],
+                    type: 'sus'
+                });
+            } else if (interval === 5) { // Perfect fourth
+                chords.push({
+                    root: root,
+                    chord: `${root}sus4`,
+                    notes: [root, second],
+                    type: 'sus'
+                });
+            }
+        }
+    }
+    
+    return chords;
+}
+
 function getPentatonicScaleChords(scale, scaleType) {
-    const root = scale[0];
+    console.log('getPentatonicScaleChords called with scale:', scale, 'scaleType:', scaleType);
+    
+    const availableChords = buildChordsFromScale(scale);
+    const triads = availableChords.filter(c => c.type === 'triad').map(c => c.chord);
+    const powerChords = availableChords.filter(c => c.type === 'power').map(c => c.chord);
+    const susChords = availableChords.filter(c => c.type === 'sus').map(c => c.chord);
     
     return {
-        triads: [
+        chords: [
             {
-                type: 'Basic Chords from Scale',
-                description: 'Fundamental chord types using only scale notes',
-                chords: [
-                    `${root}5`, `${scale[1]}5`, `${scale[4]}5`, // Power chords
-                    `${root}sus2`, `${root}sus4`, `${scale[1]}sus2`, `${scale[4]}sus4` // Suspended chords
-                ]
+                type: 'Power Chords (Built from Scale)',
+                description: 'Root and fifth intervals using only pentatonic scale notes',
+                chords: powerChords.slice(0, 3).sort()
             },
             {
-                type: 'Extended Chords',
-                description: 'Natural extensions from pentatonic intervals',
-                chords: [`${root}add9`, `${scale[2]}add9`]
-            }
-        ],
-        sevenths: [
+                type: 'Suspended Chords (Built from Scale)',
+                description: 'Sus2 and sus4 chords using only pentatonic scale notes',
+                chords: susChords.slice(0, 3).sort()
+            },
             {
-                type: 'Quartal Harmony',
-                description: 'Stacked 4th intervals characteristic of pentatonic',
-                chords: ['Quartal voicings'],
+                type: 'Available Triads (Built from Scale)',
+                description: 'Complete triads possible within the pentatonic scale notes',
+                chords: triads.length > 0 ? triads.slice(0, 2).sort() : ['Very limited - pentatonic avoids thirds'],
                 emphasis: true
             },
             {
-                type: 'Sus7 Chords',
-                description: 'Seventh chords with suspended intervals',
-                chords: [`${root}7sus4`, `${scale[4]}7sus2`]
+                type: 'Scale Applications',
+                description: scaleType.includes('minor') ? 
+                    'Works over: Am7, C7, F7, G7, Dm7 progressions' : 
+                    'Works over: Cmaj7, Am7, F6, G7sus4, Dm7 progressions',
+                chords: ['Use for melodic improvisation', 'Quartal harmony voicings']
             }
         ]
     };
 }
 
 function getWholeToneScaleChords(scale) {
-    const root = scale[0];
+    console.log('getWholeToneScaleChords called with scale:', scale);
+    
+    // Whole tone scale creates augmented triads naturally
+    const augmentedChords = [];
+    for (let i = 0; i < Math.min(3, scale.length - 2); i++) {
+        augmentedChords.push(`${scale[i]}+`);
+    }
+    
+    const availableChords = buildChordsFromScale(scale);
+    const powerChords = availableChords.filter(c => c.type === 'power').map(c => c.chord);
     
     return {
-        triads: [
+        chords: [
             {
-                type: 'Augmented Triads',
-                description: 'All triads are augmented due to whole-tone structure',
-                chords: [`${root}+`, `${scale[1]}+`, `${scale[2]}+`]
-            }
-        ],
-        sevenths: [
+                type: 'Power Chords (Built from Scale)',
+                description: 'Limited power chord options from whole-tone scale',
+                chords: powerChords.slice(0, 2).sort()
+            },
             {
-                type: 'Augmented Major 7th',
-                description: 'The characteristic seventh chord',
-                chords: [`${root}+maj7`],
+                type: 'Augmented Triads (Built from Scale)',
+                description: 'All triads are augmented due to whole-tone intervals in scale',
+                chords: augmentedChords.sort()
+            },
+            {
+                type: 'Augmented Major 7th (Built from Scale)',
+                description: 'Characteristic seventh chord using whole-tone scale notes',
+                chords: [`${scale[0]}+maj7`],
                 emphasis: true
             },
             {
-                type: 'Dominant 7♯11',
-                description: 'Altered dominant with sharp eleven',
-                chords: [`${root}7♯11`]
+                type: 'Scale Applications',
+                description: 'Works over: C+, C7♯11, C7♯5, altered dominants',
+                chords: ['Use for impressionist harmony', 'Creates floating, unresolved quality']
             }
         ]
     };
 }
 
 function getBluesScaleChords(scale, scaleType) {
-    const root = scale[0];
-    const isMinorBlues = scaleType.includes('minor');
+    console.log('getBluesScaleChords called with scale:', scale, 'scaleType:', scaleType);
+    
+    const availableChords = buildChordsFromScale(scale);
+    const triads = availableChords.filter(c => c.type === 'triad').map(c => c.chord);
+    const powerChords = availableChords.filter(c => c.type === 'power').map(c => c.chord);
+    const susChords = availableChords.filter(c => c.type === 'sus').map(c => c.chord);
+    
+    const isMinorBlues = scaleType.includes('minor') || scale.length === 6;
     
     return {
-        triads: [
+        chords: [
             {
-                type: isMinorBlues ? 'Minor Triads' : 'Major Triads',
-                description: 'Basic triads with blue note inflections',
-                chords: isMinorBlues ? [`${root}m`, `${scale[3]}`, `${scale[4]}`] : [`${root}`, `${scale[3]}m`, `${scale[4]}`]
-            }
-        ],
-        sevenths: [
+                type: 'Power Chords (Built from Scale)',
+                description: 'Essential blues harmony using only blues scale notes',
+                chords: powerChords.slice(0, 3).sort()
+            },
             {
-                type: 'Dominant 7th Chords',
-                description: 'The backbone of blues harmony',
-                chords: [`${root}7`, `${scale[3]}7`, `${scale[4]}7`],
+                type: 'Suspended Chords (Built from Scale)',
+                description: 'Sus chords using only blues scale notes',
+                chords: susChords.slice(0, 2).sort(),
                 emphasis: true
             },
             {
-                type: 'Minor 7th Chords',
-                description: 'Common in minor blues progressions',
-                chords: [`${root}m7`, `${scale[2]}m7`]
+                type: 'Available Triads (Built from Scale)',
+                description: 'Limited triads possible from blues scale notes',
+                chords: triads.length > 0 ? triads.slice(0, 2).sort() : ['Very limited - use power chords instead']
+            },
+            {
+                type: 'Scale Applications',
+                description: isMinorBlues ? 
+                    'Works over: C7, F7, G7 (12-bar blues), Am7, Dm7' : 
+                    'Works over: Cmaj7, C7, F7, G7sus4, Am7',
+                chords: ['Use for blues improvisation', 'Creates blue note tensions']
             }
         ]
     };
 }
 
-function getScaleApplications(scaleType) {
-    // Return HTML content for scale applications instead of object structure
+function getDiminishedScaleChords(scale) {
+    console.log('getDiminishedScaleChords called with scale:', scale);
     
-    const applications = {
-        'diminished': {
-            worksOver: ['Any dominant 7th chord', 'C7, Eb7, F#7, A7 (diminished cycle)', 'Altered dominants'],
-            commonIn: ['Jazz improvisation', 'Classical harmony', 'Transition passages'],
-            examples: ['Use over V7 chords in ii-V-I progressions', 'Passing tones between chord changes']
-        },
+    const root = scale[0];
+    
+    // Diminished scale has 8 notes, alternating whole-half or half-whole steps
+    // This creates specific chord patterns
+    
+    const diminishedTriads = scale.length >= 7 ? [
+        `${scale[0]}°`, `${scale[2]}°`, `${scale[4]}°`, `${scale[6]}°`
+    ] : [`${scale[0]}°`, `${scale[2]}°`];
+    
+    const majorTriads = scale.length >= 8 ? [
+        `${scale[1]}`, `${scale[3]}`, `${scale[5]}`, `${scale[7] || scale[0]}`
+    ] : [`${scale[1]}`, `${scale[3] || scale[1]}`];
+    
+    const diminished7ths = scale.length >= 7 ? [
+        `${scale[0]}°7`, `${scale[2]}°7`, `${scale[4]}°7`, `${scale[6]}°7`
+    ] : [`${scale[0]}°7`];
+    
+    const dominant7b9s = scale.length >= 8 ? [
+        `${scale[1]}7♭9`, `${scale[3]}7♭9`, `${scale[5]}7♭9`, `${scale[7] || scale[0]}7♭9`
+    ] : [`${scale[1]}7♭9`];
+    
+    return {
+        chords: [
+            {
+                type: 'Diminished Triads (Built from Scale)',
+                description: 'Four diminished triads, each a minor 3rd apart - built using scale notes',
+                chords: diminishedTriads.sort()
+            },
+            {
+                type: 'Major Triads (Built from Scale)', 
+                description: 'Four major triads, each a minor 3rd apart - built using scale notes',
+                chords: majorTriads.sort()
+            },
+            {
+                type: 'Diminished 7th Chords (Built from Scale)',
+                description: 'Fully diminished seventh chords using scale notes',
+                chords: diminished7ths.sort(),
+                emphasis: true
+            },
+            {
+                type: 'Dominant 7♭9 Chords (Built from Scale)',
+                description: 'Dominant 7♭9 chords built from scale notes',
+                chords: dominant7b9s.sort()
+            }
+        ]
+    };
+}
+
+function getAugmentedScaleChords(scale) {
+    console.log('getAugmentedScaleChords called with scale:', scale);
+    
+    const availableChords = buildChordsFromScale(scale);
+    const triads = availableChords.filter(c => c.type === 'triad').map(c => c.chord);
+    const powerChords = availableChords.filter(c => c.type === 'power').map(c => c.chord);
+    
+    // Augmented scale creates augmented triads
+    const augmentedChords = [];
+    for (let i = 0; i < Math.min(2, scale.length - 2); i += 2) {
+        augmentedChords.push(`${scale[i]}+`);
+    }
+    
+    return {
+        chords: [
+            {
+                type: 'Power Chords (Built from Scale)',
+                description: 'Power chords using augmented scale intervals',
+                chords: powerChords.slice(0, 2).sort(),
+                emphasis: true
+            },
+            {
+                type: 'Augmented Triads (Built from Scale)',
+                description: 'Augmented triads built using augmented scale notes',
+                chords: augmentedChords.sort()
+            },
+            {
+                type: 'Available Triads (Built from Scale)',
+                description: 'Other triads possible within the augmented scale notes',
+                chords: triads.length > 0 ? triads.slice(0, 2).sort() : ['Limited - augmented intervals dominate']
+            },
+            {
+                type: 'Scale Applications',
+                description: 'Works over: C+, C+maj7, altered dominants with ♯5',
+                chords: ['Use for augmented harmony', 'Creates symmetrical intervals']
+            }
+        ]
+    };
+}
+
+function getChromaticScaleChords(scale) {
+    console.log('getChromaticScaleChords called with scale:', scale);
+    
+    const availableChords = buildChordsFromScale(scale);
+    const triads = availableChords.filter(c => c.type === 'triad').map(c => c.chord);
+    const powerChords = availableChords.filter(c => c.type === 'power').map(c => c.chord);
+    const susChords = availableChords.filter(c => c.type === 'sus').map(c => c.chord);
+    
+    return {
+        chords: [
+            {
+                type: 'Power Chords (Built from Scale)',
+                description: 'Power chords using chromatic scale intervals',
+                chords: powerChords.slice(0, 4).sort()
+            },
+            {
+                type: 'Suspended Chords (Built from Scale)',
+                description: 'Various suspended chord options from chromatic notes',
+                chords: susChords.slice(0, 4).sort(),
+                emphasis: true
+            },
+            {
+                type: 'All Available Triads (Built from Scale)',
+                description: 'Multiple triad types available from chromatic scale notes',
+                chords: triads.slice(0, 6).sort()
+            },
+            {
+                type: 'Scale Applications',
+                description: 'Works over: Any chord - use for chromatic passing tones',
+                chords: ['Use for voice leading', 'Connects any harmony to any other']
+            }
+        ]
+    };
+}
+
+function isAugmentedScale(scale) {
+    if (!scale || scale.length !== 6) return false;
+    
+    // Check if the scale follows the augmented pattern: 1-3-1-3-1-3 (minor 3rd, minor 3rd pattern)
+    const noteToIndex = (note) => {
+        const cleanNote = note.replace(/[♯♭#b]/g, match => {
+            return match === '♯' || match === '#' ? '#' : 'b';
+        });
         
-        'pentatonic-major': {
-            worksOver: ['Cmaj7', 'Am7', 'F6', 'G7sus4', 'Dm7'],
-            commonIn: ['Folk music', 'Rock solos', 'Country music', 'Celtic music'],
-            examples: ['Guitar solos over major progressions', 'Vocal melodies in folk songs']
-        },
-        
-        'pentatonic-minor': {
-            worksOver: ['Am7', 'C7', 'F7', 'G7', 'Dm7'],
-            commonIn: ['Blues', 'Rock', 'Jazz fusion', 'World music'],
-            examples: ['Blues guitar solos', 'Rock lead lines', 'Jazz-rock fusion']
-        },
-        
-        'blues': {
-            worksOver: ['12-bar blues progression', 'I7-IV7-V7', 'Minor blues changes'],
-            commonIn: ['Blues', 'Jazz', 'Rock', 'Soul', 'R&B'],
-            examples: ['Classic blues progressions', 'Jazz blues heads', 'Rock power ballads']
-        },
-        
-        'whole-tone': {
-            worksOver: ['Augmented chords', 'Dominant 7♯11', 'Impressionist harmony'],
-            commonIn: ['Impressionist classical', 'Jazz ballads', 'Film scoring'],
-            examples: ['Debussy compositions', 'Jazz standards with augmented harmony']
-        }
+        const noteMap = {
+            'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4,
+            'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9,
+            'A#': 10, 'Bb': 10, 'B': 11,
+            'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
+        };
+        return noteMap[cleanNote] !== undefined ? noteMap[cleanNote] : 0;
     };
     
-    // Check all possible scale type variations
-    let scaleData = applications[scaleType];
-    if (!scaleData) {
-        // Try alternative formats
-        if (scaleType.includes('pentatonic')) {
-            scaleData = scaleType.includes('minor') ? applications['pentatonic-minor'] : applications['pentatonic-major'];
-        } else if (scaleType.includes('whole')) {
-            scaleData = applications['whole-tone'];
-        } else if (scaleType.includes('blues')) {
-            scaleData = applications['blues'];
-        } else if (scaleType.includes('diminished')) {
-            scaleData = applications['diminished'];
+    const expectedPattern = [1, 3, 1, 3, 1, 3]; // Augmented scale pattern
+    
+    for (let i = 0; i < scale.length - 1; i++) {
+        const currentNote = noteToIndex(scale[i]);
+        const nextNote = noteToIndex(scale[i + 1]);
+        const interval = (nextNote - currentNote + 12) % 12;
+        
+        if (interval !== expectedPattern[i]) {
+            return false;
         }
     }
     
-    if (!scaleData) return null;
+    return true;
+}
+
+function getAugmentedScaleChords(scale) {
+    console.log('getAugmentedScaleChords called with scale:', scale);
     
-    // Return formatted HTML content
-    return `
-        <div class="application-item">
-            <strong>Works over:</strong> ${scaleData.worksOver.join(', ')}
-        </div>
-        <div class="application-item">
-            <strong>Common in:</strong> ${scaleData.commonIn.join(', ')}
-        </div>
-        <div class="application-item">
-            <strong>Examples:</strong> ${scaleData.examples.join(', ')}
-        </div>
-    `;
+    const availableChords = buildChordsFromScale(scale);
+    const triads = availableChords.filter(c => c.type === 'triad').map(c => c.chord);
+    const powerChords = availableChords.filter(c => c.type === 'power').map(c => c.chord);
+    
+    // Augmented scale creates augmented triads
+    const augmentedChords = [];
+    for (let i = 0; i < Math.min(2, scale.length - 2); i += 2) {
+        augmentedChords.push(`${scale[i]}+`);
+    }
+    
+    return {
+        chords: [
+            {
+                type: 'Power Chords (Built from Scale)',
+                description: 'Power chords using augmented scale intervals',
+                chords: powerChords.slice(0, 2).sort(),
+                emphasis: true
+            },
+            {
+                type: 'Augmented Triads (Built from Scale)',
+                description: 'Augmented triads built using augmented scale notes',
+                chords: augmentedChords.sort()
+            },
+            {
+                type: 'Available Triads (Built from Scale)',
+                description: 'Other triads possible within the augmented scale notes',
+                chords: triads.length > 0 ? triads.slice(0, 2).sort() : ['Limited - augmented intervals dominate']
+            },
+            {
+                type: 'Scale Applications',
+                description: 'Works over: C+, C+maj7, altered dominants with ♯5',
+                chords: ['Use for augmented harmony', 'Creates symmetrical intervals']
+            }
+        ]
+    };
 }
 
 // Export all functions
@@ -1781,9 +2050,12 @@ window.MusicTheory = {
     isStandardSeventhChord,
     getIntervalName,
     getCharacteristicChords,
+    buildChordsFromScale,
     getDiminishedScaleChords,
     getPentatonicScaleChords,
     getWholeToneScaleChords,
     getBluesScaleChords,
-    getScaleApplications
-}; 
+    isAugmentedScale,
+    getAugmentedScaleChords,
+    getChromaticScaleChords
+};
