@@ -37,9 +37,9 @@ body {
 
 /* === MAIN CONTAINER === */
 .container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 1rem;
+    max-width: none;
+    margin: 0;
+    padding: 0.5rem;
 }
 
 /* === HEADER === */
@@ -51,6 +51,10 @@ body {
     color: white;
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 2rem;
 }
 
 .header h1 {
@@ -75,6 +79,10 @@ body {
     border-radius: 16px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(10px);
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 2rem;
 }
 
 .search-container {
@@ -94,6 +102,7 @@ body {
 
 .search-input-container {
     position: relative;
+    z-index: 10000;
 }
 
 #mode-search {
@@ -125,13 +134,13 @@ body {
     left: 0;
     right: 0;
     background: white;
-    border: 2px solid var(--border-color);
+    border: 1px solid #d1d5db;
     border-top: none;
-    border-radius: 0 0 12px 12px;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     max-height: 300px;
     overflow-y: auto;
-    z-index: 1000;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    z-index: 10001 !important;
 }
 
 .search-suggestions.hidden {
@@ -194,6 +203,10 @@ body {
     border-radius: 16px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(10px);
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 2.5rem;
 }
 
 .key-controls {
@@ -203,6 +216,9 @@ body {
     gap: 1.5rem;
     margin-bottom: 1rem;
     flex-wrap: wrap;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .key-selector-wrapper {
@@ -495,168 +511,189 @@ body {
 /* === RESPONSIVE DESIGN === */
 @media (max-width: 768px) {
     .container {
-        padding: 0.5rem;
+        padding: 0.25rem;
     }
-    
+
+    .scale-content {
+        padding: 1rem;
+    }
+
+    .fretboard-section {
+        padding: 1rem;
+    }
+
+    .scale-section {
+        padding: 1rem;
+    }
+
     .header {
-        margin-bottom: 1.5rem;
         padding: 1.5rem 1rem;
+        margin-bottom: 1.5rem;
     }
-    
+
     .header h1 {
         font-size: 2rem;
     }
-    
+
     .header h1::before {
         font-size: 1.5rem;
     }
-    
+
     .header .subtitle {
         font-size: 1rem;
     }
-    
+
     .key-selector-section {
-        margin-bottom: 2rem;
-        padding: 1.25rem;
-        background: rgba(255, 255, 255, 0.98);
+        padding: 1rem;
+        margin-bottom: 1.5rem;
     }
-    
+
     .key-controls {
         flex-direction: column;
         gap: 1rem;
     }
-    
+
     .key-selector-wrapper label {
-        min-width: auto;
+        font-size: 0.9rem;
     }
-    
+
     .key-selector {
-        min-width: 120px;
+        font-size: 1rem;
+        padding: 0.75rem;
+    }
+
+    .sharp-flat-toggle {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .parent-scale-section {
+        padding: 1rem;
+    }
+
+    .parent-scale-title {
         font-size: 1rem;
     }
-    
-    .sharp-flat-toggle {
-        justify-content: center;
-        margin-top: 0.5rem;
-    }
-    
-    .parent-scale-section {
-        margin-bottom: 0.75rem;
-    }
-    
-    .parent-scale-title {
-        font-size: 0.6rem;
-    }
-    
+
     .parent-scale-display {
-        font-size: 0.6rem;
-        padding: 0.1rem 0.3rem;
-    }
-    
-    .category-tabs {
+        font-size: 1.1rem;
         padding: 0.75rem;
-        gap: 0.25rem;
-        margin-bottom: 1rem;
-        background: rgba(255, 255, 255, 0.98);
     }
-    
+
+    .category-tabs {
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0 1rem;
+    }
+
     .category-tab {
-        padding: 0.5rem 1rem;
-        font-size: 0.85rem;
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
     }
-    
+
     .mode-grid {
         grid-template-columns: 1fr;
         gap: 1rem;
     }
-    
+
     .search-section {
+        padding: 1rem;
         margin-bottom: 1.5rem;
-        padding: 1.25rem;
-        background: rgba(255, 255, 255, 0.98);
+    }
+
+    .scale-controls {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
     }
 }
 
 @media (max-width: 480px) {
     .container {
-        padding: 0.25rem;
+        padding: 0.125rem;
     }
-    
+
+    .scale-content {
+        padding: 0.75rem;
+    }
+
+    .fretboard-section {
+        padding: 0.75rem;
+    }
+
+    .scale-section {
+        padding: 0.75rem;
+    }
+
     .header {
+        padding: 1rem;
         margin-bottom: 1rem;
-        padding: 1.25rem 0.75rem;
-        border-radius: 12px;
     }
-    
+
     .header h1 {
         font-size: 1.75rem;
     }
-    
+
     .header h1::before {
         font-size: 1.25rem;
     }
-    
+
     .header .subtitle {
-        font-size: 0.95rem;
+        font-size: 0.9rem;
     }
-    
+
     .key-selector-section {
-        margin-bottom: 1.5rem;
-        padding: 1rem;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.98);
+        padding: 0.75rem;
+        margin-bottom: 1rem;
     }
-    
+
     .key-controls {
         gap: 0.75rem;
     }
-    
+
     .key-selector-wrapper label {
+        font-size: 0.85rem;
+    }
+
+    .key-selector {
+        font-size: 0.9rem;
+        padding: 0.625rem;
+    }
+
+    .sharp-flat-toggle {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+
+    .parent-scale-section {
+        padding: 0.75rem;
+    }
+
+    .parent-scale-title {
         font-size: 0.9rem;
     }
-    
-    .key-selector {
-        min-width: 100px;
-        font-size: 0.95rem;
-        padding: 0.4rem 0.6rem;
-    }
-    
-    .sharp-flat-toggle {
-        gap: 0.25rem;
-    }
-    
-    .parent-scale-section {
-        margin-bottom: 0.5rem;
-    }
-    
-    .parent-scale-title {
-        font-size: 0.55rem;
-    }
-    
+
     .parent-scale-display {
-        font-size: 0.55rem;
-        padding: 0.08rem 0.25rem;
+        font-size: 1rem;
+        padding: 0.625rem;
     }
-    
+
     .category-tabs {
-        padding: 0.5rem;
-        gap: 0.2rem;
-        margin-bottom: 0.75rem;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.98);
+        padding: 0 0.75rem;
     }
-    
+
     .category-tab {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.8rem;
-        border-radius: 8px;
+        padding: 0.625rem 0.75rem;
+        font-size: 0.85rem;
     }
-    
+
     .search-section {
+        padding: 0.75rem;
         margin-bottom: 1rem;
-        padding: 1rem;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.98);
+    }
+
+    .scale-controls {
+        padding: 0.75rem;
+        margin-bottom: 1rem;
     }
 }
 
@@ -2358,22 +2395,26 @@ body {
 /* Scale Controls */
 .scale-controls {
     display: flex;
+    gap: 1rem;
+    align-items: flex-end;
     flex-wrap: wrap;
-    gap: 20px;
-    margin-bottom: 30px;
-    align-items: end;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .control-group {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    align-items: flex-start;
 }
 
 .control-group label {
     font-weight: 600;
     color: #2c3e50;
     font-size: 0.9rem;
+    margin-bottom: 0;
 }
 
 .scale-controls select {
@@ -2387,6 +2428,7 @@ body {
     transition: all 0.2s ease;
     outline: none;
     min-width: 120px;
+    height: 44px;
 }
 
 .scale-controls select:focus {
@@ -2406,6 +2448,7 @@ body {
 .color-toggle-container {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     padding: 10px 15px;
     background: linear-gradient(135deg, #E8743B, #DC6C27);
@@ -2414,6 +2457,12 @@ body {
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
+    min-width: 120px;
+    height: 44px;
+    border: 2px solid transparent;
+    font-size: 0.95rem;
+    margin-top: 0;
+    align-self: flex-end;
 }
 
 .color-toggle-container:hover {
@@ -2558,11 +2607,14 @@ body {
 .scale-header {
     text-align: center;
     margin-bottom: 25px;
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--primary-orange) 0%, var(--warm-brown) 100%);
+    border-radius: 16px 16px 0 0;
 }
 
 .scale-title {
     display: flex;
-        flex-direction: column;
+    flex-direction: column;
     align-items: center;
     gap: 5px;
     margin: 0;
@@ -2584,25 +2636,32 @@ body {
 
 /* Scale Card */
 .scale-card {
-    background: linear-gradient(135deg, #E8743B 0%, #DC6C27 100%);
-    border-radius: 15px;
-    padding: 30px;
-    margin-bottom: 30px;
-    box-shadow: 0 8px 25px rgba(232, 116, 59, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .scale-content {
-    display: flex;
-        flex-direction: column;
-    gap: 25px;
+    padding: 2rem;
+}
+
+.fretboard-section {
+    padding: 2rem;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .scale-section {
-    padding: 20px;
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.scale-section:last-child {
+    border-bottom: none;
 }
 
 .scale-section h3 {
