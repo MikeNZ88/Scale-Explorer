@@ -2190,12 +2190,15 @@ async function playScaleSequence(notes, ascending, section) {
     const noteDuration = 0.6; // Duration for each note
     let octaveElement = null;
     
+    // Calculate proper octaves for smooth scale progression
+    const notesWithOctaves = calculateScaleOctaves(playOrder, ascending);
+    
     for (let i = 0; i < playOrder.length; i++) {
         const note = playOrder[i];
         const isOctave = i === (ascending ? playOrder.length - 1 : 0);
         
-        // Add octave number for proper pitch
-        const noteWithOctave = isOctave ? `${note}5` : `${note}4`;
+        // Use the calculated octave for proper pitch progression
+        const noteWithOctave = notesWithOctaves[i];
         
         // Show octave visual at the same time as highlighting (no delay)
         if (isOctave && !octaveElement) {
@@ -2221,6 +2224,51 @@ async function playScaleSequence(notes, ascending, section) {
     if (octaveElement) {
         setTimeout(() => removeOctaveVisual(section), 500);
     }
+}
+
+// Helper function to calculate proper octaves for smooth scale progression
+function calculateScaleOctaves(notes, ascending) {
+    if (!notes || notes.length === 0) return [];
+    
+    // Note to semitone mapping for octave calculation
+    const noteToSemitone = {
+        'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4,
+        'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9,
+        'A#': 10, 'Bb': 10, 'B': 11, 'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
+    };
+    
+    const result = [];
+    let currentOctave = 4; // Start in 4th octave
+    let lastSemitone = -1;
+    
+    for (let i = 0; i < notes.length; i++) {
+        const note = notes[i];
+        const semitone = noteToSemitone[note] !== undefined ? noteToSemitone[note] : 0;
+        
+        if (i === 0) {
+            // First note - always start in 4th octave
+            result.push(`${note}${currentOctave}`);
+            lastSemitone = semitone;
+        } else {
+            // Check if we need to go to next octave
+            if (ascending) {
+                // For ascending: if current note is lower than previous, we've wrapped around
+                if (semitone < lastSemitone) {
+                    currentOctave++;
+                }
+            } else {
+                // For descending: if current note is higher than previous, we've wrapped around
+                if (semitone > lastSemitone) {
+                    currentOctave--;
+                }
+            }
+            
+            result.push(`${note}${currentOctave}`);
+            lastSemitone = semitone;
+        }
+    }
+    
+    return result;
 }
 
 function addOctaveVisual(notes, octaveNote, section) {
