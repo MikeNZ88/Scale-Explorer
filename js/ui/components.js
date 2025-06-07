@@ -896,7 +896,7 @@ function createRelatedModes(currentMode, category, currentKey) {
         // Japanese Pentatonic scales (independent scales, not modes)
         'hirojoshi-pentatonic': 0, 'iwato-scale': 0,
         // Blues scales
-        'blues-major': 0, 'blues-minor': 3,
+        'blues-major': 0, 'blues-minor': 9,
         // Other scales
         'whole-tone': 0, 'chromatic': 0, 'augmented': 0, 'bebop-major': 0
     };
@@ -938,6 +938,53 @@ function createRelatedModes(currentMode, category, currentKey) {
     
     // Store the spelling convention
     window.modalSystemSpelling = spellingConvention;
+    
+    // Special handling for blues scales - they have different formulas but share the same notes
+    if (category === 'blues-scales' || category === 'blues-modes') {
+        // For blues scales, calculate each scale independently using its own formula
+        // but ensure they use the same parent root
+        
+        // Create mode buttons for each blues scale
+        categoryData.modes.forEach((mode, index) => {
+            const modeData = MusicConstants.modeNumbers[mode];
+            if (!modeData) return;
+            
+            // Calculate the root for this mode based on the offset
+            const modeOffset = modeOffsets[mode] || 0;
+            const modeRootIndex = (parentRootIndex + modeOffset) % 12;
+            const modeKey = getConsistentNoteSpelling(modeRootIndex, spellingConvention);
+            
+            const button = document.createElement('button');
+            button.className = `mode-button ${mode === currentMode ? 'active' : ''}`;
+            button.innerHTML = `
+                <span class="mode-number">${modeData.number}</span>
+                <span class="mode-name">${modeKey} ${modeData.properName}</span>
+            `;
+            
+            // Add click handler to change to this mode
+            button.addEventListener('click', () => {
+                // Update the app state to use this mode and key
+                AppController.setState({
+                    key: modeKey,
+                    category: category,
+                    mode: mode
+                });
+            });
+            
+            modeButtonsContainer.appendChild(button);
+        });
+        
+        // Display parent scale information
+        const parentScaleName = getParentScaleName(category, finalParentRoot);
+        const parentInfo = `
+            <div class="parent-scale-info">
+                <strong>These blues scales share the same notes:</strong> ${parentScaleName}
+                <br><small>Blues Major and Blues Minor contain the same notes, starting from different degrees</small>
+            </div>
+        `;
+        parentScaleInfo.innerHTML = parentInfo;
+        return; // Exit early for blues scales
+    }
     
     // Special handling for whole tone scales
     if (category === 'whole-tone') {
@@ -1076,26 +1123,42 @@ function getConsistentNoteSpelling(noteIndex, spellingConvention) {
 
 // Helper function to convert enharmonic equivalents to proper spelling
 function getProperEnharmonicSpelling(note) {
-    // Map of enharmonic equivalents to their most common spelling
+    // Get the current spelling convention from the modal system
+    const spellingConvention = window.modalSystemSpelling || 'sharp';
+    
+    // Only convert truly problematic enharmonic equivalents, not standard sharp/flat pairs
     const enharmonicMap = {
         'B#': 'C',
-        'C#': 'C#',
-        'Db': 'Db', 
-        'D#': 'Eb',
-        'Eb': 'Eb',
         'E#': 'F',
         'Fb': 'E',
-        'F#': 'F#',
-        'Gb': 'Gb',
-        'G#': 'Ab',
-        'Ab': 'Ab',
-        'A#': 'Bb',
-        'Bb': 'Bb',
         'Cb': 'B'
     };
     
-    // Return the proper spelling if it exists in the map, otherwise return the original note
-    return enharmonicMap[note] || note;
+    // Check if it's a problematic enharmonic that should always be converted
+    if (enharmonicMap[note]) {
+        return enharmonicMap[note];
+    }
+    
+    // For standard sharp/flat pairs, respect the spelling convention
+    if (spellingConvention === 'flat') {
+        const sharpToFlat = {
+            'C#': 'Db',
+            'D#': 'Eb',
+            'F#': 'Gb',
+            'G#': 'Ab',
+            'A#': 'Bb'
+        };
+        return sharpToFlat[note] || note;
+    } else {
+        const flatToSharp = {
+            'Db': 'C#',
+            'Eb': 'D#',
+            'Gb': 'F#',
+            'Ab': 'G#',
+            'Bb': 'A#'
+        };
+        return flatToSharp[note] || note;
+    }
 }
 
 // Helper function to calculate scale with consistent enharmonic spelling
