@@ -951,14 +951,14 @@ body {
 }
 
 .toggle-btn {
-    background: #3b82f6;
+    background: #f97316;
     color: white;
-    border-color: #3b82f6;
+    border-color: #f97316;
 }
 
 .toggle-btn:hover {
-    background: #2563eb;
-    border-color: #2563eb;
+    background: #ea580c;
+    border-color: #ea580c;
 }
 
 .fret-range {
