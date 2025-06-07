@@ -114,11 +114,32 @@ function calculateScale(root, formula, scaleType = 'major') {
 function calculateScaleWithDegrees(root, formula, scaleType = 'major') {
     // Define the note names in order for proper scale degree calculation
     const noteNames = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-    const noteToIndex = {
-        'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11,
-        'C#': 1, 'Db': 1, 'D#': 3, 'Eb': 3, 'F#': 6, 'Gb': 6,
-        'G#': 8, 'Ab': 8, 'A#': 10, 'Bb': 10,
-        'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
+    
+    // Enhanced noteToIndex function that handles double accidentals
+    const noteToIndex = (note) => {
+        // Handle double accidentals first
+        if (note.includes('bb')) {
+            const naturalNote = note.replace('bb', '');
+            const naturalIndex = {
+                'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11
+            }[naturalNote];
+            return naturalIndex !== undefined ? (naturalIndex - 2 + 12) % 12 : undefined;
+        } else if (note.includes('##')) {
+            const naturalNote = note.replace('##', '');
+            const naturalIndex = {
+                'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11
+            }[naturalNote];
+            return naturalIndex !== undefined ? (naturalIndex + 2) % 12 : undefined;
+        } else {
+            // Single accidental or natural
+            const singleAccidentalMap = {
+                'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11,
+                'C#': 1, 'Db': 1, 'D#': 3, 'Eb': 3, 'F#': 6, 'Gb': 6,
+                'G#': 8, 'Ab': 8, 'A#': 10, 'Bb': 10,
+                'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
+            };
+            return singleAccidentalMap[note];
+        }
     };
     
     // Find the root note's position in the note names array
@@ -130,7 +151,7 @@ function calculateScaleWithDegrees(root, formula, scaleType = 'major') {
     }
     
     // Get the chromatic index of the root
-    const rootChromaticIndex = noteToIndex[root];
+    const rootChromaticIndex = noteToIndex(root);
     if (rootChromaticIndex === undefined) {
         console.warn('Invalid root note:', root);
         return [];
@@ -156,7 +177,7 @@ function calculateScaleWithDegrees(root, formula, scaleType = 'major') {
         // Calculate which scale degree this should be (2nd, 3rd, 4th, etc.)
         const scaleDegreeIndex = (rootNoteIndex + i + 1) % 7;
         const baseNoteName = noteNames[scaleDegreeIndex];
-        const baseNoteChromatic = noteToIndex[baseNoteName];
+        const baseNoteChromatic = noteToIndex(baseNoteName);
         
         // Calculate the difference between where we are and where the base note is
         const chromaticDifference = (currentChromaticIndex - baseNoteChromatic + 12) % 12;
@@ -234,7 +255,7 @@ function calculatePentatonicScale(root, formula, rootNoteIndex, rootChromaticInd
         // Get the corresponding diatonic scale degree
         const scaleDegreeIndex = (rootNoteIndex + pentatonicDegreeMap[i + 1]) % 7;
         const baseNoteName = noteNames[scaleDegreeIndex];
-        const baseNoteChromatic = noteToIndex[baseNoteName];
+        const baseNoteChromatic = noteToIndex(baseNoteName);
         
         const chromaticDifference = (currentChromaticIndex - baseNoteChromatic + 12) % 12;
         
@@ -293,7 +314,7 @@ function calculateBluesScale(root, formula, rootNoteIndex, rootChromaticIndex, n
         if (degreeMap) {
             const scaleDegreeIndex = (rootNoteIndex + degreeMap[i + 1]) % 7;
             const baseNoteName = noteNames[scaleDegreeIndex];
-            const baseNoteChromatic = noteToIndex[baseNoteName];
+            const baseNoteChromatic = noteToIndex(baseNoteName);
             
             const chromaticDifference = (currentChromaticIndex - baseNoteChromatic + 12) % 12;
             
@@ -364,13 +385,29 @@ function getIntervals(notes, root) {
             return match === '♯' || match === '#' ? '#' : 'b';
         });
         
-        const noteMap = {
-            'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4,
-            'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9,
-            'A#': 10, 'Bb': 10, 'B': 11,
-            'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
-        };
-        return noteMap[cleanNote] !== undefined ? noteMap[cleanNote] : 0;
+        // Handle double accidentals
+        if (cleanNote.includes('bb')) {
+            const naturalNote = cleanNote.replace('bb', '');
+            const naturalIndex = {
+                'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11
+            }[naturalNote];
+            return naturalIndex !== undefined ? (naturalIndex - 2 + 12) % 12 : 0;
+        } else if (cleanNote.includes('##')) {
+            const naturalNote = cleanNote.replace('##', '');
+            const naturalIndex = {
+                'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11
+            }[naturalNote];
+            return naturalIndex !== undefined ? (naturalIndex + 2) % 12 : 0;
+        } else {
+            // Single accidental or natural
+            const noteMap = {
+                'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4,
+                'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9,
+                'A#': 10, 'Bb': 10, 'B': 11,
+                'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
+            };
+            return noteMap[cleanNote] !== undefined ? noteMap[cleanNote] : 0;
+        }
     }
     
     const rootIndex = noteToIndex(root);

@@ -114,6 +114,11 @@ function updateScale() {
         // Update mode information
         updateModeInfo(mode, category);
         
+        // Update audio controls with new scale and chords
+        if (window.audioControls) {
+            window.audioControls.updateScale(modeNotes, key, mode);
+        }
+        
     } catch (error) {
         console.error('Error updating scale:', error);
     }
@@ -251,15 +256,11 @@ function updateColorVisibility(visible) {
     
     intervals.forEach(interval => {
         if (visible) {
-            // Show original colors
+            // Show original colors using the consistent color scheme
             const intervalText = interval.textContent;
-            interval.style.backgroundColor = MusicTheory.getIntervalColor(intervalText);
-            
-            // Handle enharmonic equivalents
-            if (intervalText === '#5' || intervalText === 'b6') {
-                interval.style.backgroundColor = MusicConstants.intervalColors['b6'] || '#8E44AD';
-            } else if (intervalText === '#6' || intervalText === 'b7') {
-                interval.style.backgroundColor = MusicConstants.intervalColors['b7'] || '#7D3C98';
+            const color = MusicTheory.getIntervalColor(intervalText);
+            if (color) {
+                interval.style.backgroundColor = color;
             }
         } else {
             // Hide colors (neutral background)

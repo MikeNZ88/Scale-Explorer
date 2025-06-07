@@ -23,6 +23,15 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
         console.error('Search functionality not available');
     }
+    
+    // Initialize audio controls
+    if (window.AudioControls) {
+        window.audioControls = window.AudioControls;
+        window.audioControls.initialize();
+        console.log('Audio controls initialized');
+    } else {
+        console.error('AudioControls module not loaded');
+    }
 });
 
 // Legacy compatibility layer

@@ -22,12 +22,29 @@ let modalFretboardState = {
 
 // Helper function to convert note names to chromatic indices (handles both sharps and flats)
 function noteToIndex(note) {
-    const noteMap = {
-        'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4,
-        'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9,
-        'A#': 10, 'Bb': 10, 'B': 11
-    };
-    return noteMap[note] !== undefined ? noteMap[note] : -1;
+    // Handle double accidentals first
+    if (note.includes('bb')) {
+        const naturalNote = note.replace('bb', '');
+        const naturalIndex = {
+            'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11
+        }[naturalNote];
+        return naturalIndex !== undefined ? (naturalIndex - 2 + 12) % 12 : -1;
+    } else if (note.includes('##')) {
+        const naturalNote = note.replace('##', '');
+        const naturalIndex = {
+            'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11
+        }[naturalNote];
+        return naturalIndex !== undefined ? (naturalIndex + 2) % 12 : -1;
+    } else {
+        // Single accidental or natural
+        const noteMap = {
+            'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4,
+            'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9,
+            'A#': 10, 'Bb': 10, 'B': 11,
+            'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
+        };
+        return noteMap[note] !== undefined ? noteMap[note] : -1;
+    }
 }
 
 // Main fretboard rendering function
@@ -697,21 +714,49 @@ function displayNotes(notes) {
     
     notesContainer.innerHTML = '';
     
+    // Create play controls container
+    const playControlsContainer = document.createElement('div');
+    playControlsContainer.className = 'play-controls';
+    
+    // Create play button
+    const playButton = document.createElement('button');
+    playButton.className = 'play-btn';
+    playButton.textContent = '▶️ Play Scale';
+    playButton.setAttribute('data-section', 'notes');
+    
+    // Create direction toggle button
+    const directionButton = document.createElement('button');
+    directionButton.className = 'direction-btn';
+    directionButton.textContent = '→';
+    directionButton.setAttribute('data-direction', 'ascending');
+    directionButton.setAttribute('title', 'Ascending');
+    
+    playControlsContainer.appendChild(playButton);
+    playControlsContainer.appendChild(directionButton);
+    notesContainer.appendChild(playControlsContainer);
+    
+    // Create notes display container
+    const notesDisplay = document.createElement('div');
+    notesDisplay.className = 'notes-display';
+    
     notes.forEach((note, index) => {
         const noteElement = document.createElement('span');
         noteElement.className = 'note';
         noteElement.textContent = note;
+        noteElement.setAttribute('data-note', note);
         
         if (index === 0) {
             noteElement.classList.add('root-note');
         }
         
-        notesContainer.appendChild(noteElement);
-        
-        if (index < notes.length - 1) {
-            notesContainer.appendChild(document.createTextNode(' - '));
-        }
+        notesDisplay.appendChild(noteElement);
     });
+    
+    notesContainer.appendChild(notesDisplay);
+    
+    // Add event listeners
+    playButton.addEventListener('click', () => playScale(notes, 'notes'));
+    directionButton.addEventListener('click', () => toggleDirection(directionButton));
 }
 
 function displayIntervals(intervals) {
@@ -720,25 +765,27 @@ function displayIntervals(intervals) {
     
     intervalsContainer.innerHTML = '';
     
+    // Create intervals display container (no play controls here)
+    const intervalsDisplay = document.createElement('div');
+    intervalsDisplay.className = 'intervals-display';
+    
     intervals.forEach((interval, index) => {
         const intervalElement = document.createElement('span');
         intervalElement.className = 'interval';
         intervalElement.textContent = interval;
-        intervalElement.style.backgroundColor = MusicTheory.getIntervalColor(interval);
+        intervalElement.setAttribute('data-interval', interval);
+        intervalElement.setAttribute('data-index', index);
         
-        // Add consistent colors for enharmonic equivalents
-        if (interval === '#5' || interval === 'b6') {
-            intervalElement.style.backgroundColor = MusicConstants.intervalColors['b6'] || '#8E44AD';
-        } else if (interval === '#6' || interval === 'b7') {
-            intervalElement.style.backgroundColor = MusicConstants.intervalColors['b7'] || '#7D3C98';
+        // Set background color based on interval using the consistent color scheme
+        const color = MusicTheory.getIntervalColor(interval);
+        if (color) {
+            intervalElement.style.backgroundColor = color;
         }
         
-        intervalsContainer.appendChild(intervalElement);
-        
-        if (index < intervals.length - 1) {
-            intervalsContainer.appendChild(document.createTextNode(' - '));
-        }
+        intervalsDisplay.appendChild(intervalElement);
     });
+    
+    intervalsContainer.appendChild(intervalsDisplay);
 }
 
 function displayFormula(formula) {
@@ -1535,6 +1582,39 @@ function displayCharacteristicChords(scale, scaleType, characteristicChords) {
     // Display chords organized by type
     displayChordsFromScale(chordsList, characteristicChords);
     
+    // Update audio controls with characteristic chord data
+    if (window.audioControls && characteristicChords) {
+        // Convert characteristic chords to a format the audio controls can use
+        const audioChords = {
+            triads: [],
+            sevenths: [],
+            characteristic: characteristicChords
+        };
+        
+        // Extract chord names from characteristic chords structure
+        if (characteristicChords.triads) {
+            characteristicChords.triads.forEach(group => {
+                if (group.chords) {
+                    group.chords.forEach(chordName => {
+                        audioChords.triads.push({ name: chordName });
+                    });
+                }
+            });
+        }
+        
+        if (characteristicChords.sevenths) {
+            characteristicChords.sevenths.forEach(group => {
+                if (group.chords) {
+                    group.chords.forEach(chordName => {
+                        audioChords.sevenths.push({ name: chordName });
+                    });
+                }
+            });
+        }
+        
+        window.audioControls.updateChords(audioChords);
+    }
+    
     // Display scale applications
     displayScaleApplications(chordsList, scaleType);
 }
@@ -1768,6 +1848,14 @@ function displayTraditionalChords(scale, scaleType) {
     // Display triads by default
     displayChordType('triads', triads);
     
+    // Update audio controls with chord data
+    if (window.audioControls) {
+        window.audioControls.updateChords({
+            triads: triads,
+            sevenths: seventhChords
+        });
+    }
+    
     // Add event listeners for chord type buttons
     const chordButtons = document.querySelectorAll('.chord-type-btn');
     chordButtons.forEach(button => {
@@ -1780,8 +1868,16 @@ function displayTraditionalChords(scale, scaleType) {
             const chordType = e.target.dataset.type;
             if (chordType === 'triads') {
                 displayChordType('triads', triads);
+                // Update audio controls with triads
+                if (window.audioControls) {
+                    window.audioControls.updateChords(triads);
+                }
             } else if (chordType === 'sevenths') {
                 displayChordType('sevenths', seventhChords);
+                // Update audio controls with 7th chords
+                if (window.audioControls) {
+                    window.audioControls.updateChords(seventhChords);
+                }
             }
         });
     });
@@ -1829,7 +1925,12 @@ function displayChordType(type, chords) {
         `;
         
         // Add click handler for future chord playback or visualization
-        chordElement.addEventListener('click', () => {
+        chordElement.addEventListener('click', (e) => {
+            // Don't interfere with audio controls if they exist
+            if (window.audioControls && e.target.closest('.chord-item')) {
+                return; // Let audio controls handle it
+            }
+            
             console.log('Chord clicked:', chord);
             highlightChordOnFretboard(chord);
         });
@@ -1869,3 +1970,219 @@ window.UIComponents = {
     createRelatedModes,
     initializeSearch
 };
+
+// Scale playback functionality
+function toggleDirection(button) {
+    const currentDirection = button.getAttribute('data-direction');
+    let newDirection, newIcon, newTitle;
+    
+    switch (currentDirection) {
+        case 'ascending':
+            newDirection = 'descending';
+            newIcon = '←';
+            newTitle = 'Descending';
+            break;
+        case 'descending':
+            newDirection = 'both';
+            newIcon = '↔';
+            newTitle = 'Both (Ascending & Descending)';
+            break;
+        case 'both':
+            newDirection = 'ascending';
+            newIcon = '→';
+            newTitle = 'Ascending';
+            break;
+    }
+    
+    button.setAttribute('data-direction', newDirection);
+    button.innerHTML = newIcon;
+    button.setAttribute('title', newTitle);
+}
+
+async function playScale(data, section) {
+    console.log('Playing scale:', data, 'section:', section);
+    
+    // Get current scale info from AppController
+    const currentState = AppController.getCurrentState();
+    const { key } = currentState;
+    
+    // Always use the notes data for playback
+    let notes = data;
+    
+    if (!notes || notes.length === 0) {
+        console.error('No notes to play');
+        return;
+    }
+    
+    // Get direction from the button in the notes section
+    const notesContainer = document.querySelector('.notes');
+    const directionButton = notesContainer.querySelector('.direction-btn');
+    const direction = directionButton.getAttribute('data-direction');
+    
+    console.log('Playing direction:', direction);
+    
+    // Add octave note for playback (but don't show it yet)
+    const octaveNote = notes[0]; // Root note an octave higher
+    
+    try {
+        // Initialize audio engine if needed
+        if (!window.AudioEngine.isInitialized) {
+            await window.AudioEngine.initialize();
+        }
+        
+        // Play the scale based on direction
+        switch (direction) {
+            case 'ascending':
+                await playScaleSequence([...notes, octaveNote], true, section);
+                break;
+            case 'descending':
+                await playScaleSequence([...notes, octaveNote], false, section);
+                break;
+            case 'both':
+                await playScaleSequence([...notes, octaveNote], true, section);
+                await new Promise(resolve => setTimeout(resolve, 500)); // Brief pause
+                await playScaleSequence([...notes, octaveNote], false, section);
+                break;
+        }
+        
+    } catch (error) {
+        console.error('Error playing scale:', error);
+    }
+}
+
+async function playScaleSequence(notes, ascending, section) {
+    const playOrder = ascending ? notes : [...notes].reverse();
+    const noteDuration = 0.6; // Duration for each note
+    let octaveElement = null;
+    
+    for (let i = 0; i < playOrder.length; i++) {
+        const note = playOrder[i];
+        const isOctave = i === (ascending ? playOrder.length - 1 : 0);
+        
+        // Add octave number for proper pitch
+        const noteWithOctave = isOctave ? `${note}5` : `${note}4`;
+        
+        // Show octave visual at the same time as highlighting (no delay)
+        if (isOctave && !octaveElement) {
+            octaveElement = await addOctaveVisual(notes.slice(0, -1), note, section);
+        }
+        
+        // Highlight the current note
+        highlightCurrentNote(note, isOctave);
+        
+        // Play the note
+        await window.AudioEngine.playNote(noteWithOctave, noteDuration * 0.8);
+        
+        // Wait before next note
+        if (i < playOrder.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, noteDuration * 1000 * 0.7));
+        }
+        
+        // Remove highlight
+        removeNoteHighlight();
+    }
+    
+    // Remove octave visual after playback
+    if (octaveElement) {
+        setTimeout(() => removeOctaveVisual(section), 500);
+    }
+}
+
+function addOctaveVisual(notes, octaveNote, section) {
+    return new Promise(resolve => {
+        const notesContainer = document.querySelector('.notes-display');
+        const intervalsContainer = document.querySelector('.intervals-display');
+    
+        if (!notesContainer || !intervalsContainer) {
+            resolve(null);
+            return;
+        }
+        
+        // Add octave to notes section (no separator) - with root note styling
+        const octaveNoteElement = document.createElement('span');
+        octaveNoteElement.className = 'note octave-note root-note'; // Add root-note class for same styling
+        octaveNoteElement.textContent = octaveNote;
+        octaveNoteElement.setAttribute('data-note', octaveNote);
+        notesContainer.appendChild(octaveNoteElement);
+        
+        // Add octave to intervals section (no separator) - with same color as root
+        const octaveIntervalElement = document.createElement('span');
+        octaveIntervalElement.className = 'interval octave-interval';
+        octaveIntervalElement.textContent = '8'; // Octave interval
+        octaveIntervalElement.setAttribute('data-interval', '8');
+        // Apply the same color as the "1" interval (unison)
+        octaveIntervalElement.style.background = MusicTheory.getIntervalColor('1') || '#E8B4B8';
+        octaveIntervalElement.style.color = 'white';
+        octaveIntervalElement.style.fontWeight = '600';
+        intervalsContainer.appendChild(octaveIntervalElement);
+        
+        // Animate both elements in immediately
+        [octaveNoteElement, octaveIntervalElement].forEach(element => {
+            element.style.opacity = '1';
+            element.style.transform = 'scale(1)';
+        });
+        
+        resolve({ noteElement: octaveNoteElement, intervalElement: octaveIntervalElement });
+    });
+}
+
+function removeOctaveVisual(section) {
+    // Remove octave elements from both sections (no separators to remove)
+    const octaveElements = document.querySelectorAll('.octave-note, .octave-interval');
+    
+    octaveElements.forEach(element => {
+        element.style.transition = 'all 0.3s ease';
+        element.style.opacity = '0';
+        element.style.transform = 'scale(0.8)';
+        
+        setTimeout(() => {
+            if (element.parentNode) {
+                element.parentNode.removeChild(element);
+            }
+        }, 300);
+    });
+}
+
+function highlightCurrentNote(note, isOctave) {
+    // Remove any existing highlights
+    removeNoteHighlight();
+    
+    // Find and highlight the note
+    const noteElements = document.querySelectorAll('.note');
+    noteElements.forEach(element => {
+        if (element.getAttribute('data-note') === note) {
+            element.classList.add('playing-highlight');
+        }
+    });
+    
+    // Find and highlight the corresponding interval
+    const intervalElements = document.querySelectorAll('.interval');
+    const noteIndex = getCurrentNoteIndex(note, isOctave);
+    
+    if (noteIndex !== -1 && intervalElements[noteIndex]) {
+        intervalElements[noteIndex].classList.add('playing-highlight');
+    }
+}
+
+function removeNoteHighlight() {
+    // Remove highlights from both notes and intervals
+    const highlightedElements = document.querySelectorAll('.playing-highlight');
+    highlightedElements.forEach(element => {
+        element.classList.remove('playing-highlight');
+    });
+}
+
+function getCurrentNoteIndex(note, isOctave) {
+    // Get current scale notes to find the index
+    const notesDisplay = document.querySelector('.notes-display');
+    if (!notesDisplay) return -1;
+    
+    const noteElements = notesDisplay.querySelectorAll('.note');
+    for (let i = 0; i < noteElements.length; i++) {
+        if (noteElements[i].getAttribute('data-note') === note) {
+            return isOctave ? 0 : i; // Octave maps to root interval (index 0)
+        }
+    }
+    
+    return -1;
+}

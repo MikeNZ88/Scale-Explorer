@@ -1,0 +1,23 @@
+/* Minimal Audio Controls - Just click-to-play styling */
+
+/* Click-to-play note styling */
+.fretboard-note, .note-circle, .notes .note, .intervals .interval {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+}
+
+.fretboard-note:hover, .note-circle:hover, .notes .note:hover, .intervals .interval:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+/* Click-to-play chord styling */
+.chord-item:hover, .chord-button:hover, .characteristic-chord:hover {
+    transform: scale(1.01);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.chord-item, .chord-button, .characteristic-chord {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+} 
