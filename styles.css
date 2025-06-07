@@ -1645,42 +1645,44 @@ body {
 /* === FRETBOARD TOGGLE BUTTONS === */
 .fretboard-toggle-container {
     display: flex;
-        justify-content: center;
-    align-items: center;
-    margin: 1rem 0;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 20px;
 }
 
 .fretboard-toggle-wrapper {
     display: flex;
-    background: var(--cream-light);
+    background: #f3f4f6;
     border-radius: 8px;
-    padding: 0.25rem;
-    border: 1px solid var(--border-color);
+    padding: 4px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .fretboard-toggle-btn {
-    padding: 0.5rem 1rem;
+    padding: 8px 16px;
     border: none;
     background: transparent;
-    color: var(--text-secondary);
-    cursor: pointer;
-    border-radius: 6px;
+    color: #6b7280;
+    font-size: 14px;
     font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
     transition: all 0.2s ease;
+    min-width: 80px;
 }
 
 .fretboard-toggle-btn:hover {
-    background: rgba(217, 119, 6, 0.1);
-    color: var(--primary-orange);
+    background: #e5e7eb;
+    color: #374151;
 }
 
 .fretboard-toggle-btn.active {
-    background: var(--primary-orange);
+    background: #f97316;
     color: white;
-    box-shadow: 0 2px 4px rgba(217, 119, 6, 0.3);
+    box-shadow: 0 2px 4px rgba(249, 115, 22, 0.3);
+}
+
+.fretboard-toggle-btn.active:hover {
+    background: #ea580c;
 }
 
 .fretboard-display-container {
@@ -3104,6 +3106,224 @@ body {
     font-size: 12px;
     color: #666;
     font-style: italic;
+}
+
+/* ... existing code ... */
+
+/* === CHORD MODAL SPECIFIC STYLES === */
+#chord-modal .modal-content {
+    width: 90vw !important;
+    height: 85vh !important;
+    max-width: 1000px !important;
+    max-height: 800px !important;
+    min-width: 320px !important;
+    min-height: 400px !important;
+}
+
+#chord-modal .modal-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 0.75rem 1rem !important;
+    background: #f8fafc !important;
+    color: #1f2937 !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    border-radius: 8px 8px 0 0 !important;
+    flex-shrink: 0 !important;
+    min-height: 50px !important;
+}
+
+#chord-modal .modal-header h3 {
+    color: #1f2937 !important;
+    font-size: 1.25rem !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    flex-grow: 1 !important;
+}
+
+#chord-modal .modal-body {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
+    padding: 1rem !important;
+    min-height: 0 !important;
+}
+
+.chord-info-section {
+    flex-shrink: 0 !important;
+    margin-bottom: 1rem !important;
+    padding: 1rem !important;
+    background: #f8fafc !important;
+    border-radius: 8px !important;
+    border: 1px solid #e5e7eb !important;
+}
+
+.chord-details {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+}
+
+.chord-name-display {
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    color: #1f2937 !important;
+    margin: 0 !important;
+}
+
+.chord-notes-display {
+    font-size: 1rem !important;
+    color: #4b5563 !important;
+    font-weight: 500 !important;
+}
+
+.chord-quality-display {
+    font-size: 0.875rem !important;
+    color: #6b7280 !important;
+    font-style: italic !important;
+}
+
+.chord-fretboard-container {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    overflow: auto !important;
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    padding: 1rem !important;
+    min-height: 0 !important;
+}
+
+/* Chord Modal Fretboard Toggle Styles (matching main fretboard) */
+#chord-modal .fretboard-toggle-container {
+    display: flex !important;
+    justify-content: center !important;
+    margin-bottom: 1rem !important;
+    flex-shrink: 0 !important;
+}
+
+#chord-modal .fretboard-toggle-wrapper {
+    display: flex !important;
+    background: #f8fafc !important;
+    border-radius: 8px !important;
+    padding: 4px !important;
+    border: 1px solid #e5e7eb !important;
+}
+
+#chord-modal .fretboard-toggle-btn {
+    padding: 8px 16px !important;
+    border: none !important;
+    background: transparent !important;
+    color: #6b7280 !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+#chord-modal .fretboard-toggle-btn:hover {
+    background: #e5e7eb !important;
+    color: #374151 !important;
+}
+
+#chord-modal .fretboard-toggle-btn.active {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+}
+
+#chord-modal .fretboard-display-container {
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: auto !important;
+    min-height: 0 !important;
+}
+
+/* Chord Modal Fretboard SVG Styles (matching main fretboard) */
+#chord-modal .fretboard-svg {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    height: auto !important;
+    width: auto !important;
+}
+
+#chord-modal .fret-line {
+    stroke: #666 !important;
+}
+
+#chord-modal .string-line {
+    stroke: #333 !important;
+}
+
+#chord-modal .fret-number {
+    fill: #666 !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+#chord-modal .string-label {
+    fill: #666 !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+#chord-modal .inlay-dot {
+    fill: #ddd !important;
+    opacity: 0.5 !important;
+}
+
+#chord-modal .note-dot {
+    stroke-width: 1 !important;
+}
+
+#chord-modal .note-dot.root {
+    stroke: #fff !important;
+    stroke-width: 2 !important;
+}
+
+#chord-modal .note-text {
+    fill: #fff !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    font-weight: 500 !important;
+    text-anchor: middle !important;
+    dominant-baseline: central !important;
+}
+
+/* Chord Modal Mobile Styles */
+@media (max-width: 768px) {
+    .chord-fretboard-container {
+        padding: 0.75rem !important;
+    }
+    
+    #chord-modal .fretboard-toggle-container {
+        margin-bottom: 0.75rem !important;
+    }
+    
+    #chord-modal .fretboard-toggle-btn {
+        padding: 6px 12px !important;
+        font-size: 13px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .chord-fretboard-container {
+        padding: 0.5rem !important;
+    }
+    
+    #chord-modal .fretboard-toggle-container {
+        margin-bottom: 0.5rem !important;
+    }
+    
+    #chord-modal .fretboard-toggle-btn {
+        padding: 5px 10px !important;
+        font-size: 12px !important;
+    }
 }
 
 /* ... existing code ... */

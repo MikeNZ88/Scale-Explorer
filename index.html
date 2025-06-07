@@ -89,6 +89,25 @@
                 </div>
             </div>
 
+            <!-- Mode Information - Moved below fretboard -->
+            <div class="scale-section mode-info" style="display: none;">
+                <h3>Mode Information</h3>
+                <div class="mode-details">
+                    <div class="mode-mood">
+                        <strong>Mood:</strong> <span></span>
+                    </div>
+                    <div class="mode-description">
+                        <strong>Description:</strong> <span></span>
+                    </div>
+                    <div class="mode-applications">
+                        <strong>Applications:</strong>
+                        <div class="application-tags">
+                            <!-- Application tags will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="scale-content">
                 <div class="scale-section">
                     <h3>Notes</h3>
@@ -133,24 +152,6 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="scale-section mode-info" style="display: none;">
-                    <h3>Mode Information</h3>
-                    <div class="mode-details">
-                        <div class="mode-mood">
-                            <strong>Mood:</strong> <span></span>
-                        </div>
-                        <div class="mode-description">
-                            <strong>Description:</strong> <span></span>
-                        </div>
-                        <div class="mode-applications">
-                            <strong>Applications:</strong>
-                            <div class="application-tags">
-                                <!-- Application tags will be populated by JavaScript -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -166,6 +167,28 @@
             </div>
             <div class="modal-fretboard">
                 <!-- Modal fretboard content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Chord Fretboard Modal -->
+    <div class="modal hidden" id="chord-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="chord-modal-title">Chord Diagram</h3>
+                <button class="close-modal" onclick="UIComponents.closeChordModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="chord-info-section">
+                    <div class="chord-details">
+                        <div class="chord-name-display" id="chord-name-display"></div>
+                        <div class="chord-notes-display" id="chord-notes-display"></div>
+                        <div class="chord-quality-display" id="chord-quality-display"></div>
+                    </div>
+                </div>
+                <div class="chord-fretboard-container" id="chord-fretboard-container">
+                    <!-- Chord fretboard will be rendered here -->
+                </div>
             </div>
         </div>
     </div>

@@ -2061,8 +2061,8 @@ function displayChordType(type, chords) {
         
         // Add click handler for future chord playback or visualization
         chordElement.addEventListener('click', (e) => {
-            // Don't interfere with audio controls if they exist
-            if (window.audioControls && e.target.closest('.chord-item')) {
+            // Only prevent modal if clicking directly on audio control buttons
+            if (window.audioControls && (e.target.closest('.play-btn') || e.target.closest('.direction-btn'))) {
                 return; // Let audio controls handle it
             }
             
@@ -2075,14 +2075,318 @@ function displayChordType(type, chords) {
 }
 
 function highlightChordOnFretboard(chord) {
-    // Future enhancement: highlight chord notes on the fretboard
-    console.log('Highlighting chord on fretboard:', chord.name, chord.notes);
+    // Get current key and open chord modal directly
+    const currentKey = window.AppController ? window.AppController.getCurrentState().key : 'C';
+    openChordModal(chord, currentKey);
+}
+
+// Chord Modal Functions
+function openChordModal(chord, key) {
+    const modal = document.getElementById('chord-modal');
+    const modalTitle = document.getElementById('chord-modal-title');
+    const chordInfoSection = document.querySelector('.chord-info');
     
-    // For now, just log the chord information
-    // This could be expanded to:
-    // 1. Highlight chord tones on the existing fretboard
-    // 2. Show chord fingerings
-    // 3. Open a modal with chord diagrams
+    if (!modal || !modalTitle || !chordInfoSection) return;
+
+    // Set modal title
+    modalTitle.textContent = `${chord.symbol} Chord`;
+    
+    // Update chord information
+    chordInfoSection.innerHTML = `
+        <h3>${chord.symbol}</h3>
+        <p><strong>Notes:</strong> ${chord.notes.join(', ')}</p>
+        <p><em>Quality:</em> ${chord.quality}</p>
+    `;
+    
+    // Clear and render chord fretboard
+    renderChordFretboard(chord, key);
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    modal.style.display = 'block';
+    
+    // Add escape key listener
+    document.addEventListener('keydown', handleChordModalEscape);
+}
+
+function closeChordModal() {
+    const modal = document.getElementById('chord-modal');
+    modal.classList.add('hidden');
+    
+    // Remove escape key listener
+    document.removeEventListener('keydown', handleChordModalEscape);
+}
+
+function handleChordModalEscape(e) {
+    if (e.key === 'Escape') {
+        closeChordModal();
+    }
+}
+
+function renderChordFretboard(chord, key) {
+    const container = document.getElementById('chord-fretboard-container');
+    if (!container) return;
+
+    // Clear existing content
+    container.innerHTML = '';
+
+    // Create toggle controls (matching the main fretboard)
+    const toggleContainer = document.createElement('div');
+    toggleContainer.className = 'fretboard-toggle-container';
+    toggleContainer.innerHTML = `
+        <div class="fretboard-toggle-wrapper">
+            <button class="fretboard-toggle-btn active" data-display="notes">Notes</button>
+            <button class="fretboard-toggle-btn" data-display="intervals">Intervals</button>
+        </div>
+    `;
+    container.appendChild(toggleContainer);
+
+    // Create fretboard display container
+    const displayContainer = document.createElement('div');
+    displayContainer.className = 'fretboard-display-container';
+    container.appendChild(displayContainer);
+
+    // State for display mode
+    let displayMode = 'notes';
+
+    // Add toggle event listeners
+    const toggleButtons = toggleContainer.querySelectorAll('.fretboard-toggle-btn');
+    toggleButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            toggleButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            displayMode = btn.dataset.display;
+            renderFretboard();
+        });
+    });
+
+    function renderFretboard() {
+        // Match the exact dimensions of the main fretboard
+        const fretCount = 12;
+        const stringCount = 6;
+        const fretWidth = 80;  // Match main fretboard
+        const stringSpacing = 40; // Match main fretboard
+        const svgWidth = (fretCount + 1) * fretWidth + 100;
+        const svgHeight = (stringCount - 1) * stringSpacing + 100;
+
+        // Create SVG with exact same structure as main fretboard
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'fretboard-svg');
+        svg.setAttribute('width', svgWidth);
+        svg.setAttribute('height', svgHeight);
+        svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
+
+        // Standard guitar tuning (low to high) - SAME ORDER AS MAIN FRETBOARD
+        const stringNotes = ['E', 'A', 'D', 'G', 'B', 'E'];
+        const stringMidiNotes = [40, 45, 50, 55, 59, 64]; // MIDI note numbers for open strings
+
+        // Draw frets (vertical lines)
+        for (let fret = 0; fret <= fretCount; fret++) {
+            const x = 100 + (fret * fretWidth);
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', x);
+            line.setAttribute('y1', 50);
+            line.setAttribute('x2', x);
+            line.setAttribute('y2', 50 + ((stringCount - 1) * stringSpacing));
+            line.setAttribute('stroke', fret === 0 ? '#1f2937' : '#6b7280');
+            line.setAttribute('stroke-width', fret === 0 ? '4' : '2');
+            svg.appendChild(line);
+
+            // Fret numbers (only for frets 1-12)
+            if (fret > 0) {
+                const fretNumber = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                fretNumber.setAttribute('x', 100 + ((fret - 0.5) * fretWidth));
+                fretNumber.setAttribute('y', 40);
+                fretNumber.setAttribute('text-anchor', 'middle');
+                fretNumber.setAttribute('fill', '#374151');
+                fretNumber.setAttribute('font-size', '18');
+                fretNumber.setAttribute('font-weight', 'bold');
+                fretNumber.textContent = fret;
+                svg.appendChild(fretNumber);
+            }
+        }
+
+        // Draw strings (horizontal lines) - CORRECT ORDER: E(high) to E(low)
+        for (let string = 0; string < stringCount; string++) {
+            const y = 50 + (string * stringSpacing);
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', 100);
+            line.setAttribute('y1', y);
+            line.setAttribute('x2', 100 + (fretCount * fretWidth));
+            line.setAttribute('y2', y);
+            line.setAttribute('stroke', '#6b7280');
+            line.setAttribute('stroke-width', '3');
+            svg.appendChild(line);
+
+            // String labels - REVERSE ORDER to match visual layout (high E at top)
+            const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            label.setAttribute('x', 70);
+            label.setAttribute('y', y + 6);
+            label.setAttribute('text-anchor', 'middle');
+            label.setAttribute('fill', '#374151');
+            label.setAttribute('font-size', '18');
+            label.setAttribute('font-weight', 'bold');
+            label.textContent = stringNotes[stringCount - 1 - string]; // Reverse order for display
+            svg.appendChild(label);
+        }
+
+        // Draw fret markers (inlay dots)
+        const markerFrets = [3, 5, 7, 9, 12];
+        markerFrets.forEach(markerFret => {
+            const x = 100 + ((markerFret - 0.5) * fretWidth);
+            
+            if (markerFret === 12) {
+                // Double dots for 12th fret
+                const marker1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                marker1.setAttribute('cx', x);
+                marker1.setAttribute('cy', 90);
+                marker1.setAttribute('r', '8');
+                marker1.setAttribute('fill', '#d1d5db');
+                svg.appendChild(marker1);
+                
+                const marker2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                marker2.setAttribute('cx', x);
+                marker2.setAttribute('cy', 170);
+                marker2.setAttribute('r', '8');
+                marker2.setAttribute('fill', '#d1d5db');
+                svg.appendChild(marker2);
+            } else {
+                // Single dot for other markers
+                const marker = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                marker.setAttribute('cx', x);
+                marker.setAttribute('cy', 130);
+                marker.setAttribute('r', '8');
+                marker.setAttribute('fill', '#d1d5db');
+                svg.appendChild(marker);
+            }
+        });
+
+        // Place chord notes on fretboard
+        for (let string = 0; string < stringCount; string++) {
+            // Use reverse string index for MIDI calculation (low E = 0, high E = 5)
+            const midiStringIndex = stringCount - 1 - string;
+            
+            for (let fret = 0; fret <= fretCount; fret++) {
+                const midiNote = stringMidiNotes[midiStringIndex] + fret;
+                const chromaticIndex = midiNote % 12;
+                const noteName = MusicConstants.chromaticScale[chromaticIndex];
+                
+                // Check if this note is in the chord
+                let isChordNote = false;
+                let chordNoteIndex = -1;
+                
+                for (let i = 0; i < chord.notes.length; i++) {
+                    const chordNote = chord.notes[i];
+                    
+                    // Use enharmonic equivalence check if available
+                    if (typeof MusicTheory !== 'undefined' && 
+                        typeof MusicTheory.areEnharmonicEquivalents === 'function') {
+                        if (MusicTheory.areEnharmonicEquivalents(noteName, chordNote)) {
+                            isChordNote = true;
+                            chordNoteIndex = i;
+                            break;
+                        }
+                    } else {
+                        // Fallback to direct comparison
+                        if (noteName === chordNote) {
+                            isChordNote = true;
+                            chordNoteIndex = i;
+                            break;
+                        }
+                    }
+                }
+
+                if (isChordNote) {
+                    const chordNote = chord.notes[chordNoteIndex];
+                    const rootNote = chord.notes[0]; // First note is the root
+                    
+                    // Check if this is the root note
+                    const isRoot = (typeof MusicTheory !== 'undefined' && 
+                        typeof MusicTheory.areEnharmonicEquivalents === 'function') ?
+                        MusicTheory.areEnharmonicEquivalents(chordNote, rootNote) :
+                        chordNote === rootNote;
+                    
+                    // Calculate interval using the same system as scales
+                    let interval = '1'; // Default to root
+                    let intervalColor = MusicTheory.getIntervalColor('1');
+                    
+                    if (isRoot) {
+                        interval = '1';
+                        intervalColor = MusicTheory.getIntervalColor('1');
+                    } else {
+                        // Use the same interval calculation as scales
+                        const chordIntervals = MusicTheory.getIntervals(chord.notes, rootNote);
+                        interval = chordIntervals[chordNoteIndex] || '1';
+                        intervalColor = MusicTheory.getIntervalColor(interval);
+                    }
+                    
+                    // Position notes - CORRECT positioning
+                    const x = fret === 0 ? 40 : 100 + ((fret - 0.5) * fretWidth);
+                    const y = 50 + (string * stringSpacing);
+                    
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('cx', x);
+                    circle.setAttribute('cy', y);
+                    circle.setAttribute('r', '16');
+                    circle.setAttribute('fill', intervalColor);
+                    circle.setAttribute('stroke', 'white');
+                    circle.setAttribute('stroke-width', '3');
+                    svg.appendChild(circle);
+                    
+                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('x', x);
+                    text.setAttribute('y', y + 5);
+                    text.setAttribute('text-anchor', 'middle');
+                    text.setAttribute('fill', 'white');
+                    text.setAttribute('font-size', '12');
+                    text.setAttribute('font-weight', 'bold');
+                    
+                    if (displayMode === 'intervals') {
+                        text.textContent = interval;
+                    } else {
+                        // Use the chord note name directly (it's already properly spelled)
+                        text.textContent = chordNote;
+                    }
+                    
+                    svg.appendChild(text);
+                }
+            }
+        }
+
+        // Clear and add the new SVG
+        displayContainer.innerHTML = '';
+        displayContainer.appendChild(svg);
+    }
+
+    // Initial render
+    renderFretboard();
+}
+
+// Helper function to check enharmonic equivalents
+function isEnharmonicEquivalent(note1, note2) {
+    const enharmonicMap = {
+        'C': ['C', 'B#'],
+        'C#': ['C#', 'Db'],
+        'D': ['D'],
+        'D#': ['D#', 'Eb'],
+        'E': ['E', 'Fb'],
+        'F': ['F', 'E#'],
+        'F#': ['F#', 'Gb'],
+        'G': ['G'],
+        'G#': ['G#', 'Ab'],
+        'A': ['A'],
+        'A#': ['A#', 'Bb'],
+        'B': ['B', 'Cb']
+    };
+    
+    // Find which group each note belongs to
+    for (const [key, equivalents] of Object.entries(enharmonicMap)) {
+        if (equivalents.includes(note1) && equivalents.includes(note2)) {
+            return true;
+        }
+    }
+    
+    return false;
 }
 
 // Export all functions
@@ -2091,6 +2395,9 @@ window.UIComponents = {
     openFretboardModal,
     renderModalFretboard,
     closeFretboardModal,
+    openChordModal,
+    closeChordModal,
+    renderChordFretboard,
     setOptimalModalSize,
     handleMobileOrientation,
     makeDraggable,
