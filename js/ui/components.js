@@ -46,11 +46,6 @@ function createFretboard(scale) {
     const controlsDiv = document.createElement('div');
     controlsDiv.className = 'fretboard-controls';
     controlsDiv.innerHTML = `
-        <div class="fret-navigation">
-            <button id="fret-left" class="nav-btn" ${fretboardState.startFret === 0 ? 'disabled' : ''}>←</button>
-            <span class="fret-range">Frets ${fretboardState.startFret}-${fretboardState.startFret + fretboardState.fretRange}</span>
-            <button id="fret-right" class="nav-btn" ${fretboardState.startFret + fretboardState.fretRange >= fretboardState.maxFrets ? 'disabled' : ''}>→</button>
-        </div>
         <div class="fret-range-selector">
             <label>View: </label>
             <select id="fret-range-select">
@@ -65,23 +60,9 @@ function createFretboard(scale) {
     fretboardContainer.appendChild(controlsDiv);
     
     // Add event listeners for controls
-    document.getElementById('fret-left').addEventListener('click', () => {
-        if (fretboardState.startFret > 0) {
-            fretboardState.startFret = Math.max(0, fretboardState.startFret - 6);
-            createFretboard(scale);
-        }
-    });
-    
-    document.getElementById('fret-right').addEventListener('click', () => {
-        if (fretboardState.startFret + fretboardState.fretRange < fretboardState.maxFrets) {
-            fretboardState.startFret = Math.min(fretboardState.maxFrets - fretboardState.fretRange, fretboardState.startFret + 6);
-            createFretboard(scale);
-        }
-    });
-    
     document.getElementById('fret-range-select').addEventListener('change', (e) => {
         fretboardState.fretRange = parseInt(e.target.value);
-        fretboardState.startFret = 0; // Reset to beginning when changing range
+        fretboardState.startFret = 0; // Always start from fret 0
         createFretboard(scale);
     });
     
@@ -201,11 +182,6 @@ function createFretboard(scale) {
             
             for (let fret = 0; fret <= displayFrets; fret++) {
                 const actualFret = fretboardState.startFret + fret;
-                
-                // Skip open frets if we're not starting from fret 0
-                if (actualFret === 0 && fretboardState.startFret > 0) {
-                    continue;
-                }
                 
                 const chromaticIndex = (noteToIndex(openNote) + actualFret) % 12;
                 const chromaticNoteName = MusicConstants.chromaticScale[chromaticIndex];
@@ -483,11 +459,6 @@ function renderModalFretboard(container, scale) {
             
             for (let fret = 0; fret <= displayFrets; fret++) {
                 const actualFret = fretboardState.startFret + fret;
-                
-                // Skip open frets if we're not starting from fret 0
-                if (actualFret === 0 && fretboardState.startFret > 0) {
-                    continue;
-                }
                 
                 const chromaticIndex = (noteToIndex(openNote) + actualFret) % 12;
                 const chromaticNoteName = MusicConstants.chromaticScale[chromaticIndex];
