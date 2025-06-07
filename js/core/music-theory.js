@@ -117,7 +117,8 @@ function calculateScaleWithDegrees(root, formula, scaleType = 'major') {
     const noteToIndex = {
         'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11,
         'C#': 1, 'Db': 1, 'D#': 3, 'Eb': 3, 'F#': 6, 'Gb': 6,
-        'G#': 8, 'Ab': 8, 'A#': 10, 'Bb': 10
+        'G#': 8, 'Ab': 8, 'A#': 10, 'Bb': 10,
+        'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
     };
     
     // Find the root note's position in the note names array
@@ -366,7 +367,8 @@ function getIntervals(notes, root) {
         const noteMap = {
             'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4,
             'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9,
-            'A#': 10, 'Bb': 10, 'B': 11
+            'A#': 10, 'Bb': 10, 'B': 11,
+            'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
         };
         return noteMap[cleanNote] !== undefined ? noteMap[cleanNote] : 0;
     }
@@ -440,7 +442,10 @@ function isHarmonicMinorPattern(notes, root) {
     if (notes.length !== 7) return false;
     
     function noteToIndex(note) {
-        const noteMap = {'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11};
+        const noteMap = {
+            'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11,
+            'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
+        };
         return noteMap[note] !== undefined ? noteMap[note] : 0;
     }
     
@@ -455,7 +460,10 @@ function isMelodicMinorPattern(notes, root) {
     if (notes.length !== 7) return false;
     
     function noteToIndex(note) {
-        const noteMap = {'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11};
+        const noteMap = {
+            'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11,
+            'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
+        };
         return noteMap[note] !== undefined ? noteMap[note] : 0;
     }
     
@@ -470,7 +478,10 @@ function isMajorPattern(notes, root) {
     if (notes.length !== 7) return false;
     
     function noteToIndex(note) {
-        const noteMap = {'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11};
+        const noteMap = {
+            'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11,
+            'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
+        };
         return noteMap[note] !== undefined ? noteMap[note] : 0;
     }
     
@@ -485,7 +496,10 @@ function isBluesPattern(notes, root) {
     if (notes.length !== 6) return false;
     
     function noteToIndex(note) {
-        const noteMap = {'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11};
+        const noteMap = {
+            'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11,
+            'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
+        };
         return noteMap[note] !== undefined ? noteMap[note] : 0;
     }
     
@@ -516,16 +530,33 @@ function isBluesMinorPattern(intervalPattern) {
 function areEnharmonicEquivalents(note1, note2) {
     if (note1 === note2) return true;
     
-    // Map enharmonic equivalents
-    const enharmonicMap = {
-        'C#': 'Db', 'Db': 'C#',
-        'D#': 'Eb', 'Eb': 'D#',
-        'F#': 'Gb', 'Gb': 'F#',
-        'G#': 'Ab', 'Ab': 'G#',
-        'A#': 'Bb', 'Bb': 'A#'
+    // Convert both notes to their chromatic index for comparison
+    const noteToIndex = (note) => {
+        // Handle double sharps and flats
+        if (note.includes('##')) {
+            const baseNote = note.replace('##', '');
+            const baseIndex = getNoteIndex(baseNote);
+            return (baseIndex + 2) % 12;
+        }
+        if (note.includes('bb')) {
+            const baseNote = note.replace('bb', '');
+            const baseIndex = getNoteIndex(baseNote);
+            return (baseIndex - 2 + 12) % 12;
+        }
+        
+        return getNoteIndex(note);
     };
     
-    return enharmonicMap[note1] === note2 || enharmonicMap[note2] === note1;
+    const getNoteIndex = (note) => {
+        const noteMap = {
+            'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'E#': 5, 'Fb': 4,
+            'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 
+            'B': 11, 'B#': 0, 'Cb': 11
+        };
+        return noteMap[note] !== undefined ? noteMap[note] : 0;
+    };
+    
+    return noteToIndex(note1) === noteToIndex(note2);
 }
 
 // Chord calculation functions
@@ -675,6 +706,11 @@ function analyzeTriadComprehensive(thirdInterval, fifthInterval, scale, rootInde
     }
     if (thirdInterval === 3 && fifthInterval === 8) {
         return { quality: 'minor+5', symbol: 'm+5', isNonStandard: true, description: 'Minor sharp fifth' };
+    }
+    
+    // Sus2♭5 chord (Major 2nd + Tritone)
+    if (thirdInterval === 2 && fifthInterval === 6) {
+        return { quality: 'sus2♭5', symbol: 'sus2♭5', isNonStandard: false, description: 'Suspended second flat fifth' };
     }
     
     // Quartal harmony (common in pentatonic scales)
@@ -959,6 +995,28 @@ function analyzeSeventhChordComprehensive(thirdInterval, fifthInterval, seventhI
         return { quality: 'minor Major 7th', symbol: 'mMaj7', isNonStandard: false, description: 'Minor major seventh' };
     }
     
+    // SPECIFIC FIXES FOR EXOTIC SCALES - Add these before the generic patterns
+    
+    // Fix for Neapolitan Minor: B(♭2♭4♭6) - Notes: B - Db - F - Ab
+    if (thirdInterval === 2 && fifthInterval === 6 && seventhInterval === 9) {
+        return { quality: 'cluster chord', symbol: '(2♭5♭6)', isNonStandard: false, description: 'Cluster chord with major 2nd, tritone, and major 6th' };
+    }
+    
+    // Fix for Hungarian Minor: D7♯11 - Notes: D - F# - Ab - C  
+    if (thirdInterval === 4 && fifthInterval === 6 && seventhInterval === 10) {
+        return { quality: 'Dominant 7♯11', symbol: '7♯11', isNonStandard: false, description: 'Dominant seventh sharp eleventh' };
+    }
+    
+    // Fix for Hungarian Minor: F#°7 - Notes: F# - Ab - C - Eb
+    if (thirdInterval === 2 && fifthInterval === 5 && seventhInterval === 8) {
+        return { quality: 'diminished 7th', symbol: '°7', isNonStandard: false, description: 'Diminished seventh chord' };
+    }
+    
+    // Fix for Neapolitan Major: G7♭5 - Notes: G - B - Db - F
+    if (thirdInterval === 4 && fifthInterval === 6 && seventhInterval === 10) {
+        return { quality: 'Dominant 7♭5', symbol: '7♭5', isNonStandard: false, description: 'Dominant seventh flat fifth' };
+    }
+    
     // Extended and altered seventh chords for exotic scales
     if (thirdInterval === 2 && fifthInterval === 6 && seventhInterval === 10) {
         return { quality: 'sus2♭5 7th', symbol: '7sus2♭5', isNonStandard: false, description: 'Suspended second flat fifth seventh' };
@@ -988,9 +1046,6 @@ function analyzeSeventhChordComprehensive(thirdInterval, fifthInterval, seventhI
     }
     if (thirdInterval === 6 && fifthInterval === 10 && seventhInterval === 2) {
         return { quality: 'tritone maj6/9', symbol: '♭5maj6/9', isNonStandard: false, description: 'Tritone major sixth add ninth' };
-    }
-    if (thirdInterval === 2 && fifthInterval === 6 && seventhInterval === 9) {
-        return { quality: 'whole tone cluster', symbol: 'WTCluster', isNonStandard: false, description: 'Whole tone cluster chord' };
     }
     
     // Hungarian minor and related exotic scales
@@ -1124,7 +1179,12 @@ function getExoticChordName(thirdInterval, fifthInterval, seventhInterval) {
         if (fifthInterval >= 8) return 'quartal#5';
         return 'quartal';
     }
-    if (fifthInterval === 6) return 'tritone chord';
+    // Remove generic "tritone chord" - let specific cases handle this
+    if (fifthInterval === 6) {
+        if (thirdInterval === 4) return 'Maj7♭5';  // Major with flat 5
+        if (thirdInterval === 3) return 'min♭5';   // Minor with flat 5
+        return 'altered♭5';  // Generic altered with flat 5
+    }
     if (fifthInterval >= 9) return 'wide interval';
     
     return 'complex harmony';
@@ -1138,7 +1198,12 @@ function getExoticChordSymbol(thirdInterval, fifthInterval, seventhInterval) {
     if (thirdInterval >= 5 && fifthInterval <= 6) return 'qrt♭5';
     if (thirdInterval >= 5 && fifthInterval >= 8) return 'qrt#5';
     if (thirdInterval >= 5) return 'qrt';
-    if (fifthInterval === 6) return 'trit';
+    // Remove generic "trit" - provide more specific symbols
+    if (fifthInterval === 6) {
+        if (thirdInterval === 4) return 'Maj♭5';  // Major with flat 5
+        if (thirdInterval === 3) return 'm♭5';    // Minor with flat 5
+        return 'alt♭5';  // Generic altered with flat 5
+    }
     if (fifthInterval >= 9) return 'wide';
     
     return 'alt';
@@ -1264,7 +1329,8 @@ function getIntervalBetweenNotes(note1, note2) {
         const noteMap = {
             'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4,
             'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9,
-            'A#': 10, 'Bb': 10, 'B': 11
+            'A#': 10, 'Bb': 10, 'B': 11,
+            'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
         };
         return noteMap[note] !== undefined ? noteMap[note] : 0;
     };
@@ -1427,7 +1493,8 @@ function isWholeToneScale(scale) {
         const noteMap = {
             'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4,
             'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9,
-            'A#': 10, 'Bb': 10, 'B': 11
+            'A#': 10, 'Bb': 10, 'B': 11,
+            'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
         };
         return noteMap[cleanNote] !== undefined ? noteMap[cleanNote] : 0;
     };

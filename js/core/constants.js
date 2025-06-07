@@ -378,7 +378,7 @@ const modeMetadata = {
     'blues-minor': { mood: 'Soulful', description: 'Six-note blues scale with characteristic blue notes', applications: ['Blues', 'rock', 'jazz'] },
     
     // Other scales
-    'whole-tone': { mood: 'Dreamy', description: 'Six notes separated by whole steps, creates floating ambiguity', applications: ['Impressionist', 'jazz', 'film'] },
+    'whole-tone': { mood: 'Dreamy', description: 'Six notes separated by whole steps, creates floating ambiguity. Note: The whole tone scale doesn\'t have traditional modes since every rotation produces the same interval pattern. There are only two distinct whole tone scales: one starting on C (C-D-E-F#-G#-A#) and one starting on Db (Db-Eb-F-G-A-B), which together contain all 12 chromatic notes.', applications: ['Impressionist', 'jazz', 'film'] },
     'chromatic': { mood: 'Chromatic', description: 'All twelve pitches, ultimate color and tension', applications: ['Jazz', 'classical', 'experimental'] },
     'augmented': { mood: 'Symmetrical', description: 'Six-note symmetrical scale with augmented character', applications: ['Jazz', 'experimental', 'modern classical'] },
     'bebop-major': { mood: 'Jazzy', description: 'Major scale with added chromatic passing tone', applications: ['Bebop jazz', 'jazz improvisation'] }
@@ -450,8 +450,8 @@ const modeNumbers = {
     'altered-major': { number: 7, properName: 'Altered Major' },
     
     // Diminished modes
-    'diminished': { number: 1, properName: 'Diminished' },
-    'half-diminished': { number: 2, properName: 'Half Diminished' },
+    'diminished': { number: 1, properName: 'Whole Half Diminished' },
+    'half-diminished': { number: 2, properName: 'Half Whole Diminished' },
     
     // Pentatonic scales
     'major-pentatonic': { number: 1, properName: 'Major Pentatonic' },

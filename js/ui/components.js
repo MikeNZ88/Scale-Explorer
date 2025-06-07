@@ -801,6 +801,9 @@ function updateParentScale(scaleType, key, category) {
 }
 
 function createRelatedModes(currentMode, category, currentKey) {
+    console.log('=== createRelatedModes called ===');
+    console.log('currentMode:', currentMode, 'category:', category, 'currentKey:', currentKey);
+    
     const modeButtonsContainer = document.querySelector('.mode-buttons');
     const parentScaleInfo = document.querySelector('.parent-scale-info');
     
@@ -854,21 +857,100 @@ function createRelatedModes(currentMode, category, currentKey) {
     const currentModeOffset = modeOffsets[currentMode] || 0;
     const parentRootIndex = (noteToIndex(currentKey) - currentModeOffset + 12) % 12;
     
-    // Use proper note spelling for the parent root based on the current key's spelling convention
-    const scaleType = getScaleTypeFromCategory(category);
-    const parentRoot = MusicTheory.getProperNoteSpelling(parentRootIndex, currentKey, scaleType);
+    console.log('currentModeOffset:', currentModeOffset);
+    console.log('parentRootIndex:', parentRootIndex);
     
-    // Calculate the actual parent scale notes
+    // Determine spelling convention based on the parent scale root, not the current key
+    const parentRoot = getConsistentNoteSpelling(parentRootIndex, 'sharp'); // Get sharp version first
+    const parentRootFlat = getConsistentNoteSpelling(parentRootIndex, 'flat'); // Get flat version
+    
+    // Determine which spelling convention to use based on standard key signatures
+    let spellingConvention;
+    
+    // Keys that use flats in their key signatures
+    const flatKeys = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'];
+    // Keys that use sharps in their key signatures  
+    const sharpKeys = ['G', 'D', 'A', 'E', 'B', 'F#', 'C#'];
+    
+    if (flatKeys.includes(parentRootFlat)) {
+        spellingConvention = 'flat';
+    } else if (sharpKeys.includes(parentRoot)) {
+        spellingConvention = 'sharp';
+    } else {
+        // For C major (no sharps or flats), default to sharp
+        spellingConvention = 'sharp';
+    }
+    
+    // Get the final parent root with the determined spelling convention
+    const finalParentRoot = getConsistentNoteSpelling(parentRootIndex, spellingConvention);
+    
+    console.log('parentRoot (sharp):', parentRoot);
+    console.log('parentRoot (flat):', parentRootFlat);
+    console.log('determined spellingConvention:', spellingConvention);
+    console.log('finalParentRoot:', finalParentRoot);
+    
+    // Store the spelling convention
+    window.modalSystemSpelling = spellingConvention;
+    
+    // Special handling for whole tone scales
+    if (category === 'whole-tone') {
+        // For whole tone scales, show all the other whole tone scales that share the same notes
+        const wholeToneNotes = ['C', 'D', 'E', 'F#', 'G#', 'A#']; // One whole tone scale
+        const otherWholeToneNotes = ['Db', 'Eb', 'F', 'G', 'A', 'B']; // The other whole tone scale
+        
+        // Determine which whole tone scale the current key belongs to
+        const currentKeyIndex = noteToIndex(currentKey);
+        const wholeToneIndices = wholeToneNotes.map(note => noteToIndex(note));
+        const isInFirstScale = wholeToneIndices.includes(currentKeyIndex);
+        
+        const relatedNotes = isInFirstScale ? wholeToneNotes : otherWholeToneNotes;
+        
+        // Create buttons for all notes in the same whole tone scale
+        relatedNotes.forEach((note, index) => {
+            const button = document.createElement('button');
+            button.className = `mode-button ${note === currentKey ? 'active' : ''}`;
+            button.innerHTML = `
+                <span class="mode-number">${index + 1}</span>
+                <span class="mode-name">${note} Whole Tone</span>
+            `;
+            
+            // Add click handler to change to this note
+            button.addEventListener('click', () => {
+                AppController.setState({
+                    key: note,
+                    category: category,
+                    mode: currentMode
+                });
+            });
+            
+            modeButtonsContainer.appendChild(button);
+        });
+        
+        // Display special information for whole tone scales
+        const otherScaleNotes = isInFirstScale ? otherWholeToneNotes : wholeToneNotes;
+        const parentInfo = `
+            <div class="parent-scale-info">
+                <strong>Related Whole Tone Scales:</strong> ${relatedNotes.join(', ')} (current scale)
+                <br><strong>Complementary Scale:</strong> ${otherScaleNotes.join(', ')}
+                <br><small>These two scales together contain all 12 chromatic notes</small>
+            </div>
+        `;
+        parentScaleInfo.innerHTML = parentInfo;
+        return; // Exit early for whole tone scales
+    }
+    
+    // Calculate the parent scale with consistent spelling
+    const scaleType = getScaleTypeFromCategory(category);
     const parentFormula = categoryData.formulas[categoryData.modes[0]]; // Get the first mode's formula (the parent scale)
-    const parentScaleNotes = MusicTheory.calculateScale(parentRoot, parentFormula, scaleType);
+    const parentScaleNotes = calculateScaleWithConsistentSpelling(finalParentRoot, parentFormula, scaleType, spellingConvention);
     
     // Create mode buttons for each mode in the category
     categoryData.modes.forEach((mode, index) => {
         const modeData = MusicConstants.modeNumbers[mode];
         if (!modeData) return;
         
-        // Use the actual scale note for this mode (not chromatic)
-        const modeKey = parentScaleNotes[index] || parentRoot;
+        // Use the actual scale note for this mode (maintaining consistent spelling)
+        const modeKey = parentScaleNotes[index] || finalParentRoot;
         
         const button = document.createElement('button');
         button.className = `mode-button ${mode === currentMode ? 'active' : ''}`;
@@ -879,9 +961,12 @@ function createRelatedModes(currentMode, category, currentKey) {
         
         // Add click handler to change to this mode
         button.addEventListener('click', () => {
-            // Update the app state to use this mode and key
+            // Convert the modeKey to proper enharmonic spelling
+            const properKey = getProperEnharmonicSpelling(modeKey);
+            
+            // Update the app state to use this mode and proper key
             AppController.setState({
-                key: modeKey,
+                key: properKey,
                 category: category,
                 mode: mode
             });
@@ -891,7 +976,7 @@ function createRelatedModes(currentMode, category, currentKey) {
     });
     
     // Display parent scale information
-    const parentScaleName = getParentScaleName(category, parentRoot);
+    const parentScaleName = getParentScaleName(category, finalParentRoot);
     const parentInfo = `
         <div class="parent-scale-info">
             <strong>These modes are derived from:</strong> ${parentScaleName}
@@ -899,6 +984,154 @@ function createRelatedModes(currentMode, category, currentKey) {
         </div>
     `;
     parentScaleInfo.innerHTML = parentInfo;
+}
+
+// Helper function to determine spelling convention from a key
+function determineSpellingConvention(key) {
+    // Determine if the key uses sharps, flats, or naturals
+    if (key.includes('#')) {
+        return 'sharp';
+    }
+    if (key.includes('b')) {
+        return 'flat';
+    }
+    
+    // For natural keys, determine based on key signature conventions
+    // Keys that typically use sharps in their key signatures
+    const sharpKeys = ['C', 'G', 'D', 'A', 'E', 'B'];
+    // Keys that typically use flats in their key signatures  
+    const flatKeys = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'];
+    
+    if (sharpKeys.includes(key)) {
+        return 'sharp';
+    }
+    if (flatKeys.includes(key)) {
+        return 'flat';
+    }
+    
+    return 'sharp'; // Default to sharp for ambiguous cases
+}
+
+// Helper function to get consistent note spelling based on convention
+function getConsistentNoteSpelling(noteIndex, spellingConvention) {
+    const normalizedIndex = ((noteIndex % 12) + 12) % 12;
+    
+    // Chromatic scales with consistent spelling
+    const sharpChromatic = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const flatChromatic = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+    
+    if (spellingConvention === 'flat') {
+        return flatChromatic[normalizedIndex];
+    } else {
+        return sharpChromatic[normalizedIndex];
+    }
+}
+
+// Helper function to convert enharmonic equivalents to proper spelling
+function getProperEnharmonicSpelling(note) {
+    // Map of enharmonic equivalents to their most common spelling
+    const enharmonicMap = {
+        'B#': 'C',
+        'C#': 'C#',
+        'Db': 'Db', 
+        'D#': 'Eb',
+        'Eb': 'Eb',
+        'E#': 'F',
+        'Fb': 'E',
+        'F#': 'F#',
+        'Gb': 'Gb',
+        'G#': 'Ab',
+        'Ab': 'Ab',
+        'A#': 'Bb',
+        'Bb': 'Bb',
+        'Cb': 'B'
+    };
+    
+    // Return the proper spelling if it exists in the map, otherwise return the original note
+    return enharmonicMap[note] || note;
+}
+
+// Helper function to calculate scale with consistent enharmonic spelling
+function calculateScaleWithConsistentSpelling(root, formula, scaleType, spellingConvention) {
+    if (!formula || !Array.isArray(formula)) {
+        console.warn('Invalid formula provided to calculateScaleWithConsistentSpelling:', formula);
+        return [];
+    }
+    
+    // Define the note names in order for proper scale degree calculation
+    const noteNames = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+    const noteToIndex = {
+        'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11,
+        'C#': 1, 'Db': 1, 'D#': 3, 'Eb': 3, 'F#': 6, 'Gb': 6,
+        'G#': 8, 'Ab': 8, 'A#': 10, 'Bb': 10,
+        // Add enharmonic equivalents
+        'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
+    };
+    
+    // Find the root note's position in the note names array
+    const rootNoteName = root.charAt(0);
+    const rootNoteIndex = noteNames.indexOf(rootNoteName);
+    if (rootNoteIndex === -1) {
+        console.warn('Invalid root note:', root);
+        return [];
+    }
+    
+    // Get the chromatic index of the root
+    const rootChromaticIndex = noteToIndex[root];
+    if (rootChromaticIndex === undefined) {
+        console.warn('Invalid root note:', root);
+        return [];
+    }
+    
+    // Calculate scale notes based on scale degrees
+    const scale = [root]; // Start with the root
+    let currentChromaticIndex = rootChromaticIndex;
+    
+    for (let i = 0; i < formula.length - 1; i++) {
+        // Move to the next chromatic position
+        currentChromaticIndex = (currentChromaticIndex + formula[i]) % 12;
+        
+        // Calculate which scale degree this should be (2nd, 3rd, 4th, etc.)
+        const scaleDegreeIndex = (rootNoteIndex + i + 1) % 7;
+        const baseNoteName = noteNames[scaleDegreeIndex];
+        const baseNoteChromatic = noteToIndex[baseNoteName];
+        
+        // Calculate the difference between where we are and where the base note is
+        const chromaticDifference = (currentChromaticIndex - baseNoteChromatic + 12) % 12;
+        
+        let noteName;
+        if (chromaticDifference === 0) {
+            // Perfect match - use the natural note
+            noteName = baseNoteName;
+        } else if (chromaticDifference === 1) {
+            // One semitone up - use sharp or flat based on convention
+            if (spellingConvention === 'flat') {
+                // Use the next note with flat
+                const nextDegreeIndex = (scaleDegreeIndex + 1) % 7;
+                noteName = noteNames[nextDegreeIndex] + 'b';
+            } else {
+                // Use sharp
+                noteName = baseNoteName + '#';
+            }
+        } else if (chromaticDifference === 11) {
+            // One semitone down - use flat or sharp based on convention
+            if (spellingConvention === 'sharp') {
+                // Use the previous note with sharp
+                const prevDegreeIndex = (scaleDegreeIndex - 1 + 7) % 7;
+                noteName = noteNames[prevDegreeIndex] + '#';
+            } else {
+                // Use flat
+                noteName = baseNoteName + 'b';
+            }
+        } else {
+            // For other intervals, use consistent chromatic spelling
+            noteName = getConsistentNoteSpelling(currentChromaticIndex, spellingConvention);
+        }
+        
+        scale.push(noteName);
+    }
+    
+    return scale;
 }
 
 function getParentScaleName(category, parentRoot) {

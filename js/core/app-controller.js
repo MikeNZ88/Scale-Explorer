@@ -307,7 +307,13 @@ function getCurrentState() {
 }
 
 function setState(newState) {
+    const previousCategory = currentState.category;
     currentState = { ...currentState, ...newState };
+    
+    // Reset modal system spelling when category changes
+    if (newState.category && newState.category !== previousCategory) {
+        window.modalSystemSpelling = null;
+    }
     
     // Update UI to reflect new state
     const keySelect = document.getElementById('key-select');

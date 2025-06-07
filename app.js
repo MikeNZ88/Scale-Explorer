@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize the modular app
     if (window.AppController) {
         AppController.initializeApp();
-    } else {
+        } else {
         console.error('AppController module not loaded');
     }
     
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (window.UIComponents && window.UIComponents.initializeSearch) {
         UIComponents.initializeSearch();
         console.log('Search functionality initialized');
-    } else {
+        } else {
         console.error('Search functionality not available');
     }
 });
@@ -67,130 +67,6 @@ function closeFretboardModal() {
 function displayScale(scale, intervals, formula, scaleType, key, category) {
     return UIComponents ? UIComponents.displayScale(scale, intervals, formula, scaleType, key, category) : null;
 }
-
-// Legacy AlphaTab integration and file handling
-// (This will be moved to a separate audio module in the future)
-
-let api = null;
-let currentFiles = new Map();
-
-function setupAlphaTab() {
-    try {
-        const tabElement = document.getElementById('tab-content');
-        if (!tabElement) {
-            console.log('Tab content element not found, skipping AlphaTab setup');
-            return;
-        }
-
-        const settings = {
-            file: null,
-            player: {
-                enablePlayer: true,
-                soundFont: 'https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/soundfont/sonivox.sf2',
-                scrollElement: tabElement
-            },
-            display: {
-                layoutMode: 'page',
-                staveProfile: 'score'
-            }
-        };
-
-        api = new alphaTab.AlphaTabApi(tabElement, settings);
-        
-        console.log('AlphaTab initialized successfully');
-        setupPlayerControls();
-        
-    } catch (error) {
-        console.warn('AlphaTab initialization failed:', error);
-    }
-}
-
-function setupPlayerControls() {
-    if (!api) return;
-
-    const playBtn = document.getElementById('play-btn');
-    const pauseBtn = document.getElementById('pause-btn');
-    const stopBtn = document.getElementById('stop-btn');
-
-    if (playBtn) {
-        playBtn.addEventListener('click', () => {
-            if (api.player) api.player.play();
-        });
-    }
-
-    if (pauseBtn) {
-        pauseBtn.addEventListener('click', () => {
-            if (api.player) api.player.pause();
-        });
-    }
-
-    if (stopBtn) {
-        stopBtn.addEventListener('click', () => {
-            if (api.player) api.player.stop();
-        });
-    }
-}
-
-function setupFileUpload() {
-    const fileInput = document.getElementById('file-input');
-    const uploadSection = document.getElementById('upload-section');
-
-    if (fileInput) {
-        fileInput.addEventListener('change', handleFileSelect);
-    }
-
-    if (uploadSection) {
-        uploadSection.addEventListener('dragover', handleDragOver);
-        uploadSection.addEventListener('drop', handleFileDrop);
-    }
-}
-
-function handleFileSelect(event) {
-    const files = Array.from(event.target.files);
-    processFiles(files);
-}
-
-function handleDragOver(event) {
-    event.preventDefault();
-    event.currentTarget.classList.add('dragover');
-}
-
-function handleFileDrop(event) {
-    event.preventDefault();
-    event.currentTarget.classList.remove('dragover');
-    
-    const files = Array.from(event.dataTransfer.files);
-    processFiles(files);
-}
-
-function processFiles(files) {
-    files.forEach(file => {
-        if (file.name.match(/\.(gp[345x]?|ptb)$/i)) {
-            currentFiles.set(file.name, file);
-            loadFile(file);
-        } else {
-            console.warn('Unsupported file format:', file.name);
-        }
-    });
-}
-
-function loadFile(file) {
-        if (api) {
-        try {
-            api.load(file);
-            document.getElementById('tab-player').classList.remove('hidden');
-            console.log('File loaded:', file.name);
-            } catch (error) {
-            console.error('Error loading file:', error);
-        }
-    }
-}
-
-// Initialize file upload and AlphaTab when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    setupFileUpload();
-    setupAlphaTab();
-});
 
 // Export key functions for global access
 window.calculateScale = calculateScale;
