@@ -499,162 +499,162 @@ body {
     }
     
     .header {
-        margin-bottom: 0.75rem;
-        padding: 0.25rem 0;
+        margin-bottom: 1rem;
+        padding: 1rem 0.5rem;
     }
     
     .header h1 {
-        font-size: 1.5rem;
-        gap: 0.375rem;
-        margin-bottom: 0.125rem;
+        font-size: 2rem;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
     }
     
     .header h1::before {
-        font-size: 1.25rem;
+        font-size: 1.5rem;
     }
     
     .header .subtitle {
-        font-size: 0.8rem;
-        line-height: 1.3;
+        font-size: 1rem;
+        line-height: 1.4;
     }
     
     .key-selector-section {
-        padding: 0.375rem;
-        margin-bottom: 0.375rem;
-    border-radius: 8px;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        border-radius: 12px;
     }
     
     .key-controls {
-        gap: 0.25rem;
-        margin-bottom: 0.25rem;
+        gap: 1rem;
+        margin-bottom: 1rem;
     }
     
     .key-selector-wrapper label {
-        font-size: 0.7rem;
+        font-size: 0.9rem;
     }
     
     .key-selector {
-        padding: 0.1875rem 0.375rem;
-        font-size: 0.7rem;
-        min-width: 60px;
-        border-radius: 4px;
-    }
-    
-    .sharp-flat-toggle {
-        padding: 0.1875rem 0.375rem;
-        font-size: 0.65rem;
-        border-radius: 4px;
-    }
-    
-    .parent-scale-section {
-        margin-bottom: 0.25rem;
-    }
-    
-    .parent-scale-title {
-        font-size: 0.7rem;
-        margin-bottom: 0.125rem;
-    }
-    
-    .parent-scale-display {
-        padding: 0.125rem 0.375rem;
-        font-size: 0.7rem;
-        border-radius: 4px;
-    }
-    
-    .category-tabs {
-        padding: 0.5rem;
-        margin-bottom: 0.75rem;
-        gap: 0.25rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+        min-width: 80px;
         border-radius: 8px;
     }
     
+    .sharp-flat-toggle {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+        border-radius: 8px;
+    }
+    
+    .parent-scale-section {
+        margin-bottom: 1rem;
+    }
+    
+    .parent-scale-title {
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .parent-scale-display {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+        border-radius: 8px;
+    }
+    
+    .category-tabs {
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        gap: 0.75rem;
+        border-radius: 12px;
+    }
+    
     .category-tab {
-        padding: 0.375rem 0.75rem;
-        font-size: 0.8rem;
-        border-radius: 6px;
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+        border-radius: 8px;
     }
     
     .mode-grid {
-        gap: 0.75rem;
+        gap: 1rem;
         grid-template-columns: 1fr;
     }
 }
 
 @media (max-width: 480px) {
     .container {
-        padding: 0.375rem;
+        padding: 0.25rem;
     }
     
     .header {
-        padding: 0.125rem 0;
-        margin-bottom: 0.5rem;
+        padding: 0.75rem 0.25rem;
+        margin-bottom: 0.75rem;
     }
     
     .header h1 {
-        font-size: 1.25rem;
+        font-size: 1.75rem;
         flex-direction: column;
-        gap: 0.125rem;
+        gap: 0.25rem;
     }
     
     .header h1::before {
-        font-size: 1rem;
+        font-size: 1.25rem;
     }
     
     .header .subtitle {
-        font-size: 0.75rem;
-        padding: 0 0.25rem;
+        font-size: 0.9rem;
+        padding: 0 0.5rem;
     }
     
     .key-selector-section {
-        padding: 0.25rem;
-        margin-bottom: 0.25rem;
+        padding: 0.5rem;
+        margin-bottom: 0.75rem;
     }
     
     .key-controls {
-        gap: 0.125rem;
-        margin-bottom: 0.125rem;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
     }
     
     .key-selector-wrapper label {
-        font-size: 0.65rem;
+        font-size: 0.8rem;
     }
     
     .key-selector {
-        padding: 0.125rem 0.25rem;
-        font-size: 0.65rem;
-        min-width: 50px;
-        border-radius: 3px;
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+        min-width: 70px;
+        border-radius: 6px;
     }
     
     .sharp-flat-toggle {
-        padding: 0.125rem 0.25rem;
-        font-size: 0.65rem;
-        border-radius: 4px;
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+        border-radius: 6px;
     }
     
     .parent-scale-section {
-        margin-bottom: 0.125rem;
+        margin-bottom: 0.75rem;
     }
     
     .parent-scale-title {
-        font-size: 0.65rem;
-        margin-bottom: 0.0625rem;
+        font-size: 0.8rem;
+        margin-bottom: 0.25rem;
     }
     
     .parent-scale-display {
-        padding: 0.0625rem 0.25rem;
-        font-size: 0.65rem;
-        border-radius: 3px;
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+        border-radius: 6px;
     }
     
     .category-tabs {
-        padding: 0.375rem;
-        margin-bottom: 0.5rem;
+        padding: 0.5rem;
+        margin-bottom: 0.75rem;
     }
     
     .category-tab {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
     }
 }
 
@@ -3524,4 +3524,175 @@ body {
     border-color: var(--primary-orange);
     box-shadow: 0 4px 12px rgba(217, 119, 6, 0.15);
     transform: translateY(-1px);
-} 
+}
+
+/* === MOBILE RESPONSIVE IMPROVEMENTS FOR CONTENT === */
+@media (max-width: 768px) {
+    /* Scale Card Mobile Styles */
+    .scale-card {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 12px;
+    }
+    
+    .scale-content {
+        gap: 1rem;
+    }
+    
+    .scale-section {
+        padding: 0.75rem;
+        border-radius: 10px;
+    }
+    
+    .scale-section h3 {
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    /* Notes and Intervals Mobile */
+    .notes, .intervals {
+        gap: 0.5rem;
+    }
+    
+    .note {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+        border-radius: 6px;
+    }
+    
+    .interval {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+        border-radius: 5px;
+    }
+    
+    .formula {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+        border-radius: 6px;
+    }
+    
+    /* Chords Section Mobile */
+    .chords-section {
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        border-radius: 10px;
+    }
+    
+    .chord-controls {
+        gap: 0.375rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .chord-type-btn {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.8rem;
+        border-radius: 6px;
+    }
+    
+    .chords-container {
+        padding: 0.5rem;
+        border-radius: 6px;
+    }
+    
+    .chords-list {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .chord-item {
+        padding: 0.75rem;
+        gap: 0.75rem;
+        border-radius: 6px;
+    }
+    
+    .chord-degree {
+        width: 50px;
+        height: 50px;
+        border-radius: 6px;
+    }
+    
+    .degree-number {
+        font-size: 1rem;
+    }
+    
+    .roman-numeral {
+        font-size: 0.7rem;
+    }
+    
+    .chord-name {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Extra small mobile adjustments */
+    .scale-card {
+        padding: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .scale-content {
+        gap: 0.75rem;
+    }
+    
+    .scale-section {
+        padding: 0.5rem;
+    }
+    
+    .scale-section h3 {
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .note {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .interval {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    .formula {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .chords-section {
+        padding: 0.5rem;
+    }
+    
+    .chord-type-btn {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+    }
+    
+    .chords-container {
+        padding: 0.375rem;
+    }
+    
+    .chord-item {
+        padding: 0.5rem;
+        gap: 0.5rem;
+    }
+    
+    .chord-degree {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .degree-number {
+        font-size: 0.9rem;
+    }
+    
+    .roman-numeral {
+        font-size: 0.65rem;
+    }
+    
+    .chord-name {
+        font-size: 0.9rem;
+    }
+}
