@@ -130,7 +130,7 @@ const intervalColors = {
     '#6': '#CD6155'   // Augmented Sixth = b7 (same pitch, same color)
 };
 
-// Scale Categories and Metadata - COMPLETELY RESTRUCTURED
+// Scale Categories and Metadata - REORDERED FROM MOST COMMON TO LEAST COMMON
 const scaleCategories = {
     'major-modes': {
         name: 'Major Modes',
@@ -144,6 +144,27 @@ const scaleCategories = {
             'mixolydian': [2, 2, 1, 2, 2, 1, 2],
             'aeolian': [2, 1, 2, 2, 1, 2, 2],
             'locrian': [1, 2, 2, 1, 2, 2, 2]
+        }
+    },
+    'pentatonic': {
+        name: 'Major Pentatonic',
+        description: 'The five modes of the major pentatonic scale',
+        modes: ['major-pentatonic', 'suspended-pentatonic', 'man-gong', 'ritusen', 'minor-pentatonic'],
+        formulas: {
+            'major-pentatonic': [2, 2, 3, 2, 3],
+            'suspended-pentatonic': [2, 3, 2, 3, 2],
+            'man-gong': [3, 2, 3, 2, 2],
+            'ritusen': [2, 3, 2, 2, 3],
+            'minor-pentatonic': [3, 2, 2, 3, 2]
+        }
+    },
+    'blues-scales': {
+        name: 'Blues Scales',
+        description: 'Six-note blues scales with added chromatic notes',
+        modes: ['blues-major', 'blues-minor'],
+        formulas: {
+            'blues-major': [2, 1, 1, 3, 2, 3],
+            'blues-minor': [3, 2, 1, 1, 3, 2]
         }
     },
     'harmonic-minor-modes': {
@@ -160,20 +181,6 @@ const scaleCategories = {
             'altered-dominant': [1, 2, 1, 2, 2, 1, 3]
         }
     },
-    'harmonic-major-modes': {
-        name: 'Harmonic Major Modes',
-        description: 'The seven modes of the harmonic major scale',
-        modes: ['harmonic-major', 'dorian-b5', 'phrygian-b4', 'lydian-b3', 'mixolydian-b2', 'lydian-augmented-sharp-2', 'locrian-double-flat-7'],
-        formulas: {
-            'harmonic-major': [2, 2, 1, 2, 1, 3, 1],
-            'dorian-b5': [2, 1, 2, 1, 3, 1, 2],
-            'phrygian-b4': [1, 2, 1, 3, 1, 2, 2],
-            'lydian-b3': [2, 1, 3, 1, 2, 2, 1],
-            'mixolydian-b2': [1, 3, 1, 2, 2, 1, 2],
-            'lydian-augmented-sharp-2': [3, 1, 2, 2, 1, 2, 1],
-            'locrian-double-flat-7': [1, 2, 2, 1, 2, 1, 3]
-        }
-    },
     'melodic-minor-modes': {
         name: 'Melodic Minor Modes',
         description: 'The seven modes of the melodic minor scale',
@@ -186,6 +193,32 @@ const scaleCategories = {
             'mixolydian-b6': [2, 2, 1, 2, 1, 2, 2],
             'locrian-natural-2': [2, 1, 2, 1, 2, 2, 2],
             'super-locrian': [1, 2, 1, 2, 2, 2, 2]
+        }
+    },
+    'diminished-modes': {
+        name: 'Diminished Modes',
+        description: 'Symmetrical diminished scales',
+        modes: ['diminished', 'half-diminished'],
+        formulas: {
+            'diminished': [2, 1, 2, 1, 2, 1, 2, 1],
+            'half-diminished': [1, 2, 1, 2, 1, 2, 1, 2]
+        }
+    },
+    'whole-tone': {
+        name: 'Whole Tone',
+        description: 'Six-note scale of equal whole steps',
+        modes: ['whole-tone'],
+        formulas: {
+            'whole-tone': [2, 2, 2, 2, 2, 2]
+        }
+    },
+    'japanese-pentatonic': {
+        name: 'Japanese Pentatonic',
+        description: 'Traditional Japanese pentatonic scales',
+        modes: ['hirojoshi-pentatonic', 'iwato-scale'],
+        formulas: {
+            'hirojoshi-pentatonic': [2, 1, 4, 1, 4],
+            'iwato-scale': [1, 4, 1, 4, 2]
         }
     },
     'hungarian-minor-modes': {
@@ -230,59 +263,18 @@ const scaleCategories = {
             'altered-major': [1, 1, 2, 2, 2, 2, 2]
         }
     },
-    'diminished-modes': {
-        name: 'Diminished Modes',
-        description: 'Symmetrical diminished scales',
-        modes: ['diminished', 'half-diminished'],
+    'harmonic-major-modes': {
+        name: 'Harmonic Major Modes',
+        description: 'The seven modes of the harmonic major scale',
+        modes: ['harmonic-major', 'dorian-b5', 'phrygian-b4', 'lydian-b3', 'mixolydian-b2', 'lydian-augmented-sharp-2', 'locrian-double-flat-7'],
         formulas: {
-            'diminished': [2, 1, 2, 1, 2, 1, 2, 1],
-            'half-diminished': [1, 2, 1, 2, 1, 2, 1, 2]
-        }
-    },
-    'whole-tone': {
-        name: 'Whole Tone',
-        description: 'Six-note scale of equal whole steps',
-        modes: ['whole-tone'],
-        formulas: {
-            'whole-tone': [2, 2, 2, 2, 2, 2]
-        }
-    },
-    'pentatonic': {
-        name: 'Major Pentatonic',
-        description: 'The five modes of the major pentatonic scale',
-        modes: ['major-pentatonic', 'suspended-pentatonic', 'man-gong', 'ritusen', 'minor-pentatonic'],
-        formulas: {
-            'major-pentatonic': [2, 2, 3, 2, 3],
-            'suspended-pentatonic': [2, 3, 2, 3, 2],
-            'man-gong': [3, 2, 3, 2, 2],
-            'ritusen': [2, 3, 2, 2, 3],
-            'minor-pentatonic': [3, 2, 2, 3, 2]
-        }
-    },
-    'japanese-pentatonic': {
-        name: 'Japanese Pentatonic',
-        description: 'Traditional Japanese pentatonic scales',
-        modes: ['hirojoshi-pentatonic', 'iwato-scale'],
-        formulas: {
-            'hirojoshi-pentatonic': [2, 1, 4, 1, 4],
-            'iwato-scale': [1, 4, 1, 4, 2]
-        }
-    },
-    'blues-scales': {
-        name: 'Blues Scales',
-        description: 'Six-note blues scales with added chromatic notes',
-        modes: ['blues-major', 'blues-minor'],
-        formulas: {
-            'blues-major': [2, 1, 1, 3, 2, 3],
-            'blues-minor': [3, 2, 1, 1, 3, 2]
-        }
-    },
-    'chromatic-scale': {
-        name: 'Chromatic Scale',
-        description: 'All twelve chromatic pitches',
-        modes: ['chromatic'],
-        formulas: {
-            'chromatic': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+            'harmonic-major': [2, 2, 1, 2, 1, 3, 1],
+            'dorian-b5': [2, 1, 2, 1, 3, 1, 2],
+            'phrygian-b4': [1, 2, 1, 3, 1, 2, 2],
+            'lydian-b3': [2, 1, 3, 1, 2, 2, 1],
+            'mixolydian-b2': [1, 3, 1, 2, 2, 1, 2],
+            'lydian-augmented-sharp-2': [3, 1, 2, 2, 1, 2, 1],
+            'locrian-double-flat-7': [1, 2, 2, 1, 2, 1, 3]
         }
     },
     'augmented-scale': {
@@ -291,6 +283,14 @@ const scaleCategories = {
         modes: ['augmented'],
         formulas: {
             'augmented': [1, 3, 1, 3, 1, 3]
+        }
+    },
+    'chromatic-scale': {
+        name: 'Chromatic Scale',
+        description: 'All twelve chromatic pitches',
+        modes: ['chromatic'],
+        formulas: {
+            'chromatic': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
         }
     }
 };
