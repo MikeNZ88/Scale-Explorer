@@ -166,6 +166,14 @@ function calculateScaleWithDegrees(root, formula, scaleType = 'major') {
         return calculateBluesScale(root, formula, rootNoteIndex, rootChromaticIndex, noteNames, noteToIndex);
     }
     
+    if (scaleType === 'hybrid-blues') {
+        return calculateHybridBluesScale(root, formula, rootNoteIndex, rootChromaticIndex, noteNames, noteToIndex);
+    }
+    
+    if (scaleType === 'augmented') {
+        return calculateAugmentedScale(root, formula, rootChromaticIndex, noteToIndex);
+    }
+    
     // Calculate scale notes based on scale degrees for regular scales
     const scale = [root]; // Start with the root
     let currentChromaticIndex = rootChromaticIndex;
@@ -339,6 +347,49 @@ function calculateBluesScale(root, formula, rootNoteIndex, rootChromaticIndex, n
     return scale;
 }
 
+function calculateHybridBluesScale(root, formula, rootNoteIndex, rootChromaticIndex, noteNames, noteToIndex) {
+    // Hybrid blues scale: 1, 2, b3, 3, 4, b5, 5, 6, b7 (9 notes)
+    // Formula: [2, 1, 1, 1, 1, 1, 2, 1]
+    
+    const scale = [root];
+    let currentChromaticIndex = rootChromaticIndex;
+    
+    // Blues-friendly chromatic scale (always use flats for altered notes)
+    const bluesChromatic = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+    
+    for (let i = 0; i < formula.length; i++) {
+        currentChromaticIndex = (currentChromaticIndex + formula[i]) % 12;
+        
+        // For hybrid blues scale, always use the blues-friendly chromatic scale
+        // This ensures Gb instead of F# and Bb instead of B
+        const noteName = bluesChromatic[currentChromaticIndex];
+        scale.push(noteName);
+    }
+    
+    return scale;
+}
+
+function calculateAugmentedScale(root, formula, rootChromaticIndex, noteToIndex) {
+    // Augmented scale: 6-note symmetrical scale
+    // Formula: [1, 3, 1, 3, 1, 3] or [3, 1, 3, 1, 3, 1]
+    
+    const scale = [root];
+    let currentChromaticIndex = rootChromaticIndex;
+    
+    // Augmented scale uses flats for altered notes to maintain consistent spelling
+    const augmentedChromatic = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+    
+    for (let i = 0; i < formula.length - 1; i++) {
+        currentChromaticIndex = (currentChromaticIndex + formula[i]) % 12;
+        
+        // Use the augmented-friendly chromatic scale
+        const noteName = augmentedChromatic[currentChromaticIndex];
+        scale.push(noteName);
+    }
+    
+    return scale;
+}
+
 // Helper function for chromatic fallback (improved version of getProperNoteSpelling)
 function getChromatic(chromaticIndex, key, scaleType = 'major') {
     const normalizedIndex = ((chromaticIndex % 12) + 12) % 12;
@@ -352,7 +403,10 @@ function getChromatic(chromaticIndex, key, scaleType = 'major') {
     
     // Chromatic scale with proper enharmonics based on key signature
     let chromaticScale;
-    if (usesSharps) {
+    if (scaleType === 'hybrid-blues' || scaleType === 'blues') {
+        // Blues scales generally prefer flats for altered notes
+        chromaticScale = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+    } else if (usesSharps) {
         chromaticScale = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     } else if (usesFlats) {
         chromaticScale = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
@@ -375,39 +429,17 @@ function getModeNotes(parentScale, modeIndex, parentFormula, scaleType = 'major'
     return calculateScale(modeRoot, modeFormula, scaleType);
 }
 
-function getIntervals(notes, root) {
+function getIntervals(notes, root, scaleType = 'major') {
     if (!notes || !Array.isArray(notes) || notes.length === 0) {
         return [];
     }
     
     function noteToIndex(note) {
-        const cleanNote = note.replace(/[♯♭#b]/g, match => {
-            return match === '♯' || match === '#' ? '#' : 'b';
-        });
-        
-        // Handle double accidentals
-        if (cleanNote.includes('bb')) {
-            const naturalNote = cleanNote.replace('bb', '');
-            const naturalIndex = {
-                'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11
-            }[naturalNote];
-            return naturalIndex !== undefined ? (naturalIndex - 2 + 12) % 12 : 0;
-        } else if (cleanNote.includes('##')) {
-            const naturalNote = cleanNote.replace('##', '');
-            const naturalIndex = {
-                'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11
-            }[naturalNote];
-            return naturalIndex !== undefined ? (naturalIndex + 2) % 12 : 0;
-        } else {
-            // Single accidental or natural
-            const noteMap = {
-                'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4,
-                'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9,
-                'A#': 10, 'Bb': 10, 'B': 11,
-                'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
-            };
-            return noteMap[cleanNote] !== undefined ? noteMap[cleanNote] : 0;
-        }
+        const noteMap = {
+            'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11,
+            'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
+        };
+        return noteMap[note] !== undefined ? noteMap[note] : 0;
     }
     
     const rootIndex = noteToIndex(root);
@@ -415,7 +447,12 @@ function getIntervals(notes, root) {
     
     // Special handling for different scale types
     if (notes.length === 6) {
-        // Check for blues scale patterns first
+        // Check for augmented scale type first
+        if (scaleType === 'augmented' || isAugmentedScale(notes) || isAugmentedScale2(notes)) {
+            return ['1', 'b2', '4', 'b5', '6', 'b7'];
+        }
+        
+        // Check for blues scale patterns
         if (isBluesPattern(notes, root)) {
             const intervalPattern = [];
             for (let i = 0; i < notes.length; i++) {
@@ -439,6 +476,12 @@ function getIntervals(notes, root) {
     if (notes.length === 8) {
         // Diminished scales - return proper intervals to prevent duplicates
         return ['1', '2', 'b3', '4', 'b5', 'b6', '6', '7'];
+    }
+    
+    if (notes.length === 9) {
+        // Hybrid blues scale - nine-note scale combining blues minor and blues major
+        // Contains: 1-2-♭3-3-4-♭5-5-6-♭7
+        return ['1', '2', 'b3', '3', '4', 'b5', '5', '6', 'b7'];
     }
     
     if (notes.length === 7) {
@@ -1512,7 +1555,8 @@ function getCharacteristicChords(scale, scaleType) {
     console.log('scale && scale.length === 6:', scale && scale.length === 6);
     
     if (scaleType === 'blues' || scaleType === 'blues-major' || scaleType === 'blues-minor' || 
-        scaleType.includes('blues') || (scale && scale.length === 6 && isBluesPattern(scale, scale[0]))) {
+        scaleType === 'hybrid-blues' || scaleType.includes('blues') || 
+        (scale && scale.length === 6 && isBluesPattern(scale, scale[0]))) {
         console.log('Detected blues scale, calling getBluesScaleChords');
         return getBluesScaleChords(scale, scaleType);
     }
@@ -1980,44 +2024,37 @@ function isAugmentedScale(scale) {
     return true;
 }
 
-function getAugmentedScaleChords(scale) {
-    console.log('getAugmentedScaleChords called with scale:', scale);
+function isAugmentedScale2(scale) {
+    if (!scale || scale.length !== 6) return false;
     
-    const availableChords = buildChordsFromScale(scale);
-    const triads = availableChords.filter(c => c.type === 'triad').map(c => c.chord);
-    const powerChords = availableChords.filter(c => c.type === 'power').map(c => c.chord);
+    // Check if the scale follows the second augmented pattern: 3-1-3-1-3-1 (major 3rd, minor 2nd pattern)
+    const noteToIndex = (note) => {
+        const cleanNote = note.replace(/[♯♭#b]/g, match => {
+            return match === '♯' || match === '#' ? '#' : 'b';
+        });
+        
+        const noteMap = {
+            'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4,
+            'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9,
+            'A#': 10, 'Bb': 10, 'B': 11,
+            'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
+        };
+        return noteMap[cleanNote] !== undefined ? noteMap[cleanNote] : 0;
+    };
     
-    // Augmented scale creates augmented triads
-    const augmentedChords = [];
-    for (let i = 0; i < Math.min(2, scale.length - 2); i += 2) {
-        augmentedChords.push(`${scale[i]}+`);
+    const expectedPattern = [3, 1, 3, 1, 3, 1]; // Second augmented scale pattern
+    
+    for (let i = 0; i < scale.length - 1; i++) {
+        const currentNote = noteToIndex(scale[i]);
+        const nextNote = noteToIndex(scale[i + 1]);
+        const interval = (nextNote - currentNote + 12) % 12;
+        
+        if (interval !== expectedPattern[i]) {
+            return false;
+        }
     }
     
-    return {
-        chords: [
-            {
-                type: 'Power Chords (Built from Scale)',
-                description: 'Power chords using augmented scale intervals',
-                chords: powerChords.slice(0, 2).sort(),
-                emphasis: true
-            },
-            {
-                type: 'Augmented Triads (Built from Scale)',
-                description: 'Augmented triads built using augmented scale notes',
-                chords: augmentedChords.sort()
-            },
-            {
-                type: 'Available Triads (Built from Scale)',
-                description: 'Other triads possible within the augmented scale notes',
-                chords: triads.length > 0 ? triads.slice(0, 2).sort() : ['Limited - augmented intervals dominate']
-            },
-            {
-                type: 'Scale Applications',
-                description: 'Works over: C+, C+maj7, altered dominants with ♯5',
-                chords: ['Use for augmented harmony', 'Creates symmetrical intervals']
-            }
-        ]
-    };
+    return true;
 }
 
 // Export all functions
@@ -2056,6 +2093,7 @@ window.MusicTheory = {
     getWholeToneScaleChords,
     getBluesScaleChords,
     isAugmentedScale,
+    isAugmentedScale2,
     getAugmentedScaleChords,
     getChromaticScaleChords
 };

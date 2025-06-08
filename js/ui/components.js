@@ -300,6 +300,7 @@ function getScaleTypeFromCategory(category) {
         case 'japanese-pentatonic': return 'pentatonic';
         case 'blues-modes': return 'blues';
         case 'blues-scales': return 'blues';
+        case 'hybrid-blues': return 'hybrid-blues';
         case 'whole-tone': return 'whole-tone';
         case 'chromatic-scale': return 'chromatic';
         case 'augmented-scale': return 'augmented';
@@ -792,6 +793,12 @@ function displayFormula(formula) {
     const formulaContainer = document.querySelector('.formula');
     if (!formulaContainer || !formula) return;
     
+    // Add debugging for augmented scale
+    console.log('=== displayFormula DEBUG ===');
+    console.log('Formula received:', formula);
+    console.log('Formula type:', typeof formula);
+    console.log('Formula is array:', Array.isArray(formula));
+    
     // Convert interval numbers to W/H/WH notation
     const convertedFormula = formula.map(interval => {
         switch (interval) {
@@ -801,6 +808,9 @@ function displayFormula(formula) {
             default: return interval.toString();
         }
     });
+    
+    console.log('Converted formula:', convertedFormula);
+    console.log('Final display:', convertedFormula.join(' - '));
     
     formulaContainer.textContent = convertedFormula.join(' - ');
 }
@@ -863,6 +873,37 @@ function createRelatedModes(currentMode, category, currentKey) {
     const categoryData = MusicConstants.scaleCategories[category];
     if (!categoryData || !categoryData.modes) return;
     
+    // Define non-modal scales (scales that don't have modes and should be treated as single entities)
+    const nonModalScales = [
+        'hybrid-blues',
+        'major-6th-diminished', 
+        'minor-6th-diminished',
+        'whole-tone',
+        'chromatic-scale'
+    ];
+    
+    // Check if this is a non-modal scale
+    if (nonModalScales.includes(category)) {
+        // For non-modal scales, hide the entire related modes section
+        const relatedModesSection = document.querySelector('.related-modes');
+        if (relatedModesSection) {
+            relatedModesSection.style.display = 'none';
+        }
+        return;
+    }
+    
+    // Show the related modes section for modal scales
+    const relatedModesSection = document.querySelector('.related-modes');
+    if (relatedModesSection) {
+        relatedModesSection.style.display = 'block';
+        
+        // Reset the section title to default for modal scales
+        const sectionTitle = relatedModesSection.querySelector('h4');
+        if (sectionTitle) {
+            sectionTitle.textContent = 'Related Modes';
+        }
+    }
+    
     // Calculate the root key of the parent scale based on current mode
     const currentModeData = MusicConstants.modeNumbers[currentMode];
     if (!currentModeData) return;
@@ -897,6 +938,9 @@ function createRelatedModes(currentMode, category, currentKey) {
         'hirojoshi-pentatonic': 0, 'iwato-scale': 0,
         // Blues scales
         'blues-major': 0, 'blues-minor': 9,
+        'hybrid-blues': 0,
+        // Barry Harris scales
+        'major-6th-diminished': 0, 'minor-6th-diminished': 0,
         // Other scales
         'whole-tone': 0, 'chromatic': 0, 'augmented': 0, 'bebop-major': 0
     };
@@ -988,6 +1032,18 @@ function createRelatedModes(currentMode, category, currentKey) {
     
     // Special handling for whole tone scales
     if (category === 'whole-tone') {
+        // Show the related modes section for whole tone scales
+        const relatedModesSection = document.querySelector('.related-modes');
+        if (relatedModesSection) {
+            relatedModesSection.style.display = 'block';
+        }
+        
+        // Update the section title to reflect rotations instead of modes
+        const sectionTitle = relatedModesSection.querySelector('h4');
+        if (sectionTitle) {
+            sectionTitle.textContent = 'Related Rotations';
+        }
+        
         // For whole tone scales, show all the other whole tone scales that share the same notes
         const wholeToneNotes = ['C', 'D', 'E', 'F#', 'G#', 'A#']; // One whole tone scale
         const otherWholeToneNotes = ['Db', 'Eb', 'F', 'G', 'A', 'B']; // The other whole tone scale
@@ -1020,13 +1076,14 @@ function createRelatedModes(currentMode, category, currentKey) {
             modeButtonsContainer.appendChild(button);
         });
         
-        // Display special information for whole tone scales
+        // Display special information for whole tone scales explaining rotations vs modes
         const otherScaleNotes = isInFirstScale ? otherWholeToneNotes : wholeToneNotes;
         const parentInfo = `
             <div class="parent-scale-info">
-                <strong>Related Whole Tone Scales:</strong> ${relatedNotes.join(', ')} (current scale)
+                <strong>Current Whole Tone Scale:</strong> ${relatedNotes.join(', ')}
                 <br><strong>Complementary Scale:</strong> ${otherScaleNotes.join(', ')}
-                <br><small>These two scales together contain all 12 chromatic notes</small>
+                <br><small><strong>Note:</strong> The whole tone scale has rotations, not modes. Each rotation starts on a different note but maintains the same interval pattern (all whole steps). These rotations change the root note and visual associations but don't create new harmonic colors like traditional modes do.</small>
+                <br><small>Together, these two scales contain all 12 chromatic notes.</small>
             </div>
         `;
         parentScaleInfo.innerHTML = parentInfo;
@@ -1168,6 +1225,13 @@ function calculateScaleWithConsistentSpelling(root, formula, scaleType, spelling
         return [];
     }
     
+    // Special handling for augmented scale - use chromatic spelling
+    if (scaleType === 'augmented' || (Array.isArray(formula) && 
+        (JSON.stringify(formula) === JSON.stringify([1, 3, 1, 3, 1, 3]) || 
+         JSON.stringify(formula) === JSON.stringify([3, 1, 3, 1, 3, 1])))) {
+        return calculateAugmentedScaleSpelling(root, formula, spellingConvention);
+    }
+    
     // Define the note names in order for proper scale degree calculation
     const noteNames = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
     const noteToIndex = {
@@ -1236,6 +1300,50 @@ function calculateScaleWithConsistentSpelling(root, formula, scaleType, spelling
         } else {
             // For other intervals, use consistent chromatic spelling
             noteName = getConsistentNoteSpelling(currentChromaticIndex, spellingConvention);
+        }
+        
+        scale.push(noteName);
+    }
+    
+    return scale;
+}
+
+// Special function for augmented scale spelling
+function calculateAugmentedScaleSpelling(root, formula, spellingConvention) {
+    const noteToIndex = {
+        'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11,
+        'C#': 1, 'Db': 1, 'D#': 3, 'Eb': 3, 'F#': 6, 'Gb': 6,
+        'G#': 8, 'Ab': 8, 'A#': 10, 'Bb': 10,
+        'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
+    };
+    
+    const rootChromaticIndex = noteToIndex[root];
+    if (rootChromaticIndex === undefined) {
+        console.warn('Invalid root note:', root);
+        return [];
+    }
+    
+    const scale = [root];
+    let currentChromaticIndex = rootChromaticIndex;
+    
+    for (let i = 0; i < formula.length - 1; i++) {
+        currentChromaticIndex = (currentChromaticIndex + formula[i]) % 12;
+        
+        // For augmented scale, use chromatic spelling with proper enharmonics
+        // The augmented scale should avoid using the same letter name twice
+        let noteName = getConsistentNoteSpelling(currentChromaticIndex, spellingConvention);
+        
+        // Check if this note name conflicts with existing notes in the scale
+        const existingLetters = scale.map(note => note.charAt(0));
+        const currentLetter = noteName.charAt(0);
+        
+        if (existingLetters.includes(currentLetter)) {
+            // Use the enharmonic equivalent
+            if (spellingConvention === 'flat') {
+                noteName = getConsistentNoteSpelling(currentChromaticIndex, 'sharp');
+            } else {
+                noteName = getConsistentNoteSpelling(currentChromaticIndex, 'flat');
+            }
         }
         
         scale.push(noteName);

@@ -96,6 +96,18 @@ function updateScale() {
             return;
         }
         
+        // DEBUG: Log formula retrieval for augmented scale
+        if (category === 'augmented-scale') {
+            console.log('=== AUGMENTED SCALE DEBUG ===');
+            console.log('Category:', category);
+            console.log('Mode:', mode);
+            console.log('CategoryData:', categoryData);
+            console.log('Available formulas:', categoryData.formulas);
+            console.log('Retrieved formula:', modeFormula);
+            console.log('Expected formula for augmented:', [1, 3, 1, 3, 1, 3]);
+            console.log('Formula matches expected:', JSON.stringify(modeFormula) === JSON.stringify([1, 3, 1, 3, 1, 3]));
+        }
+        
         // Get scale type
         const scaleType = getScaleType(category);
         
@@ -138,6 +150,7 @@ function getScaleType(category) {
         'japanese-pentatonic': 'pentatonic',
         'blues-modes': 'blues',
         'blues-scales': 'blues',
+        'hybrid-blues': 'hybrid-blues',
         'whole-tone': 'whole-tone',
         'chromatic-scale': 'chromatic',
         'augmented-scale': 'augmented'
@@ -173,30 +186,91 @@ function populateModeSelect() {
     const categoryData = MusicConstants.scaleCategories[currentState.category];
     if (!categoryData) return;
     
+    // Define non-modal scales (scales that don't have modes and should be treated as single entities)
+    const nonModalScales = [
+        'hybrid-blues',
+        'major-6th-diminished', 
+        'minor-6th-diminished',
+        'chromatic-scale'
+    ];
+    
+    // Check if this is a non-modal scale
+    const isNonModal = nonModalScales.includes(currentState.category);
+    
+    // Special handling for whole tone scale (has rotations, not modes)
+    const isWholeTone = currentState.category === 'whole-tone';
+    
     modeSelect.innerHTML = '';
     
-    categoryData.modes.forEach(mode => {
-        const option = document.createElement('option');
-        option.value = mode;
-        
-        // Use proper mode names from constants, with fallback to string transformation
-        const modeData = MusicConstants.modeNumbers[mode];
-        const properModeName = modeData ? modeData.properName : mode.split('-')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ');
-        option.textContent = properModeName;
-        
-        if (mode === currentState.mode) {
-            option.selected = true;
+    if (isNonModal) {
+        // For non-modal scales, ensure the mode is set to the first (and only) mode
+        if (!categoryData.modes.includes(currentState.mode)) {
+            currentState.mode = categoryData.modes[0];
         }
         
+        // For non-modal scales, disable the dropdown and show a single option
+        modeSelect.disabled = true;
+        modeSelect.style.opacity = '0.5';
+        modeSelect.style.cursor = 'not-allowed';
+        modeSelect.style.backgroundColor = '#f5f5f5';
+        modeSelect.style.color = '#999';
+        
+        // Add a single option indicating this scale has no modes
+        const option = document.createElement('option');
+        option.value = currentState.mode;
+        option.textContent = 'No modes available';
+        option.selected = true;
         modeSelect.appendChild(option);
-    });
-    
-    // Update current mode if it doesn't exist in new category
-    if (!categoryData.modes.includes(currentState.mode)) {
-        currentState.mode = categoryData.modes[0];
-        modeSelect.value = currentState.mode;
+    } else if (isWholeTone) {
+        // For whole tone scale, ensure the mode is set correctly
+        if (!categoryData.modes.includes(currentState.mode)) {
+            currentState.mode = categoryData.modes[0];
+        }
+        
+        // For whole tone scale, enable the dropdown but show rotations
+        modeSelect.disabled = false;
+        modeSelect.style.opacity = '1';
+        modeSelect.style.cursor = 'pointer';
+        modeSelect.style.backgroundColor = 'white';
+        modeSelect.style.color = '#DC6C27';
+        
+        // Add a single option explaining rotations
+        const option = document.createElement('option');
+        option.value = currentState.mode;
+        option.textContent = 'Rotations (see below)';
+        option.selected = true;
+        modeSelect.appendChild(option);
+    } else {
+        // For modal scales, enable the dropdown and populate with modes
+        modeSelect.disabled = false;
+        modeSelect.style.opacity = '1';
+        modeSelect.style.cursor = 'pointer';
+        modeSelect.style.backgroundColor = 'white';
+        modeSelect.style.color = '#DC6C27';
+        
+        categoryData.modes.forEach(mode => {
+            const option = document.createElement('option');
+            option.value = mode;
+            
+            // Use proper mode names from constants, with fallback to string transformation
+            const modeData = MusicConstants.modeNumbers[mode];
+            const properModeName = modeData ? modeData.properName : mode.split('-')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+            option.textContent = properModeName;
+            
+            if (mode === currentState.mode) {
+                option.selected = true;
+            }
+            
+            modeSelect.appendChild(option);
+        });
+        
+        // Update current mode if it doesn't exist in new category
+        if (!categoryData.modes.includes(currentState.mode)) {
+            currentState.mode = categoryData.modes[0];
+            modeSelect.value = currentState.mode;
+        }
     }
 }
 
