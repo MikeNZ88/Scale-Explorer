@@ -2190,8 +2190,9 @@ function displayChordType(type, chords) {
         const chordElement = document.createElement('div');
         chordElement.className = `chord-item ${chord.isNonStandard ? 'non-standard' : ''}`;
         
-        const functionColor = MusicTheory.getChordColor(chord.function, chord.quality);
-        const textColor = getContrastTextColor(functionColor);
+        // Always use orange color for chord degrees instead of function-based colors
+        const functionColor = '#f97316'; // Orange color
+        const textColor = 'white'; // White text for good contrast with orange
         
         // Add a tooltip for non-standard chords
         const tooltip = chord.isNonStandard ? 
