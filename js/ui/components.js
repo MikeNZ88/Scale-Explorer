@@ -373,11 +373,15 @@ function renderModalFretboard(container, scale) {
     // String notes (high E to low E)
     const stringNotes = ['E', 'B', 'G', 'D', 'A', 'E'];
     
-    // Create larger SVG for modal
+    // Create optimized SVG for modal with better space usage
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    const fretWidth = displayFrets <= 12 ? 80 : 60; // Larger frets for modal
-    const svgWidth = 120 + (displayFrets * fretWidth);
-    const svgHeight = 400; // Taller for modal
+    const fretWidth = displayFrets <= 12 ? 90 : 70; // Increased fret width for better visibility
+    const stringSpacing = 45; // Increased string spacing
+    const leftMargin = 80; // Reduced left margin
+    const topMargin = 50; // Reduced top margin
+    const svgWidth = leftMargin + (displayFrets * fretWidth) + 20;
+    const svgHeight = topMargin + ((stringNotes.length - 1) * stringSpacing) + 60;
+    
     svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
     svg.setAttribute('width', '100%');
     svg.setAttribute('height', '100%');
@@ -388,12 +392,12 @@ function renderModalFretboard(container, scale) {
     // Draw fret lines
     for (let fret = 0; fret <= displayFrets; fret++) {
         const actualFret = fretboardState.startFret + fret;
-        const x = 100 + (fret * fretWidth);
+        const x = leftMargin + (fret * fretWidth);
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         line.setAttribute('x1', x);
-        line.setAttribute('y1', 65); // Start just above the strings
+        line.setAttribute('y1', topMargin); // Start just above the strings
         line.setAttribute('x2', x);
-        line.setAttribute('y2', 295); // End just below the strings (strings are at y=80 to y=280)
+        line.setAttribute('y2', topMargin + ((stringNotes.length - 1) * stringSpacing)); // End just below the strings
         line.setAttribute('stroke', actualFret === 0 ? '#000' : '#999');
         line.setAttribute('stroke-width', actualFret === 0 ? '5' : '3');
         svg.appendChild(line);
@@ -401,11 +405,11 @@ function renderModalFretboard(container, scale) {
         // Fret numbers
         if (fret > 0) {
             const fretNumber = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            fretNumber.setAttribute('x', 100 + ((fret - 0.5) * fretWidth));
-            fretNumber.setAttribute('y', 40);
+            fretNumber.setAttribute('x', leftMargin + ((fret - 0.5) * fretWidth));
+            fretNumber.setAttribute('y', topMargin - 15);
             fretNumber.setAttribute('text-anchor', 'middle');
             fretNumber.setAttribute('fill', '#374151');
-            fretNumber.setAttribute('font-size', '18');
+            fretNumber.setAttribute('font-size', '20');
             fretNumber.setAttribute('font-weight', 'bold');
             fretNumber.textContent = actualFret;
             svg.appendChild(fretNumber);
@@ -413,12 +417,12 @@ function renderModalFretboard(container, scale) {
     }
     
     // Draw strings
-    for (let string = 0; string < 6; string++) {
-        const y = 80 + (string * 40);
+    for (let string = 0; string < stringNotes.length; string++) {
+        const y = topMargin + (string * stringSpacing);
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', 100);
+        line.setAttribute('x1', leftMargin);
         line.setAttribute('y1', y);
-        line.setAttribute('x2', 100 + (displayFrets * fretWidth));
+        line.setAttribute('x2', leftMargin + (displayFrets * fretWidth));
         line.setAttribute('y2', y);
         line.setAttribute('stroke', '#6b7280');
         line.setAttribute('stroke-width', '3');
@@ -426,11 +430,11 @@ function renderModalFretboard(container, scale) {
         
         // String labels
         const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        label.setAttribute('x', 70);
+        label.setAttribute('x', leftMargin - 25);
         label.setAttribute('y', y + 6);
         label.setAttribute('text-anchor', 'middle');
         label.setAttribute('fill', '#374151');
-        label.setAttribute('font-size', '18');
+        label.setAttribute('font-size', '20');
         label.setAttribute('font-weight', 'bold');
         label.textContent = stringNotes[string];
         svg.appendChild(label);
@@ -441,29 +445,30 @@ function renderModalFretboard(container, scale) {
     markerFrets.forEach(markerFret => {
         if (markerFret > fretboardState.startFret && markerFret <= endFret) {
             const fretPosition = markerFret - fretboardState.startFret;
-            const x = 100 + ((fretPosition - 0.5) * fretWidth);
+            const x = leftMargin + ((fretPosition - 0.5) * fretWidth);
+            const centerY = topMargin + (((stringNotes.length - 1) * stringSpacing) / 2);
             
             if (markerFret === 12 || markerFret === 24) {
                 // Double dots for octaves
                 const marker1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 marker1.setAttribute('cx', x);
-                marker1.setAttribute('cy', 140);
-                marker1.setAttribute('r', '8');
+                marker1.setAttribute('cy', centerY - stringSpacing * 0.8);
+                marker1.setAttribute('r', '10');
                 marker1.setAttribute('fill', '#d1d5db');
                 svg.appendChild(marker1);
                 
                 const marker2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 marker2.setAttribute('cx', x);
-                marker2.setAttribute('cy', 220);
-                marker2.setAttribute('r', '8');
+                marker2.setAttribute('cy', centerY + stringSpacing * 0.8);
+                marker2.setAttribute('r', '10');
                 marker2.setAttribute('fill', '#d1d5db');
                 svg.appendChild(marker2);
             } else {
                 // Single dot for other markers
                 const marker = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 marker.setAttribute('cx', x);
-                marker.setAttribute('cy', 180);
-                marker.setAttribute('r', '8');
+                marker.setAttribute('cy', centerY);
+                marker.setAttribute('r', '10');
                 marker.setAttribute('fill', '#d1d5db');
                 svg.appendChild(marker);
             }
@@ -472,7 +477,7 @@ function renderModalFretboard(container, scale) {
     
     // Place notes on fretboard
     if (scale && scale.length > 0) {
-        for (let string = 0; string < 6; string++) {
+        for (let string = 0; string < stringNotes.length; string++) {
             const openNote = stringNotes[string];
             
             for (let fret = 0; fret <= displayFrets; fret++) {
@@ -502,9 +507,9 @@ function renderModalFretboard(container, scale) {
                 }
                 
                 if (displayNote) {
-                    // Position notes
-                    const x = fret === 0 ? 40 : 100 + ((fret - 0.5) * fretWidth);
-                    const y = 80 + (string * 40);
+                    // Position notes - optimized for better visibility
+                    const x = fret === 0 ? leftMargin - 30 : leftMargin + ((fret - 0.5) * fretWidth);
+                    const y = topMargin + (string * stringSpacing);
                     
                     // Get interval and color
                     const scaleIndex = scale.indexOf(displayNote);
@@ -514,7 +519,7 @@ function renderModalFretboard(container, scale) {
                     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                     circle.setAttribute('cx', x);
                     circle.setAttribute('cy', y);
-                    circle.setAttribute('r', '16');
+                    circle.setAttribute('r', '18'); // Larger circles for better visibility
                     circle.setAttribute('fill', color);
                     circle.setAttribute('stroke', 'white');
                     circle.setAttribute('stroke-width', '3');
@@ -522,10 +527,10 @@ function renderModalFretboard(container, scale) {
                     
                     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                     text.setAttribute('x', x);
-                    text.setAttribute('y', y + 5);
+                    text.setAttribute('y', y + 6);
                     text.setAttribute('text-anchor', 'middle');
                     text.setAttribute('fill', 'white');
-                    text.setAttribute('font-size', '12');
+                    text.setAttribute('font-size', '14'); // Larger font for better readability
                     text.setAttribute('font-weight', 'bold');
                     // Use the same display mode as the main fretboard
                     text.textContent = fretboardState.showIntervals ? interval : displayNote;
@@ -2288,15 +2293,17 @@ function renderChordFretboard(chord, key) {
     });
 
     function renderFretboard() {
-        // Match the exact dimensions of the main fretboard
+        // Optimized dimensions for better space usage
         const fretCount = 12;
         const stringCount = 6;
-        const fretWidth = 80;  // Match main fretboard
-        const stringSpacing = 40; // Match main fretboard
-        const svgWidth = (fretCount + 1) * fretWidth + 100;
-        const svgHeight = (stringCount - 1) * stringSpacing + 100;
+        const fretWidth = 90;  // Increased from 80
+        const stringSpacing = 45; // Increased from 40
+        const leftMargin = 80; // Reduced from 100
+        const topMargin = 50; // Reduced from previous value
+        const svgWidth = leftMargin + (fretCount * fretWidth) + 20;
+        const svgHeight = topMargin + ((stringCount - 1) * stringSpacing) + 60;
 
-        // Create SVG with exact same structure as main fretboard
+        // Create SVG with optimized structure
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('class', 'fretboard-svg');
         svg.setAttribute('width', svgWidth);
@@ -2305,16 +2312,16 @@ function renderChordFretboard(chord, key) {
 
         // Standard guitar tuning (low to high) - SAME ORDER AS MAIN FRETBOARD
         const stringNotes = ['E', 'A', 'D', 'G', 'B', 'E'];
-        const stringMidiNotes = [40, 45, 50, 55, 59, 64]; // MIDI note numbers for open strings
+        const stringMidiNotes = [40, 45, 50, 55, 59, 64];
 
         // Draw frets (vertical lines)
         for (let fret = 0; fret <= fretCount; fret++) {
-            const x = 100 + (fret * fretWidth);
+            const x = leftMargin + (fret * fretWidth);
             const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
             line.setAttribute('x1', x);
-            line.setAttribute('y1', 50);
+            line.setAttribute('y1', topMargin);
             line.setAttribute('x2', x);
-            line.setAttribute('y2', 50 + ((stringCount - 1) * stringSpacing));
+            line.setAttribute('y2', topMargin + ((stringCount - 1) * stringSpacing));
             line.setAttribute('stroke', fret === 0 ? '#1f2937' : '#6b7280');
             line.setAttribute('stroke-width', fret === 0 ? '4' : '2');
             svg.appendChild(line);
@@ -2322,11 +2329,11 @@ function renderChordFretboard(chord, key) {
             // Fret numbers (only for frets 1-12)
             if (fret > 0) {
                 const fretNumber = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                fretNumber.setAttribute('x', 100 + ((fret - 0.5) * fretWidth));
-                fretNumber.setAttribute('y', 40);
+                fretNumber.setAttribute('x', leftMargin + ((fret - 0.5) * fretWidth));
+                fretNumber.setAttribute('y', topMargin - 15);
                 fretNumber.setAttribute('text-anchor', 'middle');
                 fretNumber.setAttribute('fill', '#374151');
-                fretNumber.setAttribute('font-size', '18');
+                fretNumber.setAttribute('font-size', '20');
                 fretNumber.setAttribute('font-weight', 'bold');
                 fretNumber.textContent = fret;
                 svg.appendChild(fretNumber);
@@ -2335,11 +2342,11 @@ function renderChordFretboard(chord, key) {
 
         // Draw strings (horizontal lines) - CORRECT ORDER: E(high) to E(low)
         for (let string = 0; string < stringCount; string++) {
-            const y = 50 + (string * stringSpacing);
+            const y = topMargin + (string * stringSpacing);
             const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', 100);
+            line.setAttribute('x1', leftMargin);
             line.setAttribute('y1', y);
-            line.setAttribute('x2', 100 + (fretCount * fretWidth));
+            line.setAttribute('x2', leftMargin + (fretCount * fretWidth));
             line.setAttribute('y2', y);
             line.setAttribute('stroke', '#6b7280');
             line.setAttribute('stroke-width', '3');
@@ -2347,11 +2354,11 @@ function renderChordFretboard(chord, key) {
 
             // String labels - REVERSE ORDER to match visual layout (high E at top)
             const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            label.setAttribute('x', 70);
+            label.setAttribute('x', leftMargin - 25);
             label.setAttribute('y', y + 6);
             label.setAttribute('text-anchor', 'middle');
             label.setAttribute('fill', '#374151');
-            label.setAttribute('font-size', '18');
+            label.setAttribute('font-size', '20');
             label.setAttribute('font-weight', 'bold');
             label.textContent = stringNotes[stringCount - 1 - string]; // Reverse order for display
             svg.appendChild(label);
@@ -2360,29 +2367,30 @@ function renderChordFretboard(chord, key) {
         // Draw fret markers (inlay dots)
         const markerFrets = [3, 5, 7, 9, 12];
         markerFrets.forEach(markerFret => {
-            const x = 100 + ((markerFret - 0.5) * fretWidth);
+            const x = leftMargin + ((markerFret - 0.5) * fretWidth);
+            const centerY = topMargin + (((stringCount - 1) * stringSpacing) / 2);
             
             if (markerFret === 12) {
                 // Double dots for 12th fret
                 const marker1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 marker1.setAttribute('cx', x);
-                marker1.setAttribute('cy', 90);
-                marker1.setAttribute('r', '8');
+                marker1.setAttribute('cy', centerY - stringSpacing * 0.8);
+                marker1.setAttribute('r', '10');
                 marker1.setAttribute('fill', '#d1d5db');
                 svg.appendChild(marker1);
                 
                 const marker2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 marker2.setAttribute('cx', x);
-                marker2.setAttribute('cy', 170);
-                marker2.setAttribute('r', '8');
+                marker2.setAttribute('cy', centerY + stringSpacing * 0.8);
+                marker2.setAttribute('r', '10');
                 marker2.setAttribute('fill', '#d1d5db');
                 svg.appendChild(marker2);
             } else {
                 // Single dot for other markers
                 const marker = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 marker.setAttribute('cx', x);
-                marker.setAttribute('cy', 130);
-                marker.setAttribute('r', '8');
+                marker.setAttribute('cy', centerY);
+                marker.setAttribute('r', '10');
                 marker.setAttribute('fill', '#d1d5db');
                 svg.appendChild(marker);
             }
@@ -2447,14 +2455,14 @@ function renderChordFretboard(chord, key) {
                         intervalColor = MusicTheory.getIntervalColor(interval);
                     }
                     
-                    // Position notes - CORRECT positioning
-                    const x = fret === 0 ? 40 : 100 + ((fret - 0.5) * fretWidth);
-                    const y = 50 + (string * stringSpacing);
+                    // Position notes - optimized positioning
+                    const x = fret === 0 ? leftMargin - 30 : leftMargin + ((fret - 0.5) * fretWidth);
+                    const y = topMargin + (string * stringSpacing);
                     
                     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                     circle.setAttribute('cx', x);
                     circle.setAttribute('cy', y);
-                    circle.setAttribute('r', '16');
+                    circle.setAttribute('r', '18'); // Larger circles for better visibility
                     circle.setAttribute('fill', intervalColor);
                     circle.setAttribute('stroke', 'white');
                     circle.setAttribute('stroke-width', '3');
@@ -2462,10 +2470,10 @@ function renderChordFretboard(chord, key) {
                     
                     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                     text.setAttribute('x', x);
-                    text.setAttribute('y', y + 5);
+                    text.setAttribute('y', y + 6);
                     text.setAttribute('text-anchor', 'middle');
                     text.setAttribute('fill', 'white');
-                    text.setAttribute('font-size', '12');
+                    text.setAttribute('font-size', '14'); // Larger font for better readability
                     text.setAttribute('font-weight', 'bold');
                     
                     if (displayMode === 'intervals') {
