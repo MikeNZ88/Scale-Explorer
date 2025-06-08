@@ -942,132 +942,180 @@ body {
 /* Main Fretboard Controls */
 .fretboard-controls {
     display: flex;
-    justify-content: space-between;
+    gap: 15px;
+    margin: 15px 0;
     align-items: center;
-    margin-bottom: 1rem;
-    padding: 1rem;
-    background: #f8fafc;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    gap: 1rem;
     flex-wrap: wrap;
 }
 
-.fret-navigation {
+.fret-range-selector,
+.display-toggle,
+.compare-toggle {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 8px;
 }
 
-.fret-range-selector {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.display-toggle {
-    display: flex;
-    align-items: center;
-}
-
-.nav-btn, .toggle-btn {
-    padding: 0.5rem 1rem;
-    border: 1px solid #d1d5db;
-    background: white;
-    border-radius: 8px;
-    cursor: pointer;
+.fret-range-selector label {
     font-weight: 500;
+    color: #374151;
+}
+
+.fret-range-selector select {
+    padding: 8px 12px;
+    border: 2px solid #d1d5db;
+    border-radius: 6px;
+    background: white;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
     transition: all 0.2s ease;
+    min-width: 100px;
 }
 
-.nav-btn:hover:not(:disabled), .toggle-btn:hover {
-    background: #f3f4f6;
-    border-color: #9ca3af;
+.fret-range-selector select:focus {
+    outline: none;
+    border-color: #f97316;
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
 }
 
-.nav-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.toggle-btn {
-    background: #f97316;
-    color: white;
+.fret-range-selector select:hover {
     border-color: #f97316;
 }
 
-.toggle-btn:hover {
-    background: #ea580c;
-    border-color: #ea580c;
-}
-
-.fret-range {
-    font-weight: 600;
-    color: #374151;
-    min-width: 100px;
-    text-align: center;
-}
-
-#fret-range-select {
-    padding: 0.5rem;
-    border: 1px solid #d1d5db;
+.toggle-btn {
+    padding: 8px 16px;
+    border: 2px solid #d1d5db;
     border-radius: 6px;
     background: white;
-    cursor: pointer;
-}
-
-/* Mobile responsive */
-@media (max-width: 768px) {
-    .fretboard-controls {
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-    
-    .fret-navigation, .fret-range-selector, .display-toggle {
-        width: 100%;
-        justify-content: center;
-    }
-}
-
-/* Practice tabs section */
-.practice-section {
-    background: #f8fafc;
-    border-radius: 16px;
-    padding: 1.5rem;
-    border: 1px solid #e2e8f0;
-}
-
-.practice-tabs {
-    display: grid;
-    gap: 1rem;
-}
-
-/* Navigation */
-.navigation {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.nav-btn {
-    background: white;
-    border: 2px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 0.75rem 1.5rem;
-    font-weight: 600;
-    color: #4a5568;
+    color: #374151;
     cursor: pointer;
     transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    font-size: 14px;
+    font-weight: 500;
 }
 
-.nav-btn:hover {
-    border-color: #667eea;
-    color: #667eea;
-    background: rgba(102, 126, 234, 0.05);
+.toggle-btn:hover {
+    border-color: #f97316;
+    color: #f97316;
+}
+
+.toggle-btn.active {
+    background: #f97316;
+    border-color: #f97316;
+    color: white;
+}
+
+/* Scale comparison styles */
+.comparison-selector {
+    width: 100%;
+    margin-top: 15px;
+    padding: 15px;
+    background: #fff7ed;
+    border: 2px solid #fed7aa;
+    border-radius: 8px;
+}
+
+.comparison-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.comparison-controls label {
+    font-weight: 500;
+    color: #9a3412;
+    white-space: nowrap;
+}
+
+.comparison-controls select {
+    padding: 6px 12px;
+    border: 1px solid #fed7aa;
+    border-radius: 4px;
+    background: white;
+    color: #9a3412;
+    font-size: 14px;
+    min-width: 100px;
+}
+
+.comparison-controls select:focus {
+    outline: none;
+    border-color: #f97316;
+    box-shadow: 0 0 0 1px #f97316;
+}
+
+.apply-btn {
+    padding: 8px 16px;
+    background: #f97316;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.apply-btn:hover {
+    background: #ea580c;
+}
+
+/* Legend for comparison mode */
+.comparison-legend {
+    margin-top: 10px;
+    padding: 8px;
+    background: rgba(249, 115, 22, 0.1);
+    border-radius: 4px;
+    border: 1px solid #f97316;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+    color: #f97316;
+    font-weight: 500;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+    border: 1px solid #f97316;
+}
+
+.legend-shared {
+    background: #10b981;
+}
+
+.legend-scale1 {
+    background: #3b82f6;
+}
+
+.legend-scale2 {
+    background: #8b5cf6;
+}
+
+/* Responsive design for comparison controls */
+@media (max-width: 768px) {
+    .comparison-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .comparison-controls select,
+    .apply-btn {
+        width: 100%;
+    }
+    
+    .comparison-legend {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
 }
 
 /* === ENHANCED MODAL STYLES === */

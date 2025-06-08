@@ -10,7 +10,9 @@ let fretboardState = {
     startFret: 0,
     fretRange: 12, // 12 or 24
     maxFrets: 24,
-    showIntervals: false // Add toggle state
+    showIntervals: false, // Add toggle state
+    compareMode: false,
+    comparisonScale: null
 };
 
 // Modal fretboard state (separate from main fretboard)
@@ -22,29 +24,12 @@ let modalFretboardState = {
 
 // Helper function to convert note names to chromatic indices (handles both sharps and flats)
 function noteToIndex(note) {
-    // Handle double accidentals first
-    if (note.includes('bb')) {
-        const naturalNote = note.replace('bb', '');
-        const naturalIndex = {
-            'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11
-        }[naturalNote];
-        return naturalIndex !== undefined ? (naturalIndex - 2 + 12) % 12 : -1;
-    } else if (note.includes('##')) {
-        const naturalNote = note.replace('##', '');
-        const naturalIndex = {
-            'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11
-        }[naturalNote];
-        return naturalIndex !== undefined ? (naturalIndex + 2) % 12 : -1;
-    } else {
-        // Single accidental or natural
-        const noteMap = {
+    const noteMapping = {
             'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4,
             'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9,
-            'A#': 10, 'Bb': 10, 'B': 11,
-            'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
+        'A#': 10, 'Bb': 10, 'B': 11
         };
-        return noteMap[note] !== undefined ? noteMap[note] : -1;
-    }
+    return noteMapping[note] || 0;
 }
 
 // Main fretboard rendering function
@@ -73,6 +58,9 @@ function createFretboard(scale) {
         <div class="display-toggle">
             <button id="toggle-display" class="toggle-btn">${fretboardState.showIntervals ? 'Show Notes' : 'Show Intervals'}</button>
         </div>
+        <div class="compare-toggle">
+            <button id="compare-scales" class="toggle-btn ${fretboardState.compareMode ? 'active' : ''}">${fretboardState.compareMode ? 'Exit Compare' : 'Compare Scales'}</button>
+        </div>
     `;
     fretboardContainer.appendChild(controlsDiv);
     
@@ -88,6 +76,20 @@ function createFretboard(scale) {
         fretboardState.showIntervals = !fretboardState.showIntervals;
         createFretboard(scale);
     });
+    
+    // Add compare functionality
+    document.getElementById('compare-scales').addEventListener('click', () => {
+        if (fretboardState.compareMode) {
+            exitCompareMode();
+        } else {
+            enterCompareMode();
+        }
+    });
+    
+    // Show comparison selector if in compare mode
+    if (fretboardState.compareMode) {
+        showComparisonSelector(controlsDiv);
+    }
     
     // Calculate display range
     const displayFrets = fretboardState.fretRange;
@@ -194,73 +196,10 @@ function createFretboard(scale) {
     
     // Place notes on fretboard
     if (scale && scale.length > 0) {
-        for (let string = 0; string < 6; string++) {
-            const openNote = stringNotes[string];
-            
-            for (let fret = 0; fret <= displayFrets; fret++) {
-                const actualFret = fretboardState.startFret + fret;
-                
-                const chromaticIndex = (noteToIndex(openNote) + actualFret) % 12;
-                const chromaticNoteName = MusicConstants.chromaticScale[chromaticIndex];
-                
-                let displayNote = null;
-                
-                // Check if this note is in the scale
-                for (let i = 0; i < scale.length; i++) {
-                    const scaleNote = scale[i];
-                    
-                    // Check for enharmonic equivalents if the function exists
-                    if (typeof MusicTheory !== 'undefined' && 
-                        typeof MusicTheory.areEnharmonicEquivalents === 'function') {
-                        if (MusicTheory.areEnharmonicEquivalents(chromaticNoteName, scaleNote)) {
-                            displayNote = scaleNote;
-                            break;
-                        }
+        if (fretboardState.compareMode && fretboardState.comparisonScale) {
+            renderComparisonFretboard(svg, scale, fretboardState.comparisonScale, displayFrets, fretWidth);
                     } else {
-                        // Fallback to direct comparison if function not available
-                        if (chromaticNoteName === scaleNote) {
-                            displayNote = scaleNote;
-                            break;
-                        }
-                    }
-                }
-                
-                if (displayNote) {
-                    // Improved positioning: move fret 0 notes further to the left
-                    const x = fret === 0 ? 25 : 80 + ((fret - 0.5) * fretWidth);
-                    const y = 60 + (string * 30);
-                    
-                    // Get the scale index and interval for this note
-                    const scaleIndex = scale.indexOf(displayNote);
-                    const scaleRoot = scale[0];
-                    const intervals = MusicTheory.getIntervals(scale, scaleRoot);
-                    const interval = intervals[scaleIndex] || '1';
-                    
-                    // Check color visibility state - use orange if colors are disabled
-                    const color = window.colorsVisible ? 
-                        MusicTheory.getIntervalColor(interval) : '#d97706';
-                    
-                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                    circle.setAttribute('cx', x);
-                    circle.setAttribute('cy', y);
-                    circle.setAttribute('r', '12');
-                    circle.setAttribute('fill', color);
-                    circle.setAttribute('stroke', 'white');
-                    circle.setAttribute('stroke-width', '2');
-                    svg.appendChild(circle);
-                    
-                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                    text.setAttribute('x', x);
-                    text.setAttribute('y', y + 4);
-                    text.setAttribute('text-anchor', 'middle');
-                    text.setAttribute('fill', 'white');
-                    text.setAttribute('font-size', '10');
-                    text.setAttribute('font-weight', 'bold');
-                    // Show intervals or notes based on toggle state
-                    text.textContent = fretboardState.showIntervals ? interval : displayNote;
-                    svg.appendChild(text);
-                }
-            }
+            renderSingleScale(svg, scale, displayFrets, fretWidth);
         }
     }
     
@@ -2868,4 +2807,437 @@ function getCurrentNoteIndex(note, isOctave) {
     }
     
     return -1;
+}
+
+// Scale comparison functions
+function enterCompareMode() {
+    fretboardState.compareMode = true;
+    
+    // Update legend to show primary scale name
+    updatePrimaryScaleLegend();
+    
+    // Re-render fretboard
+    createFretboard(currentScale);
+}
+
+function exitCompareMode() {
+    fretboardState.compareMode = false;
+    fretboardState.comparisonScale = null;
+    
+    // Re-render fretboard
+    createFretboard(currentScale);
+}
+
+// Function to update the comparison legend with actual scale names
+function updateComparisonLegend(comparisonRoot, comparisonCategory, comparisonMode) {
+    const comparisonScaleNameElement = document.getElementById('comparison-scale-name');
+    if (comparisonScaleNameElement) {
+        const formattedModeName = formatModeName(comparisonMode);
+        comparisonScaleNameElement.textContent = `${comparisonRoot} ${formattedModeName} only`;
+    }
+}
+
+// Function to update the primary scale legend
+function updatePrimaryScaleLegend() {
+    const primaryScaleNameElement = document.getElementById('primary-scale-name');
+    if (primaryScaleNameElement && window.AppController) {
+        const currentState = window.AppController.getCurrentState();
+        if (currentState) {
+            const formattedModeName = formatModeName(currentState.mode);
+            primaryScaleNameElement.textContent = `${currentState.key} ${formattedModeName} only`;
+        }
+    }
+}
+
+function showComparisonSelector(controlsDiv) {
+    const comparisonDiv = document.createElement('div');
+    comparisonDiv.className = 'comparison-selector';
+    
+    comparisonDiv.innerHTML = `
+        <h4>Select Comparison Scale</h4>
+        <div class="comparison-controls">
+            <label for="comparison-root">Root Note:</label>
+            <select id="comparison-root" name="comparison-root">
+                <option value="C">C</option>
+                <option value="C#">C#</option>
+                <option value="Db">Db</option>
+                <option value="D">D</option>
+                <option value="D#">D#</option>
+                <option value="Eb">Eb</option>
+                <option value="E">E</option>
+                <option value="F">F</option>
+                <option value="F#">F#</option>
+                <option value="Gb">Gb</option>
+                <option value="G">G</option>
+                <option value="G#">G#</option>
+                <option value="Ab">Ab</option>
+                <option value="A">A</option>
+                <option value="A#">A#</option>
+                <option value="Bb">Bb</option>
+                <option value="B">B</option>
+            </select>
+            
+            <label for="comparison-category">Scale Category:</label>
+            <select id="comparison-category" name="comparison-category">
+            </select>
+            
+            <label for="comparison-mode">Mode:</label>
+            <select id="comparison-mode" name="comparison-mode">
+            </select>
+            
+            <button id="apply-comparison" class="apply-btn">Apply Comparison</button>
+        </div>
+    `;
+    
+    // Add legend
+    const legend = document.createElement('div');
+    legend.className = 'comparison-legend';
+    legend.innerHTML = `
+        <h5>Legend</h5>
+        <div class="legend-item">
+            <span class="legend-color" style="background-color: #22c55e;"></span>
+            <span>Shared notes</span>
+        </div>
+        <div class="legend-item" id="primary-scale-legend">
+            <span class="legend-color" style="background-color: #3b82f6;"></span>
+            <span id="primary-scale-name">Primary scale only</span>
+        </div>
+        <div class="legend-item" id="comparison-scale-legend">
+            <span class="legend-color" style="background-color: #a855f7;"></span>
+            <span id="comparison-scale-name">Comparison scale only</span>
+        </div>
+    `;
+    comparisonDiv.appendChild(legend);
+    controlsDiv.appendChild(comparisonDiv);
+    
+    // Populate category dropdown
+    populateComparisonCategories();
+    
+    // Set up event listeners for dependent dropdowns
+    const categorySelect = document.getElementById('comparison-category');
+    const modeSelect = document.getElementById('comparison-mode');
+    
+    categorySelect.addEventListener('change', function() {
+        populateComparisonModes(this.value);
+    });
+    
+    // Initialize with first category
+    if (categorySelect.options.length > 0) {
+        categorySelect.selectedIndex = 0;
+        populateComparisonModes(categorySelect.value);
+    }
+    
+    // Apply comparison event listener
+    document.getElementById('apply-comparison').addEventListener('click', function() {
+        const root = document.getElementById('comparison-root').value;
+        const category = document.getElementById('comparison-category').value;
+        const mode = document.getElementById('comparison-mode').value;
+        
+        if (!root || !category || !mode) {
+            console.warn('Please select root, category, and mode for comparison');
+            return;
+        }
+        
+        try {
+            // Get the category data from constants
+            const categoryData = MusicConstants.scaleCategories[category];
+            if (!categoryData) {
+                console.error('Invalid category:', category);
+                return;
+            }
+            
+            // Get the formula for the selected mode
+            const modeFormula = categoryData.formulas[mode];
+            if (!modeFormula) {
+                console.error('Invalid mode for category:', mode, category);
+                return;
+            }
+            
+            // Get scale type
+            const scaleType = getScaleTypeFromCategory(category);
+            
+            // Generate the comparison scale using the same method as the main app
+            const comparisonScale = MusicTheory.calculateScale(root, modeFormula, scaleType);
+            
+            if (comparisonScale && comparisonScale.length > 0) {
+                // Update fretboard state
+                fretboardState.comparisonScale = comparisonScale;
+                
+                // Update legend with actual scale names
+                updateComparisonLegend(root, category, mode);
+                
+                // Re-render the fretboard with comparison
+                createFretboard(currentScale);
+                
+                console.log('Comparison applied:', {
+                    root,
+                    category,
+                    mode,
+                    formula: modeFormula,
+                    scale: comparisonScale
+                });
+            } else {
+                console.error('Failed to generate comparison scale');
+            }
+        } catch (error) {
+            console.error('Error applying comparison:', error);
+        }
+    });
+}
+
+// Helper function to populate comparison categories
+function populateComparisonCategories() {
+    const categorySelect = document.getElementById('comparison-category');
+    if (!categorySelect || !MusicConstants.scaleCategories) return;
+    
+    categorySelect.innerHTML = '';
+    
+    Object.entries(MusicConstants.scaleCategories).forEach(([key, category]) => {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = category.name;
+        categorySelect.appendChild(option);
+    });
+}
+
+// Helper function to populate comparison modes based on category
+function populateComparisonModes(categoryKey) {
+    const modeSelect = document.getElementById('comparison-mode');
+    if (!modeSelect || !MusicConstants.scaleCategories) return;
+    
+    const categoryData = MusicConstants.scaleCategories[categoryKey];
+    if (!categoryData) return;
+    
+    modeSelect.innerHTML = '';
+    
+    categoryData.modes.forEach(mode => {
+        const option = document.createElement('option');
+        option.value = mode;
+        option.textContent = formatModeName(mode);
+        modeSelect.appendChild(option);
+    });
+}
+
+// Helper function to format mode names for display
+function formatModeName(mode) {
+    return mode
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
+// Helper function to get scale type from category (same logic as main app)
+function getScaleTypeFromCategory(category) {
+    const typeMap = {
+        'major-modes': 'major',
+        'harmonic-minor-modes': 'harmonic-minor',
+        'harmonic-major-modes': 'harmonic-major',
+        'melodic-minor-modes': 'melodic-minor',
+        'hungarian-minor-modes': 'hungarian-minor',
+        'neapolitan-minor-modes': 'neapolitan-minor',
+        'neapolitan-major-modes': 'neapolitan-major',
+        'diminished-modes': 'diminished',
+        'pentatonic': 'pentatonic',
+        'japanese-pentatonic': 'pentatonic',
+        'blues-modes': 'blues',
+        'blues-scales': 'blues',
+        'hybrid-blues': 'hybrid-blues',
+        'whole-tone': 'whole-tone',
+        'chromatic-scale': 'chromatic',
+        'augmented-scale': 'augmented'
+    };
+    
+    return typeMap[category] || 'major';
+}
+
+function renderSingleScale(svg, scale, displayFrets, fretWidth) {
+    const stringNotes = ['E', 'B', 'G', 'D', 'A', 'E'];
+    
+    for (let string = 0; string < 6; string++) {
+        const openNote = stringNotes[string];
+        
+        for (let fret = 0; fret <= displayFrets; fret++) {
+            const actualFret = fretboardState.startFret + fret;
+            
+            const chromaticIndex = (noteToIndex(openNote) + actualFret) % 12;
+            const chromaticNoteName = MusicConstants.chromaticScale[chromaticIndex];
+            
+            let displayNote = null;
+            
+            // Check if this note is in the scale
+            for (let i = 0; i < scale.length; i++) {
+                const scaleNote = scale[i];
+                
+                // Check for enharmonic equivalents if the function exists
+                if (typeof MusicTheory !== 'undefined' && 
+                    typeof MusicTheory.areEnharmonicEquivalents === 'function') {
+                    if (MusicTheory.areEnharmonicEquivalents(chromaticNoteName, scaleNote)) {
+                        displayNote = scaleNote;
+                        break;
+                    }
+                } else {
+                    // Fallback to direct comparison if function not available
+                    if (chromaticNoteName === scaleNote) {
+                        displayNote = scaleNote;
+                        break;
+                    }
+                }
+            }
+            
+            if (displayNote) {
+                // Improved positioning: move fret 0 notes further to the left
+                const x = fret === 0 ? 25 : 80 + ((fret - 0.5) * fretWidth);
+                const y = 60 + (string * 30);
+                
+                // Get the scale index and interval for this note
+                const scaleIndex = scale.indexOf(displayNote);
+                const scaleRoot = scale[0];
+                const intervals = MusicTheory.getIntervals(scale, scaleRoot);
+                const interval = intervals[scaleIndex] || '1';
+                
+                // Check color visibility state - use orange if colors are disabled
+                const color = window.colorsVisible ? 
+                    MusicTheory.getIntervalColor(interval) : '#d97706';
+                
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', x);
+                circle.setAttribute('cy', y);
+                circle.setAttribute('r', '12');
+                circle.setAttribute('fill', color);
+                circle.setAttribute('stroke', 'white');
+                circle.setAttribute('stroke-width', '2');
+                svg.appendChild(circle);
+                
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', x);
+                text.setAttribute('y', y + 4);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('fill', 'white');
+                text.setAttribute('font-size', '10');
+                text.setAttribute('font-weight', 'bold');
+                // Show intervals or notes based on toggle state
+                text.textContent = fretboardState.showIntervals ? interval : displayNote;
+                svg.appendChild(text);
+            }
+        }
+    }
+}
+
+function renderComparisonFretboard(svg, scale1, scale2, displayFrets, fretWidth) {
+    const stringNotes = ['E', 'B', 'G', 'D', 'A', 'E'];
+    
+    // Find shared notes between the two scales
+    const sharedNotes = scale1.filter(note => 
+        scale2.some(compareNote => {
+            if (typeof MusicTheory !== 'undefined' && 
+                typeof MusicTheory.areEnharmonicEquivalents === 'function') {
+                return MusicTheory.areEnharmonicEquivalents(note, compareNote);
+            }
+            return note === compareNote;
+        })
+    );
+    
+    for (let string = 0; string < 6; string++) {
+        const openNote = stringNotes[string];
+        
+        for (let fret = 0; fret <= displayFrets; fret++) {
+            const actualFret = fretboardState.startFret + fret;
+            
+            const chromaticIndex = (noteToIndex(openNote) + actualFret) % 12;
+            const chromaticNoteName = MusicConstants.chromaticScale[chromaticIndex];
+            
+            let displayNote = null;
+            let isInScale1 = false;
+            let isInScale2 = false;
+            let isShared = false;
+            
+            // Check if this note is in scale1
+            for (let i = 0; i < scale1.length; i++) {
+                const scaleNote = scale1[i];
+                if (typeof MusicTheory !== 'undefined' && 
+                    typeof MusicTheory.areEnharmonicEquivalents === 'function') {
+                    if (MusicTheory.areEnharmonicEquivalents(chromaticNoteName, scaleNote)) {
+                        displayNote = scaleNote;
+                        isInScale1 = true;
+                        break;
+                    }
+                } else {
+                    if (chromaticNoteName === scaleNote) {
+                        displayNote = scaleNote;
+                        isInScale1 = true;
+                        break;
+                    }
+                }
+            }
+            
+            // Check if this note is in scale2
+            for (let i = 0; i < scale2.length; i++) {
+                const scaleNote = scale2[i];
+                if (typeof MusicTheory !== 'undefined' && 
+                    typeof MusicTheory.areEnharmonicEquivalents === 'function') {
+                    if (MusicTheory.areEnharmonicEquivalents(chromaticNoteName, scaleNote)) {
+                        if (!displayNote) displayNote = scaleNote;
+                        isInScale2 = true;
+                        break;
+                    }
+                } else {
+                    if (chromaticNoteName === scaleNote) {
+                        if (!displayNote) displayNote = scaleNote;
+                        isInScale2 = true;
+                        break;
+                    }
+                }
+            }
+            
+            // Check if shared
+            if (displayNote) {
+                isShared = sharedNotes.some(sharedNote => {
+                    if (typeof MusicTheory !== 'undefined' && 
+                        typeof MusicTheory.areEnharmonicEquivalents === 'function') {
+                        return MusicTheory.areEnharmonicEquivalents(displayNote, sharedNote);
+                    }
+                    return displayNote === sharedNote;
+                });
+            }
+            
+            if (displayNote && (isInScale1 || isInScale2)) {
+                const x = fret === 0 ? 25 : 80 + ((fret - 0.5) * fretWidth);
+                const y = 60 + (string * 30);
+                
+                // Color coding for comparison
+                let color;
+                if (isShared) {
+                    // Shared notes: bright green
+                    color = '#10b981'; // emerald-500
+                } else if (isInScale1) {
+                    // Only in scale1: blue
+                    color = '#3b82f6'; // blue-500
+                } else {
+                    // Only in scale2: purple
+                    color = '#8b5cf6'; // violet-500
+                }
+                
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', x);
+                circle.setAttribute('cy', y);
+                circle.setAttribute('r', '12');
+                circle.setAttribute('fill', color);
+                circle.setAttribute('stroke', 'white');
+                circle.setAttribute('stroke-width', '2');
+                svg.appendChild(circle);
+                
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', x);
+                text.setAttribute('y', y + 4);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('fill', 'white');
+                text.setAttribute('font-size', '10');
+                text.setAttribute('font-weight', 'bold');
+                
+                // In comparison mode, always show notes for clarity
+                text.textContent = displayNote;
+                svg.appendChild(text);
+            }
+        }
+    }
 }
