@@ -1636,43 +1636,71 @@ function isWholeToneScale(scale) {
 function getDiminishedScaleChords(scale) {
     console.log('getDiminishedScaleChords called with scale:', scale);
     
-    const root = scale[0];
+    if (!scale || scale.length !== 8) {
+        return { chords: [] };
+    }
     
-    // Diminished scale has 8 notes, alternating whole-half or half-whole steps
-    // This creates specific chord patterns
+    // Diminished scale theory: 8 notes create 4 diminished 7th chords and 4 dominant 7th chords
+    // Diminished 7th chords built on scale degrees 1, 3, 5, 7 (odd degrees)
+    // Dominant 7th chords built on scale degrees 2, 4, 6, 8 (even degrees)
+    
+    const diminished7ths = [
+        `${scale[0]}°7`,  // 1st degree
+        `${scale[2]}°7`,  // 3rd degree  
+        `${scale[4]}°7`,  // 5th degree
+        `${scale[6]}°7`   // 7th degree
+    ];
+    
+    const dominant7ths = [
+        `${scale[1]}7`,   // 2nd degree
+        `${scale[3]}7`,   // 4th degree
+        `${scale[5]}7`,   // 6th degree
+        `${scale[7]}7`    // 8th degree
+    ];
+    
+    // Also show the available triads for completeness
+    const diminishedTriads = [
+        `${scale[0]}°`,
+        `${scale[2]}°`,
+        `${scale[4]}°`,
+        `${scale[6]}°`
+    ];
+    
+    const majorTriads = [
+        `${scale[1]}`,
+        `${scale[3]}`,
+        `${scale[5]}`,
+        `${scale[7]}`
+    ];
     
     return {
-        triads: [
+        chords: [
             {
-                type: 'Diminished Triads (Built from Scale)',
-                description: 'Four diminished triads, each a minor 3rd apart - built using scale notes',
-                chords: scale.length >= 7 ? [
-                    `${scale[0]}°`, `${scale[2]}°`, `${scale[4]}°`, `${scale[6]}°`
-                ] : [`${scale[0]}°`, `${scale[2]}°`]
-            },
-            {
-                type: 'Major Triads (Built from Scale)', 
-                description: 'Four major triads, each a minor 3rd apart - built using scale notes',
-                chords: scale.length >= 8 ? [
-                    `${scale[1]}`, `${scale[3]}`, `${scale[5]}`, `${scale[7] || scale[0]}`
-                ] : [`${scale[1]}`, `${scale[3] || scale[1]}`]
-            }
-        ],
-        sevenths: [
-            {
-                type: 'Diminished 7th Chords (Built from Scale)',
-                description: 'Fully diminished seventh chords using scale notes',
-                chords: scale.length >= 7 ? [
-                    `${scale[0]}°7`, `${scale[2]}°7`, `${scale[4]}°7`, `${scale[6]}°7`
-                ] : [`${scale[0]}°7`],
+                type: 'Diminished 7th Chords (Primary)',
+                description: 'Four diminished 7th chords built on odd scale degrees (1, 3, 5, 7)',
+                chords: diminished7ths.sort(),
                 emphasis: true
             },
             {
-                type: 'Dominant 7♭9 Chords (Built from Scale)',
-                description: 'Dominant 7♭9 chords built from scale notes',
-                chords: scale.length >= 8 ? [
-                    `${scale[1]}7♭9`, `${scale[3]}7♭9`, `${scale[5]}7♭9`, `${scale[7] || scale[0]}7♭9`
-                ] : [`${scale[1]}7♭9`]
+                type: 'Dominant 7th Chords (Primary)',
+                description: 'Four dominant 7th chords built on even scale degrees (2, 4, 6, 8)',
+                chords: dominant7ths.sort(),
+                emphasis: true
+            },
+            {
+                type: 'Diminished Triads',
+                description: 'Diminished triads from odd scale degrees',
+                chords: diminishedTriads.sort()
+            },
+            {
+                type: 'Major Triads',
+                description: 'Major triads from even scale degrees',
+                chords: majorTriads.sort()
+            },
+            {
+                type: 'Scale Applications',
+                description: 'Use over altered dominants, diminished passing chords, chromatic harmony',
+                chords: ['Excellent for jazz improvisation', 'Creates symmetrical harmonic patterns']
             }
         ]
     };
@@ -1860,57 +1888,6 @@ function getBluesScaleChords(scale, scaleType) {
                     'Works over: C7, F7, G7 (12-bar blues), Am7, Dm7' : 
                     'Works over: Cmaj7, C7, F7, G7sus4, Am7',
                 chords: ['Use for blues improvisation', 'Creates blue note tensions']
-            }
-        ]
-    };
-}
-
-function getDiminishedScaleChords(scale) {
-    console.log('getDiminishedScaleChords called with scale:', scale);
-    
-    const root = scale[0];
-    
-    // Diminished scale has 8 notes, alternating whole-half or half-whole steps
-    // This creates specific chord patterns
-    
-    const diminishedTriads = scale.length >= 7 ? [
-        `${scale[0]}°`, `${scale[2]}°`, `${scale[4]}°`, `${scale[6]}°`
-    ] : [`${scale[0]}°`, `${scale[2]}°`];
-    
-    const majorTriads = scale.length >= 8 ? [
-        `${scale[1]}`, `${scale[3]}`, `${scale[5]}`, `${scale[7] || scale[0]}`
-    ] : [`${scale[1]}`, `${scale[3] || scale[1]}`];
-    
-    const diminished7ths = scale.length >= 7 ? [
-        `${scale[0]}°7`, `${scale[2]}°7`, `${scale[4]}°7`, `${scale[6]}°7`
-    ] : [`${scale[0]}°7`];
-    
-    const dominant7b9s = scale.length >= 8 ? [
-        `${scale[1]}7♭9`, `${scale[3]}7♭9`, `${scale[5]}7♭9`, `${scale[7] || scale[0]}7♭9`
-    ] : [`${scale[1]}7♭9`];
-    
-    return {
-        chords: [
-            {
-                type: 'Diminished Triads (Built from Scale)',
-                description: 'Four diminished triads, each a minor 3rd apart - built using scale notes',
-                chords: diminishedTriads.sort()
-            },
-            {
-                type: 'Major Triads (Built from Scale)', 
-                description: 'Four major triads, each a minor 3rd apart - built using scale notes',
-                chords: majorTriads.sort()
-            },
-            {
-                type: 'Diminished 7th Chords (Built from Scale)',
-                description: 'Fully diminished seventh chords using scale notes',
-                chords: diminished7ths.sort(),
-                emphasis: true
-            },
-            {
-                type: 'Dominant 7♭9 Chords (Built from Scale)',
-                description: 'Dominant 7♭9 chords built from scale notes',
-                chords: dominant7b9s.sort()
             }
         ]
     };
