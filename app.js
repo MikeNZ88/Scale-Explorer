@@ -6,6 +6,9 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing app...');
     
+    // Initialize color visibility state (colors visible by default)
+    window.colorsVisible = true;
+    
     // Set up legacy compatibility
     setupLegacyCompatibility();
     

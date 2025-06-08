@@ -120,6 +120,11 @@ function updateScale() {
         // Update state
         currentState.scaleType = scaleType;
         
+        // Store scale data globally for color toggle re-rendering
+        window.currentScale = modeNotes;
+        window.currentIntervals = intervals;
+        window.currentFormula = modeFormula;
+        
         // Display the scale
         UIComponents.displayScale(modeNotes, intervals, modeFormula, scaleType, key, category);
         
@@ -326,8 +331,11 @@ function setupColorToggle() {
 }
 
 function updateColorVisibility(visible) {
-    const intervals = document.querySelectorAll('.interval');
+    // Store the color visibility state globally
+    window.colorsVisible = visible;
     
+    // Update intervals section colors
+    const intervals = document.querySelectorAll('.interval');
     intervals.forEach(interval => {
         if (visible) {
             // Show original colors using the consistent color scheme
@@ -337,8 +345,8 @@ function updateColorVisibility(visible) {
                 interval.style.backgroundColor = color;
             }
         } else {
-            // Hide colors (neutral background)
-            interval.style.backgroundColor = '#666666';
+            // Hide colors (use orange instead of gray)
+            interval.style.backgroundColor = '#d97706';
         }
     });
     
@@ -351,10 +359,39 @@ function updateColorVisibility(visible) {
                 toggleContainer.style.backgroundColor = '#8B5CF6';
                 toggleContainer.style.borderColor = '#8B5CF6';
             } else {
-                toggleContainer.style.backgroundColor = '#666666';
-                toggleContainer.style.borderColor = '#666666';
+                toggleContainer.style.backgroundColor = '#d97706';
+                toggleContainer.style.borderColor = '#d97706';
             }
         }
+    }
+    
+    // Re-render the current scale to update fretboard colors
+    if (window.currentScale && window.currentIntervals && window.currentFormula) {
+        const currentState = getCurrentState();
+        UIComponents.displayScale(
+            window.currentScale, 
+            window.currentIntervals, 
+            window.currentFormula, 
+            getScaleType(currentState.category), 
+            currentState.key, 
+            currentState.category
+        );
+    }
+    
+    // Re-render modal fretboard if it's open
+    const modal = document.getElementById('fretboard-modal');
+    if (modal && modal.style.display !== 'none' && window.currentScale) {
+        const fretboardDiv = modal.querySelector('.modal-fretboard');
+        if (fretboardDiv) {
+            UIComponents.renderModalFretboard(fretboardDiv, window.currentScale);
+        }
+    }
+    
+    // Re-render chord modal fretboard if it's open
+    const chordModal = document.getElementById('chord-modal');
+    if (chordModal && chordModal.style.display !== 'none' && window.currentChord) {
+        // The chord modal will be re-rendered by its own logic when colors change
+        // since it checks window.colorsVisible in its rendering function
     }
 }
 

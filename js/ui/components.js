@@ -235,7 +235,10 @@ function createFretboard(scale) {
                     const scaleRoot = scale[0];
                     const intervals = MusicTheory.getIntervals(scale, scaleRoot);
                     const interval = intervals[scaleIndex] || '1';
-                    const color = MusicTheory.getIntervalColor(interval);
+                    
+                    // Check color visibility state - use orange if colors are disabled
+                    const color = window.colorsVisible ? 
+                        MusicTheory.getIntervalColor(interval) : '#d97706';
                     
                     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                     circle.setAttribute('cx', x);
@@ -514,7 +517,8 @@ function renderModalFretboard(container, scale) {
                     // Get interval and color
                     const scaleIndex = scale.indexOf(displayNote);
                     const interval = MusicTheory.getIntervals(scale, scale[0])[scaleIndex] || '1';
-                    const color = MusicTheory.getIntervalColor(interval);
+                    const color = window.colorsVisible ? 
+                        MusicTheory.getIntervalColor(interval) : '#d97706';
                     
                     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                     circle.setAttribute('cx', x);
@@ -727,7 +731,7 @@ function displayNotes(notes) {
     // Create play button
     const playButton = document.createElement('button');
     playButton.className = 'play-btn';
-    playButton.textContent = '▶️ Play Scale';
+    playButton.textContent = 'Play Scale';
     playButton.setAttribute('data-section', 'notes');
     
     // Create direction toggle button
@@ -783,7 +787,8 @@ function displayIntervals(intervals) {
         intervalElement.setAttribute('data-index', index);
         
         // Set background color based on interval using the consistent color scheme
-        const color = MusicTheory.getIntervalColor(interval);
+        const color = window.colorsVisible ? 
+            MusicTheory.getIntervalColor(interval) : '#d97706';
         if (color) {
             intervalElement.style.backgroundColor = color;
         }
@@ -2150,6 +2155,20 @@ function displayTraditionalChords(scale, scaleType) {
     });
 }
 
+function getContrastTextColor(backgroundColor) {
+    // Convert hex to RGB
+    const hex = backgroundColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    
+    // Calculate luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    
+    // Return white for dark backgrounds, dark for light backgrounds
+    return luminance > 0.5 ? '#1f2937' : '#ffffff';
+}
+
 function displayChordType(type, chords) {
     const chordsList = document.getElementById('chords-list');
     if (!chordsList || !chords) return;
@@ -2172,13 +2191,14 @@ function displayChordType(type, chords) {
         chordElement.className = `chord-item ${chord.isNonStandard ? 'non-standard' : ''}`;
         
         const functionColor = MusicTheory.getChordColor(chord.function, chord.quality);
+        const textColor = getContrastTextColor(functionColor);
         
         // Add a tooltip for non-standard chords
         const tooltip = chord.isNonStandard ? 
             `title="Non-standard chord: ${chord.intervals.map(i => MusicTheory.getIntervalName(i)).join(', ')}"` : '';
         
         chordElement.innerHTML = `
-            <div class="chord-degree" style="background-color: ${functionColor}">
+            <div class="chord-degree" style="background-color: ${functionColor}; color: ${textColor};">
                 <span class="degree-number">${chord.degree}</span>
                 <span class="roman-numeral">${chord.roman}</span>
             </div>
@@ -2441,18 +2461,21 @@ function renderChordFretboard(chord, key) {
                         MusicTheory.areEnharmonicEquivalents(chordNote, rootNote) :
                         chordNote === rootNote;
                     
-                    // Calculate interval using the same system as scales
+                    // Determine interval and color
                     let interval = '1'; // Default to root
-                    let intervalColor = MusicTheory.getIntervalColor('1');
+                    let intervalColor = window.colorsVisible ? 
+                        MusicTheory.getIntervalColor('1') : '#d97706';
                     
                     if (isRoot) {
                         interval = '1';
-                        intervalColor = MusicTheory.getIntervalColor('1');
+                        intervalColor = window.colorsVisible ? 
+                            MusicTheory.getIntervalColor('1') : '#d97706';
                     } else {
                         // Use the same interval calculation as scales
                         const chordIntervals = MusicTheory.getIntervals(chord.notes, rootNote);
                         interval = chordIntervals[chordNoteIndex] || '1';
-                        intervalColor = MusicTheory.getIntervalColor(interval);
+                        intervalColor = window.colorsVisible ? 
+                            MusicTheory.getIntervalColor(interval) : '#d97706';
                     }
                     
                     // Position notes - optimized positioning
@@ -2629,11 +2652,15 @@ async function playScale(data, section) {
 
 async function playScaleSequence(notes, ascending, section) {
     const playOrder = ascending ? notes : [...notes].reverse();
-    const noteDuration = 0.6; // Duration for each note
     let octaveElement = null;
     
     // Calculate proper octaves for smooth scale progression
     const notesWithOctaves = calculateScaleOctaves(playOrder, ascending);
+    
+    // Get audio context timing for precise synchronization
+    const audioContext = window.AudioEngine.audioContext;
+    const startTime = audioContext.currentTime;
+    const noteDuration = 0.6; // Duration for each note
     
     for (let i = 0; i < playOrder.length; i++) {
         const note = playOrder[i];
@@ -2647,19 +2674,36 @@ async function playScaleSequence(notes, ascending, section) {
             octaveElement = await addOctaveVisual(notes.slice(0, -1), note, section);
         }
         
-        // Highlight the current note
+        // For the first note, highlight immediately. For subsequent notes, calculate timing.
+        if (i === 0) {
+            // First note - highlight immediately
         highlightCurrentNote(note, isOctave);
+        } else {
+            // Calculate precise timing for subsequent notes
+            const noteStartTime = startTime + (i * noteDuration * 0.7);
+            const visualDelay = Math.max(0, (noteStartTime - audioContext.currentTime) * 1000);
+            
+            // Schedule visual highlight to sync with audio
+            setTimeout(() => {
+                highlightCurrentNote(note, isOctave);
+            }, visualDelay);
+        }
         
-        // Play the note
+        // Play the note with precise Web Audio timing
         await window.AudioEngine.playNote(noteWithOctave, noteDuration * 0.8);
         
-        // Wait before next note
+        // Schedule highlight removal - immediate for first note, calculated for others
+        const highlightDuration = i === 0 ? (noteDuration * 800) : 
+            Math.max(0, (startTime + (i * noteDuration * 0.7) - audioContext.currentTime) * 1000) + (noteDuration * 800);
+        
+        setTimeout(() => {
+            removeNoteHighlight();
+        }, highlightDuration);
+        
+        // Wait before next note (only if not the last note)
         if (i < playOrder.length - 1) {
             await new Promise(resolve => setTimeout(resolve, noteDuration * 1000 * 0.7));
         }
-        
-        // Remove highlight
-        removeNoteHighlight();
     }
     
     // Remove octave visual after playback
@@ -2668,46 +2712,59 @@ async function playScaleSequence(notes, ascending, section) {
     }
 }
 
-// Helper function to calculate proper octaves for smooth scale progression
 function calculateScaleOctaves(notes, ascending) {
-    if (!notes || notes.length === 0) return [];
+    // Note names in chromatic order for octave calculation
+    const chromaticNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     
-    // Note to semitone mapping for octave calculation
-    const noteToSemitone = {
-        'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4,
-        'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9,
-        'A#': 10, 'Bb': 10, 'B': 11, 'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
-    };
+    // Function to get note index (handles both sharp and flat notation)
+    function getNoteIndex(note) {
+        const noteMap = {
+            'C': 0, 'C#': 1, 'Db': 1,
+            'D': 2, 'D#': 3, 'Eb': 3,
+            'E': 4,
+            'F': 5, 'F#': 6, 'Gb': 6,
+            'G': 7, 'G#': 8, 'Ab': 8,
+            'A': 9, 'A#': 10, 'Bb': 10,
+            'B': 11
+        };
+        return noteMap[note] !== undefined ? noteMap[note] : 0;
+    }
+    
+    if (notes.length === 0) return [];
     
     const result = [];
-    let currentOctave = 4; // Start in 4th octave
-    let lastSemitone = -1;
+    let currentOctave;
+    
+    if (ascending) {
+        // Ascending: start at octave 2 (where descending ends)
+        currentOctave = 2;
+    } else {
+        // Descending: start at octave 3 (will go down to octave 2)
+        currentOctave = 3;
+    }
+    
+    let lastNoteIndex = getNoteIndex(notes[0]);
     
     for (let i = 0; i < notes.length; i++) {
         const note = notes[i];
-        const semitone = noteToSemitone[note] !== undefined ? noteToSemitone[note] : 0;
+        const noteIndex = getNoteIndex(note);
         
-        if (i === 0) {
-            // First note - always start in 4th octave
-            result.push(`${note}${currentOctave}`);
-            lastSemitone = semitone;
-        } else {
-            // Check if we need to go to next octave
+        if (i > 0) {
             if (ascending) {
-                // For ascending: if current note is lower than previous, we've wrapped around
-                if (semitone < lastSemitone) {
+                // For ascending: if current note is lower than previous, we've crossed into next octave
+                if (noteIndex < lastNoteIndex) {
                     currentOctave++;
                 }
             } else {
-                // For descending: if current note is higher than previous, we've wrapped around
-                if (semitone > lastSemitone) {
+                // For descending: if current note is higher than previous, we've crossed into lower octave
+                if (noteIndex > lastNoteIndex) {
                     currentOctave--;
                 }
             }
-            
-            result.push(`${note}${currentOctave}`);
-            lastSemitone = semitone;
         }
+        
+        result.push(`${note}${currentOctave}`);
+        lastNoteIndex = noteIndex;
     }
     
     return result;
