@@ -133,7 +133,7 @@ const intervalColors = {
 // Scale Categories and Metadata - REORDERED FROM MOST COMMON TO LEAST COMMON
 const scaleCategories = {
     'major-modes': {
-        name: 'Major Modes',
+        name: 'Major',
         description: 'The seven modes of the major scale',
         modes: ['major', 'dorian', 'phrygian', 'lydian', 'mixolydian', 'aeolian', 'locrian'],
         formulas: {
@@ -159,7 +159,7 @@ const scaleCategories = {
         }
     },
     'blues-scales': {
-        name: 'Blues Scales',
+        name: 'Blues',
         description: 'Six-note blues scales with added chromatic notes',
         modes: ['blues-major', 'blues-minor'],
         formulas: {
@@ -168,7 +168,7 @@ const scaleCategories = {
         }
     },
     'harmonic-minor-modes': {
-        name: 'Harmonic Minor Modes',
+        name: 'Harmonic Minor',
         description: 'The seven modes of the harmonic minor scale',
         modes: ['harmonic-minor', 'locrian-natural-6', 'ionian-sharp-5', 'dorian-sharp-4', 'phrygian-dominant', 'lydian-sharp-2', 'altered-dominant'],
         formulas: {
@@ -182,7 +182,7 @@ const scaleCategories = {
         }
     },
     'melodic-minor-modes': {
-        name: 'Melodic Minor Modes',
+        name: 'Melodic Minor',
         description: 'The seven modes of the melodic minor scale',
         modes: ['melodic-minor', 'dorian-b2', 'lydian-augmented', 'lydian-dominant', 'mixolydian-b6', 'locrian-natural-2', 'super-locrian'],
         formulas: {
@@ -196,7 +196,7 @@ const scaleCategories = {
         }
     },
     'diminished-modes': {
-        name: 'Diminished Modes',
+        name: 'Diminished',
         description: 'Symmetrical diminished scales',
         modes: ['diminished', 'half-diminished'],
         formulas: {
@@ -222,7 +222,7 @@ const scaleCategories = {
         }
     },
     'hungarian-minor-modes': {
-        name: 'Hungarian Minor Modes',
+        name: 'Hungarian Minor',
         description: 'The seven modes of the Hungarian minor scale',
         modes: ['hungarian-minor', 'oriental', 'ionian-augmented-sharp-2', 'locrian-double-flat-3-double-flat-7', 'double-harmonic-major', 'lydian-sharp-2-sharp-6', 'ultra-locrian'],
         formulas: {
@@ -236,7 +236,7 @@ const scaleCategories = {
         }
     },
     'neapolitan-minor-modes': {
-        name: 'Neapolitan Minor Modes',
+        name: 'Neapolitan Minor',
         description: 'The seven modes of the neapolitan minor scale',
         modes: ['neapolitan-minor', 'leading-whole-tone', 'lydian-augmented-dominant', 'lydian-dominant-flat-6', 'major-locrian', 'half-diminished-flat-2', 'altered-diminished'],
         formulas: {
@@ -250,7 +250,7 @@ const scaleCategories = {
         }
     },
     'neapolitan-major-modes': {
-        name: 'Neapolitan Major Modes',
+        name: 'Neapolitan Major',
         description: 'The seven modes of the neapolitan major scale',
         modes: ['neapolitan-major', 'leading-whole-tone-major', 'lydian-augmented-major', 'lydian-dominant-major', 'major-locrian-major', 'half-diminished-major', 'altered-major'],
         formulas: {
@@ -264,7 +264,7 @@ const scaleCategories = {
         }
     },
     'harmonic-major-modes': {
-        name: 'Harmonic Major Modes',
+        name: 'Harmonic Major',
         description: 'The seven modes of the harmonic major scale',
         modes: ['harmonic-major', 'dorian-b5', 'phrygian-b4', 'lydian-b3', 'mixolydian-b2', 'lydian-augmented-sharp-2', 'locrian-double-flat-7'],
         formulas: {
@@ -278,7 +278,7 @@ const scaleCategories = {
         }
     },
     'augmented-scale': {
-        name: 'Augmented Scale',
+        name: 'Augmented',
         description: 'Six-note symmetrical scale',
         modes: ['augmented'],
         formulas: {
@@ -286,7 +286,7 @@ const scaleCategories = {
         }
     },
     'chromatic-scale': {
-        name: 'Chromatic Scale',
+        name: 'Chromatic',
         description: 'All twelve chromatic pitches',
         modes: ['chromatic'],
         formulas: {
@@ -298,7 +298,7 @@ const scaleCategories = {
 // Mode Metadata
 const modeMetadata = {
     // Major modes
-    major: { mood: 'Happy', description: 'Bright and uplifting, the foundation of Western music', applications: ['Pop', 'rock', 'folk', 'classical'] },
+    major: { mood: 'Happy', description: 'Bright and uplifting, the foundation of Western music. Also known as the Major scale.', applications: ['Pop', 'rock', 'folk', 'classical'] },
     dorian: { mood: 'Sophisticated', description: 'Minor with a natural 6th, creating a sophisticated, jazzy sound', applications: ['Jazz', 'folk', 'modal jazz'] },
     phrygian: { mood: 'Exotic', description: 'Dark and mysterious with a distinctive Spanish/Middle Eastern flavor', applications: ['Flamenco', 'metal', 'world music'] },
     lydian: { mood: 'Dreamy', description: 'Major with a raised 4th, creating an ethereal, floating quality', applications: ['Film scores', 'prog rock', 'jazz'] },

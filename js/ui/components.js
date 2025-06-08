@@ -1377,20 +1377,31 @@ function searchModes(query) {
             let matchedText = '';
             
             // Check if any query word matches the mode name
-            const modeWordMatch = queryWords.find(word => 
-                modeNameLower.includes(word.toLowerCase()) && word.length > 1
-            );
+            const modeWordMatch = queryWords.find(word => {
+                // Direct mode name match
+                if (modeNameLower.includes(word.toLowerCase()) && word.length > 1) {
+                    return true;
+                }
+                // Special case: "major" should match the "major" mode (Ionian)
+                if (word.toLowerCase() === 'major' && mode === 'major') {
+                    return true;
+                }
+                return false;
+            });
             
             // HIGH PRIORITY: Root note + mode combination
             if (rootNote && modeWordMatch) {
                 score = 1000; // Highest priority
-                matchedText = `${rootNote.toUpperCase()} ${modeName}`;
+                
+                // Special handling for "major" search - show as "Major" in results
+                const displayModeName = queryWords.includes('major') && mode === 'major' ? 'Major' : modeName;
+                matchedText = `${rootNote.toUpperCase()} ${displayModeName}`;
                 
                 // Add result for the specific root note
                 results.push({
                     root: rootNote.toUpperCase(),
                     mode: mode,
-                    modeName: modeName,
+                    modeName: displayModeName,
                     category: categoryKey,
                     categoryName: categoryData.name,
                     description: modeData.description || '',
@@ -1402,20 +1413,23 @@ function searchModes(query) {
             } else if (modeWordMatch) {
                 // MEDIUM PRIORITY: Mode name match only
                 score = 500;
-                matchedText = modeName;
+                
+                // Special handling for "major" search - show as "Major" in results
+                const displayModeName = queryWords.includes('major') && mode === 'major' ? 'Major' : modeName;
+                matchedText = displayModeName;
                 
                 // Add result for all notes if just searching by mode name
                 notes.forEach(note => {
                     results.push({
                         root: note,
                         mode: mode,
-                        modeName: modeName,
+                        modeName: displayModeName,
                         category: categoryKey,
                         categoryName: categoryData.name,
                         description: modeData.description || '',
                         mood: modeData.mood || '',
                         score: score,
-                        matchedText: `${note} ${modeName}`
+                        matchedText: `${note} ${displayModeName}`
                     });
                 });
                 
@@ -1429,21 +1443,26 @@ function searchModes(query) {
                         if (categoryName.includes(word.toLowerCase())) {
                             score += 25;
                         }
+                        // Special case: "major" should match the "major" mode (Ionian)
+                        if (word.toLowerCase() === 'major' && mode === 'major') {
+                            score += 100;
+                        }
                     }
                 });
                 
                 if (score > 0) {
+                    const displayModeName = queryWords.includes('major') && mode === 'major' ? 'Major' : modeName;
                     notes.forEach(note => {
                         results.push({
                             root: note,
                             mode: mode,
-                            modeName: modeName,
+                            modeName: displayModeName,
                             category: categoryKey,
                             categoryName: categoryData.name,
                             description: modeData.description || '',
                             mood: modeData.mood || '',
                             score: score,
-                            matchedText: modeName
+                            matchedText: displayModeName
                         });
                     });
                 }
