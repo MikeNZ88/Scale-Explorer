@@ -644,7 +644,6 @@ function shouldDisplayChords(scaleType, scaleLength) {
     // Scales that don't traditionally use diatonic chord analysis
     const noChordScales = [
         'chromatic',
-        'whole-tone',
         'augmented'
     ];
     
@@ -660,6 +659,11 @@ function shouldDisplayChords(scaleType, scaleLength) {
     
     // Blues scales can show chords
     if (scaleLength === 6 && scaleType === 'blues') {
+        return true;
+    }
+    
+    // Whole tone scales can show chords
+    if (scaleLength === 6 && scaleType === 'whole-tone') {
         return true;
     }
     
@@ -1818,37 +1822,46 @@ function getPentatonicScaleChords(scale, scaleType) {
 function getWholeToneScaleChords(scale) {
     console.log('getWholeToneScaleChords called with scale:', scale);
     
-    // Whole tone scale creates augmented triads naturally
-    const augmentedChords = [];
-    for (let i = 0; i < Math.min(3, scale.length - 2); i++) {
-        augmentedChords.push(`${scale[i]}+`);
+    if (!scale || scale.length !== 6) {
+        return { chords: [] };
     }
     
-    const availableChords = buildChordsFromScale(scale);
-    const powerChords = availableChords.filter(c => c.type === 'power').map(c => c.chord);
+    // In a whole tone scale, every note forms an augmented triad and dominant 7#5 chord
+    // Arrange them in order as they appear in the scale
+    
+    const augmentedTriads = [];
+    const dominant7Sharp5s = [];
+    
+    // Build chords for each note in the scale
+    for (let i = 0; i < scale.length; i++) {
+        const root = scale[i];
+        augmentedTriads.push(`${root}+`);
+        dominant7Sharp5s.push(`${root}7#5`);
+    }
     
     return {
         chords: [
             {
-                type: 'Power Chords (Built from Scale)',
-                description: 'Limited power chord options from whole-tone scale',
-                chords: powerChords.slice(0, 2).sort()
-            },
-            {
-                type: 'Augmented Triads (Built from Scale)',
-                description: 'All triads are augmented due to whole-tone intervals in scale',
-                chords: augmentedChords.sort()
-            },
-            {
-                type: 'Augmented Major 7th (Built from Scale)',
-                description: 'Characteristic seventh chord using whole-tone scale notes',
-                chords: [`${scale[0]}+maj7`],
+                type: 'Augmented Triads',
+                description: 'Each note in the whole tone scale forms an augmented triad',
+                chords: augmentedTriads,
                 emphasis: true
             },
             {
+                type: 'Dominant 7#5 Chords',
+                description: 'Each note forms a dominant seventh sharp fifth chord',
+                chords: dominant7Sharp5s,
+                emphasis: true
+            },
+            {
+                type: 'Whole Tone Clusters',
+                description: 'Any combination of adjacent notes creates whole tone clusters. These create floating, impressionistic harmony without traditional chord resolution. Use for atmospheric effects and smooth voice leading.',
+                chords: ['Cluster harmony creates ethereal, unresolved sound', 'Perfect for impressionist and film music']
+            },
+            {
                 type: 'Scale Applications',
-                description: 'Works over: C+, C7♯11, C7♯5, altered dominants',
-                chords: ['Use for impressionist harmony', 'Creates floating, unresolved quality']
+                description: 'Use over altered dominants, augmented chords, and for impressionist harmony',
+                chords: ['Creates floating, unresolved quality', 'Excellent for atmospheric music']
             }
         ]
     };

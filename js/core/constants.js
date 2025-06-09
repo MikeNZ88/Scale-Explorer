@@ -557,12 +557,12 @@ const modeNumbers = {
     
     // Other scales
     'whole-tone': { number: 1, properName: 'Whole Tone' },
-    'whole-tone-1': { number: 1, properName: 'Whole Tone 1' },
-    'whole-tone-2': { number: 2, properName: 'Whole Tone 2' },
-    'whole-tone-3': { number: 3, properName: 'Whole Tone 3' },
-    'whole-tone-4': { number: 4, properName: 'Whole Tone 4' },
-    'whole-tone-5': { number: 5, properName: 'Whole Tone 5' },
-    'whole-tone-6': { number: 6, properName: 'Whole Tone 6' },
+    'whole-tone-1': { number: 1, properName: 'Rotation 1' },
+    'whole-tone-2': { number: 2, properName: 'Rotation 2' },
+    'whole-tone-3': { number: 3, properName: 'Rotation 3' },
+    'whole-tone-4': { number: 4, properName: 'Rotation 4' },
+    'whole-tone-5': { number: 5, properName: 'Rotation 5' },
+    'whole-tone-6': { number: 6, properName: 'Rotation 6' },
     'chromatic': { number: 1, properName: 'Chromatic' },
     'augmented': { number: 1, properName: 'Whole Half - Half' },
     'augmented-2': { number: 2, properName: 'Half - Whole Half Augmented' },

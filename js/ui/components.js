@@ -833,7 +833,6 @@ function createRelatedModes(currentMode, category, currentKey) {
         'hybrid-blues',
         'major-6th-diminished', 
         'minor-6th-diminished',
-        'whole-tone',
         'chromatic-scale'
     ];
     
@@ -1001,46 +1000,55 @@ function createRelatedModes(currentMode, category, currentKey) {
             sectionTitle.textContent = 'Related Rotations';
         }
         
-        // For whole tone scales, show all the other whole tone scales that share the same notes
-        const wholeToneNotes = ['C', 'D', 'E', 'F#', 'G#', 'A#']; // One whole tone scale
-        const otherWholeToneNotes = ['Db', 'Eb', 'F', 'G', 'A', 'B']; // The other whole tone scale
+        // Calculate the whole tone scale from the current key
+        const wholeToneFormula = categoryData.formulas['whole-tone-1']; // All have same formula [2,2,2,2,2,2]
+        const wholeToneScale = calculateScaleWithConsistentSpelling(currentKey, wholeToneFormula, 'whole-tone', spellingConvention);
         
-        // Determine which whole tone scale the current key belongs to
-        const currentKeyIndex = noteToIndex(currentKey);
-        const wholeToneIndices = wholeToneNotes.map(note => noteToIndex(note));
-        const isInFirstScale = wholeToneIndices.includes(currentKeyIndex);
-        
-        const relatedNotes = isInFirstScale ? wholeToneNotes : otherWholeToneNotes;
-        
-        // Create buttons for all notes in the same whole tone scale
-        relatedNotes.forEach((note, index) => {
+        // Create 6 buttons - one for each rotation of the whole tone scale
+        wholeToneScale.forEach((startingNote, index) => {
+            const rotationName = `whole-tone-${index + 1}`;
+            const modeData = MusicConstants.modeNumbers[rotationName];
+            
+            if (!modeData) return;
+            
             const button = document.createElement('button');
-            button.className = `mode-button ${note === currentKey ? 'active' : ''}`;
+            button.className = `mode-button ${rotationName === currentMode && startingNote === currentKey ? 'active' : ''}`;
             button.innerHTML = `
                 <span class="mode-number">${index + 1}</span>
-                <span class="mode-name">${note} Whole Tone</span>
+                <span class="mode-name">${startingNote} Whole Tone</span>
             `;
             
-            // Add click handler to change to this note
+            // Add click handler to change to this rotation using the specific starting note
             button.addEventListener('click', () => {
                 AppController.setState({
-                    key: note,
+                    key: startingNote,
                     category: category,
-                    mode: currentMode
+                    mode: rotationName
                 });
             });
             
             modeButtonsContainer.appendChild(button);
         });
         
+        // Determine which whole tone scale the current key belongs to (for complementary info)
+        const currentKeyIndex = noteToIndex(currentKey);
+        const wholeToneIndices = wholeToneScale.map(note => noteToIndex(note));
+        const otherWholeToneNotes = [];
+        
+        // Calculate the complementary whole tone scale
+        for (let i = 0; i < 12; i++) {
+            if (!wholeToneIndices.includes(i)) {
+                otherWholeToneNotes.push(getConsistentNoteSpelling(i, spellingConvention));
+            }
+        }
+        
         // Display special information for whole tone scales explaining rotations vs modes
-        const otherScaleNotes = isInFirstScale ? otherWholeToneNotes : wholeToneNotes;
         const parentInfo = `
             <div class="parent-scale-info">
-                <strong>Current Whole Tone Scale:</strong> ${relatedNotes.join(', ')}
-                <br><strong>Complementary Scale:</strong> ${otherScaleNotes.join(', ')}
-                <br><small><strong>Note:</strong> The whole tone scale has rotations, not modes. Each rotation starts on a different note but maintains the same interval pattern (all whole steps). These rotations change the root note and visual associations but don't create new harmonic colors like traditional modes do.</small>
-                <br><small>Together, these two scales contain all 12 chromatic notes.</small>
+                <strong>Current Whole Tone Scale:</strong> ${wholeToneScale.join(', ')}
+                <br><strong>Complementary Scale:</strong> ${otherWholeToneNotes.join(', ')}
+                <br><small><strong>Note:</strong> The whole tone scale has rotations, not modes. Each rotation starts on a different note but maintains the same interval pattern (all whole steps). These rotations change the root note and harmonic focus but don't create new harmonic colors like traditional modes do.</small>
+                <br><small>Together, these two whole tone scales contain all 12 chromatic notes.</small>
             </div>
         `;
         parentScaleInfo.innerHTML = parentInfo;
@@ -2002,13 +2010,22 @@ function displayChordsFromScale(container, characteristicChords) {
             
             const isEmphasized = chordGroup.emphasis ? ' emphasized' : '';
             
+            const chordsHtml = chordGroup.chords.map(chord => {
+                // Check if this is a clickable chord (contains chord symbols like +, 7, etc.) vs description text
+                const isClickableChord = /[+°#♭]|7|maj|m|sus|dim|aug/.test(chord) && !chord.includes(' ');
+                
+                if (isClickableChord) {
+                    return `<span class="characteristic-chord clickable-chord" title="${chordGroup.description}" data-chord="${chord}">${chord}</span>`;
+                } else {
+                    return `<span class="characteristic-chord non-clickable" title="${chordGroup.description}">${chord}</span>`;
+                }
+            }).join('');
+            
             typeSection.innerHTML = `
                 <h4 class="chord-type-title${isEmphasized}">${chordGroup.type}</h4>
                 <p class="chord-type-description">${chordGroup.description}</p>
                 <div class="chord-type-chords">
-                    ${chordGroup.chords.map(chord => `
-                        <span class="characteristic-chord" title="${chordGroup.description}">${chord}</span>
-                    `).join('')}
+                    ${chordsHtml}
                 </div>
             `;
             
@@ -2024,12 +2041,21 @@ function displayChordsFromScale(container, characteristicChords) {
             const typeSection = document.createElement('div');
             typeSection.className = 'chord-type-section';
             
+            const chordsHtml = chords.map(chord => {
+                const chordName = chord.name || chord;
+                const isClickableChord = /[+°#♭]|7|maj|m|sus|dim|aug/.test(chordName) && !chordName.includes(' ');
+                
+                if (isClickableChord) {
+                    return `<span class="characteristic-chord clickable-chord" title="${chord.description || ''}" data-chord="${chordName}">${chordName}</span>`;
+                } else {
+                    return `<span class="characteristic-chord non-clickable" title="${chord.description || ''}">${chordName}</span>`;
+                }
+            }).join('');
+            
             typeSection.innerHTML = `
                 <h4 class="chord-type-title">${chordType}</h4>
                 <div class="chord-type-chords">
-                    ${chords.map(chord => `
-                        <span class="characteristic-chord" title="${chord.description || ''}">${chord.name}</span>
-                    `).join('')}
+                    ${chordsHtml}
                 </div>
             `;
             
@@ -2040,7 +2066,35 @@ function displayChordsFromScale(container, characteristicChords) {
     chordsFromScaleSection.appendChild(chordsContainer);
     container.appendChild(chordsFromScaleSection);
     
+    // Add click handlers for clickable chords
+    const clickableChords = chordsFromScaleSection.querySelectorAll('.clickable-chord');
+    clickableChords.forEach(chordElement => {
+        chordElement.addEventListener('click', function() {
+            const chordName = this.getAttribute('data-chord');
+            const [root, type] = parseChordName(chordName);
+            openChordModal(chordName, root);
+        });
+    });
+    
     console.log('displayChordsFromScale completed, container innerHTML length:', container.innerHTML.length);
+}
+
+// Helper function to parse chord names
+function parseChordName(chordName) {
+    // Extract root note and chord type from chord name like "C+", "F#7#5", "Bb°7"
+    let root = '';
+    let type = '';
+    
+    // Handle sharp/flat in root note
+    if (chordName.length > 1 && (chordName[1] === '#' || chordName[1] === '♯' || chordName[1] === 'b' || chordName[1] === '♭')) {
+        root = chordName.substring(0, 2);
+        type = chordName.substring(2);
+    } else {
+        root = chordName[0];
+        type = chordName.substring(1);
+    }
+    
+    return [root, type];
 }
 
 function organizeChordsByType(characteristicChords) {

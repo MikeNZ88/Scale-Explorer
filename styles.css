@@ -3595,3 +3595,33 @@ body {
 .legend-color.comparison-only {
     background-color: #dc2626; /* Red for comparison scale only */
 }
+
+/* === CLICKABLE CHORDS STYLING === */
+.clickable-chord {
+    cursor: pointer;
+    padding: 8px 12px;
+    margin: 4px;
+    border-radius: 4px;
+    background-color: #ff8c00;
+    border: 2px solid #ff7700;
+    color: white;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: inline-block;
+}
+
+.clickable-chord:hover {
+    background-color: #ff7700;
+    border-color: #ff6600;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.non-clickable {
+    cursor: default;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    background: rgba(107, 114, 128, 0.1);
+    border: 1px solid rgba(107, 114, 128, 0.2);
+    color: var(--text-secondary);
+}
