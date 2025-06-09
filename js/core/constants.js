@@ -69,8 +69,15 @@ const scaleFormulas = {
     'altered-major': [1, 1, 2, 2, 2, 2, 2],
     
     // Diminished modes
-    'diminished': [2, 1, 2, 1, 2, 1, 2, 1],
-    'half-diminished': [1, 2, 1, 2, 1, 2, 1, 2],
+    'diminished-modes': {
+        name: 'Octatonic/Diminished',
+        description: 'Two complementary eight-note symmetrical scales with 4 rotations each (only 2 unique transpositions)',
+        modes: ['wh-diminished', 'hw-diminished', 'wh-diminished', 'hw-diminished', 'wh-diminished', 'hw-diminished', 'wh-diminished', 'hw-diminished'],
+        formulas: {
+            'wh-diminished': [2, 1, 2, 1, 2, 1, 2, 1],  // W-H pattern
+            'hw-diminished': [1, 2, 1, 2, 1, 2, 1, 2]   // H-W pattern
+        }
+    },
     
     // Pentatonic scales
     'major-pentatonic': [2, 2, 3, 2, 3],
@@ -80,18 +87,22 @@ const scaleFormulas = {
     'minor-pentatonic': [3, 2, 2, 3, 2],
     
     // Symmetrical and other scales
-    'whole-tone': [2, 2, 2, 2, 2, 2],
+    'whole-tone': {
+        name: 'Whole Tone',
+        description: 'Six-note scale of equal whole steps (6 rotations, only 2 unique transpositions)',
+        modes: ['whole-tone-1', 'whole-tone-2', 'whole-tone-3', 'whole-tone-4', 'whole-tone-5', 'whole-tone-6'],
+        formulas: {
+            'whole-tone-1': [2, 2, 2, 2, 2, 2],  // Rotation 1
+            'whole-tone-2': [2, 2, 2, 2, 2, 2],  // Rotation 2
+            'whole-tone-3': [2, 2, 2, 2, 2, 2],  // Rotation 3
+            'whole-tone-4': [2, 2, 2, 2, 2, 2],  // Rotation 4
+            'whole-tone-5': [2, 2, 2, 2, 2, 2],  // Rotation 5
+            'whole-tone-6': [2, 2, 2, 2, 2, 2]   // Rotation 6
+        }
+    },
     'chromatic': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     'augmented': [1, 3, 1, 3, 1, 3],
     'bebop-major': [2, 2, 1, 2, 1, 1, 2, 1],
-    'hybrid-blues': {
-        name: 'Hybrid Blues',
-        description: 'Nine-note scale combining blues minor and blues major',
-        modes: ['hybrid-blues'],
-        formulas: {
-            'hybrid-blues': [2, 1, 1, 1, 1, 1, 2, 1]
-        }
-    },
     'major-6th-diminished': {
         name: 'Major 6th Diminished',
         description: 'Eight-note scales with added diminished passing tones',
@@ -227,20 +238,25 @@ const scaleCategories = {
         }
     },
     'diminished-modes': {
-        name: 'Diminished',
-        description: 'Symmetrical diminished scales',
-        modes: ['diminished', 'half-diminished'],
+        name: 'Octatonic/Diminished',
+        description: 'Two complementary eight-note symmetrical scales with 4 rotations each (only 2 unique transpositions)',
+        modes: ['wh-diminished', 'hw-diminished', 'wh-diminished', 'hw-diminished', 'wh-diminished', 'hw-diminished', 'wh-diminished', 'hw-diminished'],
         formulas: {
-            'diminished': [2, 1, 2, 1, 2, 1, 2, 1],
-            'half-diminished': [1, 2, 1, 2, 1, 2, 1, 2]
+            'wh-diminished': [2, 1, 2, 1, 2, 1, 2, 1],  // W-H pattern
+            'hw-diminished': [1, 2, 1, 2, 1, 2, 1, 2]   // H-W pattern
         }
     },
     'whole-tone': {
         name: 'Whole Tone',
-        description: 'Six-note scale of equal whole steps',
-        modes: ['whole-tone'],
+        description: 'Six-note scale of equal whole steps (6 rotations, only 2 unique transpositions)',
+        modes: ['whole-tone-1', 'whole-tone-2', 'whole-tone-3', 'whole-tone-4', 'whole-tone-5', 'whole-tone-6'],
         formulas: {
-            'whole-tone': [2, 2, 2, 2, 2, 2]
+            'whole-tone-1': [2, 2, 2, 2, 2, 2],  // Rotation 1
+            'whole-tone-2': [2, 2, 2, 2, 2, 2],  // Rotation 2
+            'whole-tone-3': [2, 2, 2, 2, 2, 2],  // Rotation 3
+            'whole-tone-4': [2, 2, 2, 2, 2, 2],  // Rotation 4
+            'whole-tone-5': [2, 2, 2, 2, 2, 2],  // Rotation 5
+            'whole-tone-6': [2, 2, 2, 2, 2, 2]   // Rotation 6
         }
     },
     'chromatic-scale': {
@@ -417,8 +433,8 @@ const modeMetadata = {
     'altered-major': { mood: 'Colorful', description: 'Major scale with altered tensions', applications: ['Jazz', 'fusion'] },
     
     // Diminished modes
-    'diminished': { mood: 'Symmetrical', description: 'Eight-note symmetrical scale, alternating whole-half steps', applications: ['Jazz', 'classical', 'metal'] },
-    'half-diminished': { mood: 'Symmetrical', description: 'Eight-note symmetrical scale, alternating half-whole steps', applications: ['Jazz', 'classical', 'experimental'] },
+    'wh-diminished': { mood: 'Symmetrical', description: 'Eight-note symmetrical scale, alternating whole-half steps', applications: ['Jazz', 'classical', 'metal'] },
+    'hw-diminished': { mood: 'Symmetrical', description: 'Eight-note symmetrical scale, alternating half-whole steps', applications: ['Jazz', 'classical', 'experimental'] },
     
     // Pentatonic scales
     'major-pentatonic': { mood: 'Universal', description: 'Five notes that work everywhere, no wrong notes', applications: ['Rock', 'country', 'pop', 'world'] },
@@ -440,6 +456,12 @@ const modeMetadata = {
     
     // Other scales
     'whole-tone': { mood: 'Dreamy', description: 'Six notes separated by whole steps, creates floating ambiguity. The whole tone scale has rotations rather than modes - each rotation starts on a different note but maintains the same interval pattern (all whole steps), so they don\'t create new harmonic colors like traditional modes do. There are only two distinct whole tone scales that together contain all 12 chromatic notes.', applications: ['Impressionist', 'jazz', 'film'] },
+    'whole-tone-1': { mood: 'Dreamy', description: 'First mode of the whole tone scale', applications: ['Impressionist', 'jazz', 'film'] },
+    'whole-tone-2': { mood: 'Dreamy', description: 'Second mode of the whole tone scale', applications: ['Impressionist', 'jazz', 'film'] },
+    'whole-tone-3': { mood: 'Dreamy', description: 'Third mode of the whole tone scale', applications: ['Impressionist', 'jazz', 'film'] },
+    'whole-tone-4': { mood: 'Dreamy', description: 'Fourth mode of the whole tone scale', applications: ['Impressionist', 'jazz', 'film'] },
+    'whole-tone-5': { mood: 'Dreamy', description: 'Fifth mode of the whole tone scale', applications: ['Impressionist', 'jazz', 'film'] },
+    'whole-tone-6': { mood: 'Dreamy', description: 'Sixth mode of the whole tone scale', applications: ['Impressionist', 'jazz', 'film'] },
     'chromatic': { mood: 'Chromatic', description: 'All twelve pitches, ultimate color and tension', applications: ['Jazz', 'classical', 'experimental'] },
     'augmented': { mood: 'Symmetrical', description: 'Six-note symmetrical scale with augmented character', applications: ['Jazz', 'experimental', 'modern classical'] },
     'augmented-2': { mood: 'Symmetrical', description: 'Second mode of the augmented scale, same symmetrical character', applications: ['Jazz', 'experimental', 'modern classical'] },
@@ -512,8 +534,8 @@ const modeNumbers = {
     'altered-major': { number: 7, properName: 'Altered Major' },
     
     // Diminished modes
-    'diminished': { number: 1, properName: 'Whole Half Diminished' },
-    'half-diminished': { number: 2, properName: 'Half Whole Diminished' },
+    'wh-diminished': { number: 1, properName: 'WH Diminished' },
+    'hw-diminished': { number: 2, properName: 'HW Diminished' },
     
     // Pentatonic scales
     'major-pentatonic': { number: 1, properName: 'Major Pentatonic' },
@@ -535,6 +557,12 @@ const modeNumbers = {
     
     // Other scales
     'whole-tone': { number: 1, properName: 'Whole Tone' },
+    'whole-tone-1': { number: 1, properName: 'Whole Tone 1' },
+    'whole-tone-2': { number: 2, properName: 'Whole Tone 2' },
+    'whole-tone-3': { number: 3, properName: 'Whole Tone 3' },
+    'whole-tone-4': { number: 4, properName: 'Whole Tone 4' },
+    'whole-tone-5': { number: 5, properName: 'Whole Tone 5' },
+    'whole-tone-6': { number: 6, properName: 'Whole Tone 6' },
     'chromatic': { number: 1, properName: 'Chromatic' },
     'augmented': { number: 1, properName: 'Whole Half - Half' },
     'augmented-2': { number: 2, properName: 'Half - Whole Half Augmented' },

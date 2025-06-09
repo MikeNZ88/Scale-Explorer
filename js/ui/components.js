@@ -26,11 +26,16 @@ let modalFretboardState = {
 // Helper function to convert note names to chromatic indices (handles both sharps and flats)
 function noteToIndex(note) {
     const noteMapping = {
-            'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4,
-            'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9,
-        'A#': 10, 'Bb': 10, 'B': 11
-        };
-    return noteMapping[note] || 0;
+        'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4,
+        'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9,
+        'A#': 10, 'Bb': 10, 'B': 11,
+        // Add double accidentals
+        'C##': 2, 'D##': 4, 'F##': 7, 'G##': 9, 'A##': 11,
+        'Dbb': 0, 'Ebb': 2, 'Gbb': 5, 'Abb': 7, 'Bbb': 9,
+        // Add enharmonic equivalents for edge cases
+        'B#': 0, 'E#': 5, 'Fb': 4, 'Cb': 11
+    };
+    return noteMapping[note] !== undefined ? noteMapping[note] : 0;
 }
 
 // Main fretboard rendering function
@@ -881,7 +886,7 @@ function createRelatedModes(currentMode, category, currentKey) {
         'neapolitan-major': 0, 'leading-whole-tone-major': 1, 'lydian-augmented-major': 3, 'lydian-dominant-major': 5,
         'major-locrian-major': 7, 'half-diminished-major': 9, 'altered-major': 11,
         // Diminished modes
-        'diminished': 0, 'half-diminished': 1,
+        'wh-diminished': 0, 'hw-diminished': 1,
         // Major Pentatonic modes (correct offsets)
         'major-pentatonic': 0, 'suspended-pentatonic': 2, 'man-gong': 4, 'ritusen': 7, 'minor-pentatonic': 9,
         // Japanese Pentatonic scales (independent scales, not modes)
@@ -892,7 +897,9 @@ function createRelatedModes(currentMode, category, currentKey) {
         // Barry Harris scales
         'major-6th-diminished': 0, 'minor-6th-diminished': 0,
         // Other scales
-        'whole-tone': 0, 'chromatic': 0, 'augmented': 0, 'bebop-major': 0
+        'whole-tone': 0, 
+        'whole-tone-1': 0, 'whole-tone-2': 2, 'whole-tone-3': 4, 'whole-tone-4': 6, 'whole-tone-5': 8, 'whole-tone-6': 10,
+        'chromatic': 0, 'augmented': 0, 'bebop-major': 0
     };
     
     const currentModeOffset = modeOffsets[currentMode] || 0;
@@ -1040,6 +1047,58 @@ function createRelatedModes(currentMode, category, currentKey) {
         return; // Exit early for whole tone scales
     }
     
+    // Special handling for diminished modes
+    if (category === 'diminished-modes') {
+        // Show the related modes section for diminished scales
+        const relatedModesSection = document.querySelector('.related-modes');
+        if (relatedModesSection) {
+            relatedModesSection.style.display = 'block';
+        }
+        
+        // Calculate the diminished scale from the current key to get all 8 notes
+        const diminishedFormula = categoryData.formulas['wh-diminished']; // Use WH pattern as base
+        const diminishedScale = calculateScaleWithConsistentSpelling(currentKey, diminishedFormula, 'diminished', spellingConvention);
+        
+        // Create 8 buttons - one for each note in the diminished scale
+        // Alternate between WH and HW patterns
+        diminishedScale.forEach((startingNote, index) => {
+            // Determine which pattern this note uses
+            const isWHPattern = index % 2 === 0; // Even indices use WH, odd indices use HW
+            const mode = isWHPattern ? 'wh-diminished' : 'hw-diminished';
+            const modeData = MusicConstants.modeNumbers[mode];
+            
+            if (!modeData) return;
+            
+            const button = document.createElement('button');
+            button.className = `mode-button ${mode === currentMode && startingNote === currentKey ? 'active' : ''}`;
+            button.innerHTML = `
+                <span class="mode-number">${modeData.number}</span>
+                <span class="mode-name">${startingNote} ${modeData.properName}</span>
+            `;
+            
+            // Add click handler to change to this mode using the specific starting note
+            button.addEventListener('click', () => {
+                AppController.setState({
+                    key: startingNote,
+                    category: category,
+                    mode: mode
+                });
+            });
+            
+            modeButtonsContainer.appendChild(button);
+        });
+        
+        // Display special information for diminished scales
+        const parentInfo = `
+            <div class="parent-scale-info">
+                <strong>These rotations are derived from:</strong> ${currentKey} Diminished Scale
+                <br><small><strong>Note:</strong> Diminished scale rotations start on different notes within the 8-note diminished collection. Each rotation emphasizes different harmonic and melodic relationships while using the same collection of notes.</small>
+            </div>
+        `;
+        parentScaleInfo.innerHTML = parentInfo;
+        return; // Exit early for diminished scales
+    }
+    
     // Calculate the parent scale with consistent spelling
     const scaleType = getScaleTypeFromCategory(category);
     const parentFormula = categoryData.formulas[categoryData.modes[0]]; // Get the first mode's formula (the parent scale)
@@ -1121,8 +1180,16 @@ function getConsistentNoteSpelling(noteIndex, spellingConvention) {
     const sharpChromatic = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const flatChromatic = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
     
+    // Double accidental alternatives (for special cases)
+    const doubleSharpChromatic = ['B#', 'C##', 'D', 'D##', 'E#', 'F', 'F##', 'G', 'G##', 'A', 'A##', 'B'];
+    const doubleFlatChromatic = ['C', 'Dbb', 'D', 'Ebb', 'E', 'Fb', 'Gbb', 'G', 'Abb', 'A', 'Bbb', 'Cb'];
+    
     if (spellingConvention === 'flat') {
         return flatChromatic[normalizedIndex];
+    } else if (spellingConvention === 'double-sharp') {
+        return doubleSharpChromatic[normalizedIndex];
+    } else if (spellingConvention === 'double-flat') {
+        return doubleFlatChromatic[normalizedIndex];
     } else {
         return sharpChromatic[normalizedIndex];
     }
@@ -1133,15 +1200,25 @@ function getProperEnharmonicSpelling(note) {
     // Get the current spelling convention from the modal system
     const spellingConvention = window.modalSystemSpelling || 'sharp';
     
-    // Only convert truly problematic enharmonic equivalents, not standard sharp/flat pairs
+    // Extended enharmonic map including double accidentals
     const enharmonicMap = {
         'B#': 'C',
         'E#': 'F',
         'Fb': 'E',
-        'Cb': 'B'
+        'Cb': 'B',
+        'C##': 'D',
+        'D##': 'E',
+        'F##': 'G',
+        'G##': 'A',
+        'A##': 'B',
+        'Dbb': 'C',
+        'Ebb': 'D',
+        'Gbb': 'F',
+        'Abb': 'G',
+        'Bbb': 'A'
     };
     
-    // Check if it's a problematic enharmonic that should always be converted
+    // Check if it's a problematic enharmonic that should be converted for system compatibility
     if (enharmonicMap[note]) {
         return enharmonicMap[note];
     }
@@ -1182,14 +1259,21 @@ function calculateScaleWithConsistentSpelling(root, formula, scaleType, spelling
         return calculateAugmentedScaleSpelling(root, formula, spellingConvention);
     }
     
+    // Special handling for diminished scales
+    if (scaleType === 'diminished' || formula.length === 8) {
+        return calculateDiminishedScaleSpelling(root, formula, spellingConvention);
+    }
+    
     // Define the note names in order for proper scale degree calculation
     const noteNames = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
     const noteToIndex = {
         'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11,
         'C#': 1, 'Db': 1, 'D#': 3, 'Eb': 3, 'F#': 6, 'Gb': 6,
         'G#': 8, 'Ab': 8, 'A#': 10, 'Bb': 10,
-        // Add enharmonic equivalents
-        'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
+        // Add enharmonic equivalents and double accidentals
+        'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4,
+        'C##': 2, 'D##': 4, 'F##': 7, 'G##': 9, 'A##': 11,
+        'Dbb': 0, 'Ebb': 2, 'Gbb': 5, 'Abb': 7, 'Bbb': 9
     };
     
     // Find the root note's position in the note names array
@@ -1247,12 +1331,110 @@ function calculateScaleWithConsistentSpelling(root, formula, scaleType, spelling
                 // Use flat
                 noteName = baseNoteName + 'b';
             }
+        } else if (chromaticDifference === 2) {
+            // Two semitones up - use double sharp or flat
+            if (spellingConvention === 'flat') {
+                const nextDegreeIndex = (scaleDegreeIndex + 1) % 7;
+                noteName = noteNames[nextDegreeIndex] + 'bb';
+            } else {
+                noteName = baseNoteName + '##';
+            }
+        } else if (chromaticDifference === 10) {
+            // Two semitones down - use double flat or sharp  
+            if (spellingConvention === 'sharp') {
+                const prevDegreeIndex = (scaleDegreeIndex - 1 + 7) % 7;
+                noteName = noteNames[prevDegreeIndex] + '##';
+            } else {
+                noteName = baseNoteName + 'bb';
+            }
         } else {
             // For other intervals, use consistent chromatic spelling
             noteName = getConsistentNoteSpelling(currentChromaticIndex, spellingConvention);
         }
         
         scale.push(noteName);
+    }
+    
+    return scale;
+}
+
+// Special function for diminished scale spelling
+function calculateDiminishedScaleSpelling(root, formula, spellingConvention) {
+    const noteNames = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+    const noteToIndex = {
+        'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11,
+        'C#': 1, 'Db': 1, 'D#': 3, 'Eb': 3, 'F#': 6, 'Gb': 6,
+        'G#': 8, 'Ab': 8, 'A#': 10, 'Bb': 10,
+        // Add enharmonic equivalents and double accidentals
+        'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4,
+        'C##': 2, 'D##': 4, 'F##': 7, 'G##': 9, 'A##': 11,
+        'Dbb': 0, 'Ebb': 2, 'Gbb': 5, 'Abb': 7, 'Bbb': 9
+    };
+    
+    // Find the root note's position in the note names array
+    const rootNoteName = root.charAt(0);
+    const rootNoteIndex = noteNames.indexOf(rootNoteName);
+    if (rootNoteIndex === -1) {
+        console.warn('Invalid root note:', root);
+        return [];
+    }
+    
+    // Get the chromatic index of the root
+    const rootChromaticIndex = noteToIndex[root];
+    if (rootChromaticIndex === undefined) {
+        console.warn('Invalid root note:', root);
+        return [];
+    }
+    
+    const scale = [root];
+    let currentChromaticIndex = rootChromaticIndex;
+    let usedLetters = [rootNoteName];
+    
+    for (let i = 0; i < formula.length - 1; i++) {
+        currentChromaticIndex = (currentChromaticIndex + formula[i]) % 12;
+        
+        // For diminished scales, prioritize not repeating letter names
+        // and use scale degrees when possible
+        const scaleDegreeIndex = (rootNoteIndex + i + 1) % 7;
+        const baseNoteName = noteNames[scaleDegreeIndex];
+        const baseNoteChromatic = noteToIndex[baseNoteName];
+        
+        const chromaticDifference = (currentChromaticIndex - baseNoteChromatic + 12) % 12;
+        
+        let noteName;
+        
+        // Try to use the scale degree first
+        if (chromaticDifference === 0 && !usedLetters.includes(baseNoteName)) {
+            noteName = baseNoteName;
+        } else if (chromaticDifference === 1 && !usedLetters.includes(baseNoteName)) {
+            noteName = baseNoteName + '#';
+        } else if (chromaticDifference === 11 && !usedLetters.includes(baseNoteName)) {
+            noteName = baseNoteName + 'b';
+        } else if (chromaticDifference === 2 && !usedLetters.includes(baseNoteName)) {
+            noteName = baseNoteName + '##';
+        } else if (chromaticDifference === 10 && !usedLetters.includes(baseNoteName)) {
+            noteName = baseNoteName + 'bb';
+        } else {
+            // If the scale degree is already used, find the best enharmonic equivalent
+            noteName = getConsistentNoteSpelling(currentChromaticIndex, spellingConvention);
+            
+            // Check for conflicts and resolve with enharmonics
+            const currentLetter = noteName.charAt(0);
+            if (usedLetters.includes(currentLetter)) {
+                // Try the enharmonic equivalent
+                const enharmonicConvention = spellingConvention === 'flat' ? 'sharp' : 'flat';
+                const enharmonicName = getConsistentNoteSpelling(currentChromaticIndex, enharmonicConvention);
+                const enharmonicLetter = enharmonicName.charAt(0);
+                
+                if (!usedLetters.includes(enharmonicLetter)) {
+                    noteName = enharmonicName;
+                }
+                // If both conflict, use the one that fits the spelling convention
+            }
+        }
+        
+        scale.push(noteName);
+        usedLetters.push(noteName.charAt(0));
     }
     
     return scale;
