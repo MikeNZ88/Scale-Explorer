@@ -3582,3 +3582,16 @@ body {
         font-size: 10px !important;
     }
 }
+
+/* Comparison legend colors */
+.legend-color.shared-note {
+    background-color: #3b82f6; /* Blue for shared notes */
+}
+
+.legend-color.primary-only {
+    background-color: #f97316; /* Orange for primary scale only */
+}
+
+.legend-color.comparison-only {
+    background-color: #dc2626; /* Red for comparison scale only */
+}

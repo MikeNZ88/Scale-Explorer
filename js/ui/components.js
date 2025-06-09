@@ -12,7 +12,8 @@ let fretboardState = {
     maxFrets: 24,
     showIntervals: false, // Add toggle state
     compareMode: false,
-    comparisonScale: null
+    comparisonScale: null,
+    comparisonSelection: null
 };
 
 // Modal fretboard state (separate from main fretboard)
@@ -2813,11 +2814,8 @@ function getCurrentNoteIndex(note, isOctave) {
 function enterCompareMode() {
     fretboardState.compareMode = true;
     
-    // Update legend to show primary scale name
-    updatePrimaryScaleLegend();
-    
     // Re-render fretboard
-    createFretboard(currentScale);
+    createFretboard(window.currentScale);
 }
 
 function exitCompareMode() {
@@ -2825,7 +2823,7 @@ function exitCompareMode() {
     fretboardState.comparisonScale = null;
     
     // Re-render fretboard
-    createFretboard(currentScale);
+    createFretboard(window.currentScale);
 }
 
 // Function to update the comparison legend with actual scale names
@@ -2850,6 +2848,23 @@ function updatePrimaryScaleLegend() {
 }
 
 function showComparisonSelector(controlsDiv) {
+    // Save current selections if they exist
+    let savedSelections = null;
+    const existingRoot = document.getElementById('comparison-root');
+    const existingCategory = document.getElementById('comparison-category');
+    const existingMode = document.getElementById('comparison-mode');
+    
+    if (existingRoot && existingCategory && existingMode) {
+        savedSelections = {
+            root: existingRoot.value,
+            category: existingCategory.value,
+            mode: existingMode.value
+        };
+    } else if (fretboardState.comparisonSelection) {
+        // Use stored selections if available
+        savedSelections = fretboardState.comparisonSelection;
+    }
+    
     const comparisonDiv = document.createElement('div');
     comparisonDiv.className = 'comparison-selector';
     
@@ -2893,25 +2908,65 @@ function showComparisonSelector(controlsDiv) {
     const legend = document.createElement('div');
     legend.className = 'comparison-legend';
     legend.innerHTML = `
-        <h5>Legend</h5>
-        <div class="legend-item">
-            <span class="legend-color" style="background-color: #22c55e;"></span>
-            <span>Shared notes</span>
-        </div>
-        <div class="legend-item" id="primary-scale-legend">
-            <span class="legend-color" style="background-color: #3b82f6;"></span>
-            <span id="primary-scale-name">Primary scale only</span>
-        </div>
-        <div class="legend-item" id="comparison-scale-legend">
-            <span class="legend-color" style="background-color: #a855f7;"></span>
-            <span id="comparison-scale-name">Comparison scale only</span>
+        <h4>Scale Comparison Legend</h4>
+        <div class="legend-items">
+            <div class="legend-item">
+                <span class="legend-color shared-note"></span>
+                <span>Shared notes</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color primary-only"></span>
+                <span id="primary-scale-name">Primary scale only</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color comparison-only"></span>
+                <span id="comparison-scale-name">Comparison scale only</span>
+            </div>
         </div>
     `;
     comparisonDiv.appendChild(legend);
     controlsDiv.appendChild(comparisonDiv);
     
+    // Update primary scale legend immediately after adding to DOM
+    setTimeout(() => {
+        updatePrimaryScaleLegend();
+        // Also update comparison legend if we have stored comparison data
+        if (fretboardState.comparisonSelection) {
+            updateComparisonLegend(
+                fretboardState.comparisonSelection.root,
+                fretboardState.comparisonSelection.category,
+                fretboardState.comparisonSelection.mode
+            );
+        }
+    }, 0);
+    
     // Populate category dropdown
     populateComparisonCategories();
+    
+    // Restore saved selections
+    if (savedSelections) {
+        setTimeout(() => {
+            const rootSelect = document.getElementById('comparison-root');
+            const categorySelect = document.getElementById('comparison-category');
+            const modeSelect = document.getElementById('comparison-mode');
+            
+            if (rootSelect && savedSelections.root) {
+                rootSelect.value = savedSelections.root;
+            }
+            
+            if (categorySelect && savedSelections.category) {
+                categorySelect.value = savedSelections.category;
+                populateComparisonModes(savedSelections.category);
+                
+                // Restore mode selection after populating modes
+                setTimeout(() => {
+                    if (modeSelect && savedSelections.mode) {
+                        modeSelect.value = savedSelections.mode;
+                    }
+                }, 10);
+            }
+        }, 10);
+    }
     
     // Set up event listeners for dependent dropdowns
     const categorySelect = document.getElementById('comparison-category');
@@ -2921,8 +2976,8 @@ function showComparisonSelector(controlsDiv) {
         populateComparisonModes(this.value);
     });
     
-    // Initialize with first category
-    if (categorySelect.options.length > 0) {
+    // Initialize with first category if no saved selections
+    if (!savedSelections && categorySelect.options.length > 0) {
         categorySelect.selectedIndex = 0;
         populateComparisonModes(categorySelect.value);
     }
@@ -2960,14 +3015,18 @@ function showComparisonSelector(controlsDiv) {
             const comparisonScale = MusicTheory.calculateScale(root, modeFormula, scaleType);
             
             if (comparisonScale && comparisonScale.length > 0) {
+                // Store the comparison selections to maintain them
+                fretboardState.comparisonSelection = {
+                    root,
+                    category,
+                    mode
+                };
+                
                 // Update fretboard state
                 fretboardState.comparisonScale = comparisonScale;
                 
-                // Update legend with actual scale names
-                updateComparisonLegend(root, category, mode);
-                
-                // Re-render the fretboard with comparison
-                createFretboard(currentScale);
+                // Re-render the fretboard with comparison first
+                createFretboard(window.currentScale);
                 
                 console.log('Comparison applied:', {
                     root,
@@ -2976,6 +3035,7 @@ function showComparisonSelector(controlsDiv) {
                     formula: modeFormula,
                     scale: comparisonScale
                 });
+                
             } else {
                 console.error('Failed to generate comparison scale');
             }
@@ -3207,14 +3267,14 @@ function renderComparisonFretboard(svg, scale1, scale2, displayFrets, fretWidth)
                 // Color coding for comparison
                 let color;
                 if (isShared) {
-                    // Shared notes: bright green
-                    color = '#10b981'; // emerald-500
-                } else if (isInScale1) {
-                    // Only in scale1: blue
+                    // Shared notes: blue
                     color = '#3b82f6'; // blue-500
+                } else if (isInScale1) {
+                    // Only in scale1 (primary): orange
+                    color = '#f97316'; // orange-500
                 } else {
-                    // Only in scale2: purple
-                    color = '#8b5cf6'; // violet-500
+                    // Only in scale2 (comparison): red
+                    color = '#dc2626'; // red-600
                 }
                 
                 const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
