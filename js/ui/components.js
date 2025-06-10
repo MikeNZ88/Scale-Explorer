@@ -1118,10 +1118,41 @@ function createRelatedModes(currentMode, category, currentKey) {
         const modeData = MusicConstants.modeNumbers[mode];
         if (!modeData) return;
         
-        // Calculate the correct note for this mode using mode offset instead of array index
-        const modeOffset = modeOffsets[mode] || 0;
-        const modeRootIndex = (parentRootIndex + modeOffset) % 12;
-        const modeKey = getConsistentNoteSpelling(modeRootIndex, spellingConvention);
+        // Instead of using modeOffset and converting to generic spelling,
+        // use the actual note from the parent scale for exact enharmonic matching
+        let modeKey;
+        
+        // For traditional modal systems (7-note scales), use the scale degree
+        if (parentScaleNotes.length === 7) {
+            // Map mode to its scale degree in the parent scale
+            const modeScaleDegrees = {
+                // Major modes - use index directly
+                'major': 0, 'dorian': 1, 'phrygian': 2, 'lydian': 3, 'mixolydian': 4, 'aeolian': 5, 'locrian': 6,
+                
+                // Harmonic minor modes - use index directly  
+                'harmonic-minor': 0, 'locrian-natural-6': 1, 'ionian-sharp-5': 2, 'dorian-sharp-4': 3, 
+                'phrygian-dominant': 4, 'lydian-sharp-2': 5, 'altered-dominant': 6,
+                
+                // Melodic minor modes - use index directly
+                'melodic-minor': 0, 'dorian-b2': 1, 'lydian-augmented': 2, 'lydian-dominant': 3,
+                'mixolydian-b6': 4, 'locrian-natural-2': 5, 'super-locrian': 6
+            };
+            
+            const scaleDegree = modeScaleDegrees[mode];
+            if (scaleDegree !== undefined && parentScaleNotes[scaleDegree]) {
+                modeKey = parentScaleNotes[scaleDegree];
+            } else {
+                // Fallback to offset calculation for modes not in the lookup
+                const modeOffset = modeOffsets[mode] || 0;
+                const modeRootIndex = (parentRootIndex + modeOffset) % 12;
+                modeKey = getConsistentNoteSpelling(modeRootIndex, spellingConvention);
+            }
+        } else {
+            // For non-traditional scales (pentatonic, blues, etc.), use offset calculation
+            const modeOffset = modeOffsets[mode] || 0;
+            const modeRootIndex = (parentRootIndex + modeOffset) % 12;
+            modeKey = getConsistentNoteSpelling(modeRootIndex, spellingConvention);
+        }
         
         const button = document.createElement('button');
         button.className = `mode-button ${mode === currentMode ? 'active' : ''}`;
@@ -1868,28 +1899,29 @@ function hideSuggestions() {
     }, 150); // Small delay to allow for click events
 }
 
-function displayChords(scale, scaleType, category) {
+function displayChords(scale, scaleType, category = null) {
     console.log('=== displayChords DEBUG START ===');
-    console.log('Scale:', scale);
-    console.log('Scale type:', scaleType);
-    console.log('Category:', category);
-    console.log('Scale length:', scale.length);
+    console.log('Parameters:', { 
+        scaleType, 
+        scaleLength: scale?.length, 
+        category,
+        scale: scale?.slice(0, 5) + (scale?.length > 5 ? '...' : '') 
+    });
     
     const chordsSection = document.querySelector('.chords-section');
-    if (!chordsSection) {
-        console.log('No chords section found');
-        return;
-    }
+    const chordsList = document.getElementById('chords-list');
     
-    // Hide chords section for Japanese pentatonic scales
-    if (category === 'japanese-pentatonic') {
-        console.log('Hiding chords section for Japanese pentatonic');
-        chordsSection.style.display = 'none';
+    if (!chordsSection || !chordsList) {
+        console.log('Missing required DOM elements:', { 
+            scaleLength: scale?.length, 
+            chordsSection: !!chordsSection, 
+            chordsList: !!chordsList 
+        });
         return;
     }
     
     // Check if this scale type should display chords
-    const shouldDisplay = MusicTheory.shouldDisplayChords(scaleType, scale.length);
+    const shouldDisplay = MusicTheory.shouldDisplayChords(scaleType, scale.length, category);
     console.log('shouldDisplayChords result:', shouldDisplay);
     
     if (!shouldDisplay) {
@@ -1915,7 +1947,7 @@ function displayChords(scale, scaleType, category) {
     } else {
         console.log('Using traditional chords display');
         // Use traditional degree-by-degree analysis for diatonic scales
-        displayTraditionalChords(scale, scaleType);
+        displayTraditionalChords(scale, scaleType, category);
     }
     console.log('=== displayChords DEBUG END ===');
 }
@@ -2267,7 +2299,7 @@ function getScaleApplicationData(scaleType) {
     return scaleData;
 }
 
-function displayTraditionalChords(scale, scaleType) {
+function displayTraditionalChords(scale, scaleType, category) {
     const chordsList = document.getElementById('chords-list');
     const chordsSection = document.querySelector('.chords-section');
     
@@ -2280,8 +2312,8 @@ function displayTraditionalChords(scale, scaleType) {
     chordControls.style.display = 'block';
     
     // Calculate both triads and 7th chords
-    const triads = MusicTheory.calculateTriads(scale, scaleType);
-    const seventhChords = MusicTheory.calculateSeventhChords(scale, scaleType);
+    const triads = MusicTheory.calculateTriads(scale, scaleType, category);
+    const seventhChords = MusicTheory.calculateSeventhChords(scale, scaleType, category);
     
     // If no chords can be calculated, hide the section
     if (triads.length === 0 && seventhChords.length === 0) {
