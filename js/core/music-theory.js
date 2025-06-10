@@ -641,17 +641,12 @@ function areEnharmonicEquivalents(note1, note2) {
 
 // Chord calculation functions
 function shouldDisplayChords(scaleType, scaleLength, category = null) {
-    // Hide chords for Japanese pentatonic scales specifically
-    if (category === 'japanese-pentatonic') {
-        return false;
-    }
-    
-    // Hide chords for all pentatonic scales (5 notes)
+    // Handle pentatonic scales (5 notes) - don't show chords
     if (scaleLength === 5) {
         return false;
     }
     
-    // Hide chords for blues scales (6-note blues or 9-note hybrid blues)
+    // Handle blues scales specifically - don't show chords for any blues type
     if ((scaleLength === 6 && scaleType === 'blues') || 
         (scaleLength === 9 && scaleType === 'hybrid-blues') ||
         scaleType.includes('blues')) {
@@ -662,7 +657,9 @@ function shouldDisplayChords(scaleType, scaleLength, category = null) {
     const noChordScales = [
         'chromatic',
         'whole-tone',
-        'augmented'
+        'augmented',
+        'major-6th-diminished',
+        'minor-6th-diminished'
     ];
     
     // Check if it's a scale type that doesn't use traditional chord analysis

@@ -103,29 +103,29 @@ const scaleFormulas = {
     'chromatic': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     'augmented': [1, 3, 1, 3, 1, 3],
     'bebop-major': [2, 2, 1, 2, 1, 1, 2, 1],
-    'major-6th-diminished': {
-        name: 'Major 6th Diminished',
-        description: 'Eight-note scales with added diminished passing tones',
-        modes: ['major-6th-diminished'],
-        formulas: {
-            'major-6th-diminished': [2, 2, 1, 2, 1, 1, 1, 2]
-        }
-    },
-    'minor-6th-diminished': {
-        name: 'Minor 6th Diminished',
-        description: 'Eight-note scales with added diminished passing tones',
-        modes: ['minor-6th-diminished'],
-        formulas: {
-            'minor-6th-diminished': [2, 1, 2, 2, 2, 1, 1, 1]
-        }
-    },
+    // 'major-6th-diminished': {
+    //     name: 'Major 6th Diminished',
+    //     description: 'Eight-note scales with added diminished passing tones',
+    //     modes: ['major-6th-diminished'],
+    //     formulas: {
+    //         'major-6th-diminished': [2, 2, 1, 2, 1, 1, 1, 2]
+    //     }
+    // },
+    // 'minor-6th-diminished': {
+    //     name: 'Minor 6th Diminished',
+    //     description: 'Eight-note scales with added diminished passing tones',
+    //     modes: ['minor-6th-diminished'],
+    //     formulas: {
+    //         'minor-6th-diminished': [2, 1, 2, 2, 2, 1, 1, 1]
+    //     }
+    // },
     'blues-major': [2, 1, 1, 3, 2, 3],
     'blues-minor': [3, 2, 1, 1, 3, 2],
     'hybrid-blues': [2, 1, 1, 1, 1, 1, 2, 1],
     
     // Barry Harris scales
-    'major-6th-diminished': { number: 1, properName: 'Major 6th Diminished' },
-    'minor-6th-diminished': { number: 1, properName: 'Minor 6th Diminished' }
+    // 'major-6th-diminished': { number: 1, properName: 'Major 6th Diminished' },
+    // 'minor-6th-diminished': { number: 1, properName: 'Minor 6th Diminished' }
 };
 
 // Scale Degree Weights for Color Calculation
@@ -287,22 +287,22 @@ const scaleCategories = {
             'hybrid-blues': [2, 1, 1, 1, 1, 1, 2, 1]
         }
     },
-    'major-6th-diminished': {
-        name: 'Major 6th Diminished',
-        description: 'Eight-note scales with added diminished passing tones',
-        modes: ['major-6th-diminished'],
-        formulas: {
-            'major-6th-diminished': [2, 2, 1, 2, 1, 1, 1, 2]
-        }
-    },
-    'minor-6th-diminished': {
-        name: 'Minor 6th Diminished',
-        description: 'Eight-note scales with added diminished passing tones',
-        modes: ['minor-6th-diminished'],
-        formulas: {
-            'minor-6th-diminished': [2, 1, 2, 2, 2, 1, 1, 1]
-        }
-    },
+    // 'major-6th-diminished': {
+    //     name: 'Major 6th Diminished',
+    //     description: 'Eight-note scales with added diminished passing tones',
+    //     modes: ['major-6th-diminished'],
+    //     formulas: {
+    //         'major-6th-diminished': [2, 2, 1, 2, 1, 1, 1, 2]
+    //     }
+    // },
+    // 'minor-6th-diminished': {
+    //     name: 'Minor 6th Diminished',
+    //     description: 'Eight-note scales with added diminished passing tones',
+    //     modes: ['minor-6th-diminished'],
+    //     formulas: {
+    //         'minor-6th-diminished': [2, 1, 2, 2, 2, 1, 1, 1]
+    //     }
+    // },
     'harmonic-major-modes': {
         name: 'Harmonic Major',
         description: 'The seven modes of the harmonic major scale',
@@ -457,8 +457,8 @@ const modeMetadata = {
     'hybrid-blues': { mood: 'Complete', description: 'Nine-note scale combining blues minor and blues major (1-2-♭3-3-4-♭5-5-6-♭7)', applications: ['Blues', 'rock', 'jazz', 'fusion'] },
     
     // Barry Harris scales
-    'major-6th-diminished': { mood: 'Sophisticated', description: 'Major scale with added diminished passing tone between 6th and 7th (1-2-3-4-5-♭6-6-7)', applications: ['Jazz', 'bebop', 'swing'] },
-    'minor-6th-diminished': { mood: 'Jazzy', description: 'Minor scale with added diminished passing tone between 6th and 7th (1-2-♭3-4-5-6-♭7-7)', applications: ['Jazz', 'bebop', 'swing'] },
+    // 'major-6th-diminished': { mood: 'Sophisticated', description: 'Major scale with added diminished passing tone between 6th and 7th (1-2-3-4-5-♭6-6-7)', applications: ['Jazz', 'bebop', 'swing'] },
+    // 'minor-6th-diminished': { mood: 'Jazzy', description: 'Minor scale with added diminished passing tone between 6th and 7th (1-2-♭3-4-5-6-♭7-7)', applications: ['Jazz', 'bebop', 'swing'] },
     
     // Other scales
     'whole-tone': { mood: 'Dreamy', description: 'Six notes separated by whole steps, creates floating ambiguity. The whole tone scale has rotations rather than modes - each rotation starts on a different note but maintains the same interval pattern (all whole steps), so they don\'t create new harmonic colors like traditional modes do. There are only two distinct whole tone scales that together contain all 12 chromatic notes.', applications: ['Impressionist', 'jazz', 'film'] },
@@ -561,8 +561,8 @@ const modeNumbers = {
     'hybrid-blues': { number: 1, properName: 'Hybrid Blues' },
     
     // Barry Harris scales
-    'major-6th-diminished': { number: 1, properName: 'Major 6th Diminished' },
-    'minor-6th-diminished': { number: 1, properName: 'Minor 6th Diminished' },
+    // 'major-6th-diminished': { number: 1, properName: 'Major 6th Diminished' },
+    // 'minor-6th-diminished': { number: 1, properName: 'Minor 6th Diminished' },
     
     // Other scales
     'whole-tone': { number: 1, properName: 'Whole Tone' },
