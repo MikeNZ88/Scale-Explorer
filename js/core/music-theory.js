@@ -644,6 +644,7 @@ function shouldDisplayChords(scaleType, scaleLength) {
     // Scales that don't traditionally use diatonic chord analysis
     const noChordScales = [
         'chromatic',
+        'whole-tone',
         'augmented'
     ];
     
@@ -659,11 +660,6 @@ function shouldDisplayChords(scaleType, scaleLength) {
     
     // Blues scales can show chords
     if (scaleLength === 6 && scaleType === 'blues') {
-        return true;
-    }
-    
-    // Whole tone scales can show chords
-    if (scaleLength === 6 && scaleType === 'whole-tone') {
         return true;
     }
     
@@ -1715,19 +1711,13 @@ function buildChordsFromScale(scale) {
     const scaleNotes = [...scale];
     const chords = [];
     
-    console.log('=== buildChordsFromScale DEBUG ===');
-    console.log('Input scale:', scaleNotes);
-    
     // Build triads using scale notes only
     for (let i = 0; i < scaleNotes.length; i++) {
         const root = scaleNotes[i];
         
-        // Try to build triads by checking ALL combinations of scale notes (not just subsequent ones)
-        for (let j = 0; j < scaleNotes.length; j++) {
-            if (i === j) continue; // Skip the root note itself
-            for (let k = 0; k < scaleNotes.length; k++) {
-                if (i === k || j === k) continue; // Skip root and already used notes
-                
+        // Try to build triads by stacking thirds within the scale
+        for (let j = i + 1; j < scaleNotes.length; j++) {
+            for (let k = j + 1; k < scaleNotes.length; k++) {
                 const third = scaleNotes[j];
                 const fifth = scaleNotes[k];
                 
@@ -1738,7 +1728,6 @@ function buildChordsFromScale(scale) {
                 // Accept major/minor thirds (3-4 semitones) and reasonable fifths (6-8 semitones)
                 if ((rootToThird >= 3 && rootToThird <= 4) && (rootToFifth >= 6 && rootToFifth <= 8)) {
                     const chordType = rootToThird === 3 ? 'm' : '';
-                    console.log(`    ✅ ADDING TRIAD: ${root}${chordType} (${root} + ${third} + ${fifth})`);
                     chords.push({
                         root: root,
                         chord: `${root}${chordType}`,
@@ -1749,39 +1738,26 @@ function buildChordsFromScale(scale) {
             }
         }
         
-        // Find ALL power chords (root + fifth) - check ALL notes in scale as potential fifths
-        console.log(`\n--- Checking power chords for root: ${root} ---`);
-        for (let j = 0; j < scaleNotes.length; j++) {
-            if (i === j) continue; // Skip the root note itself
-            
+        // Always include power chords (root + fifth)
+        for (let j = i + 1; j < scaleNotes.length; j++) {
             const fifth = scaleNotes[j];
             const interval = getIntervalBetweenNotes(root, fifth);
-            console.log(`  ${root} to ${fifth}: interval = ${interval} semitones`);
-            
-            if (interval === 7) { // Perfect fifth (7) only - reject augmented fifths
-                console.log(`    ✅ ADDING POWER CHORD: ${root}5 (${root} + ${fifth})`);
+            if (interval >= 6 && interval <= 8) { // Perfect or augmented fifth
                 chords.push({
                     root: root,
                     chord: `${root}5`,
                     notes: [root, fifth],
                     type: 'power'
                 });
-            } else {
-                console.log(`    ❌ Rejecting: interval ${interval} is not 7`);
+                break; // Take first suitable fifth
             }
         }
         
         // Add suspended chords using scale notes
-        console.log(`\n--- Checking sus chords for root: ${root} ---`);
-        for (let j = 0; j < scaleNotes.length; j++) {
-            if (i === j) continue; // Skip the root note itself
-            
+        for (let j = i + 1; j < scaleNotes.length; j++) {
             const second = scaleNotes[j];
             const interval = getIntervalBetweenNotes(root, second);
-            console.log(`  ${root} to ${second}: interval = ${interval} semitones`);
-            
             if (interval === 2) { // Major second
-                console.log(`    ✅ ADDING SUS2 CHORD: ${root}sus2 (${root} + ${second})`);
                 chords.push({
                     root: root,
                     chord: `${root}sus2`,
@@ -1789,22 +1765,15 @@ function buildChordsFromScale(scale) {
                     type: 'sus'
                 });
             } else if (interval === 5) { // Perfect fourth
-                console.log(`    ✅ ADDING SUS4 CHORD: ${root}sus4 (${root} + ${second})`);
                 chords.push({
                     root: root,
                     chord: `${root}sus4`,
                     notes: [root, second],
                     type: 'sus'
                 });
-            } else {
-                console.log(`    ❌ Rejecting: interval ${interval} is not 2 or 5`);
             }
         }
     }
-    
-    console.log('\n=== Final chords generated ===');
-    console.log(chords);
-    console.log('=== END buildChordsFromScale DEBUG ===\n');
     
     return chords;
 }
@@ -1849,46 +1818,37 @@ function getPentatonicScaleChords(scale, scaleType) {
 function getWholeToneScaleChords(scale) {
     console.log('getWholeToneScaleChords called with scale:', scale);
     
-    if (!scale || scale.length !== 6) {
-        return { chords: [] };
+    // Whole tone scale creates augmented triads naturally
+    const augmentedChords = [];
+    for (let i = 0; i < Math.min(3, scale.length - 2); i++) {
+        augmentedChords.push(`${scale[i]}+`);
     }
     
-    // In a whole tone scale, every note forms an augmented triad and dominant 7#5 chord
-    // Arrange them in order as they appear in the scale
-    
-    const augmentedTriads = [];
-    const dominant7Sharp5s = [];
-    
-    // Build chords for each note in the scale
-    for (let i = 0; i < scale.length; i++) {
-        const root = scale[i];
-        augmentedTriads.push(`${root}+`);
-        dominant7Sharp5s.push(`${root}7#5`);
-    }
+    const availableChords = buildChordsFromScale(scale);
+    const powerChords = availableChords.filter(c => c.type === 'power').map(c => c.chord);
     
     return {
         chords: [
             {
-                type: 'Augmented Triads',
-                description: 'Each note in the whole tone scale forms an augmented triad',
-                chords: augmentedTriads,
-                emphasis: true
+                type: 'Power Chords (Built from Scale)',
+                description: 'Limited power chord options from whole-tone scale',
+                chords: powerChords.slice(0, 2).sort()
             },
             {
-                type: 'Dominant 7#5 Chords',
-                description: 'Each note forms a dominant seventh sharp fifth chord',
-                chords: dominant7Sharp5s,
-                emphasis: true
+                type: 'Augmented Triads (Built from Scale)',
+                description: 'All triads are augmented due to whole-tone intervals in scale',
+                chords: augmentedChords.sort()
             },
             {
-                type: 'Whole Tone Clusters',
-                description: 'Any combination of adjacent notes creates whole tone clusters. These create floating, impressionistic harmony without traditional chord resolution. Use for atmospheric effects and smooth voice leading.',
-                chords: ['Cluster harmony creates ethereal, unresolved sound', 'Perfect for impressionist and film music']
+                type: 'Augmented Major 7th (Built from Scale)',
+                description: 'Characteristic seventh chord using whole-tone scale notes',
+                chords: [`${scale[0]}+maj7`],
+                emphasis: true
             },
             {
                 type: 'Scale Applications',
-                description: 'Use over altered dominants, augmented chords, and for impressionist harmony',
-                chords: ['Creates floating, unresolved quality', 'Excellent for atmospheric music']
+                description: 'Works over: C+, C7♯11, C7♯5, altered dominants',
+                chords: ['Use for impressionist harmony', 'Creates floating, unresolved quality']
             }
         ]
     };
@@ -1901,67 +1861,86 @@ function getBluesScaleChords(scale, scaleType) {
         return { chords: [] };
     }
     
-    // Build ALL chords using ONLY the notes present in the blues scale
+    // Use the existing buildChordsFromScale function to generate chords dynamically
     const availableChords = buildChordsFromScale(scale);
-    console.log('Available chords from buildChordsFromScale:', availableChords);
     
+    // Organize chords by type
+    const triads = availableChords.filter(c => c.type === 'triad').map(c => c.chord);
     const powerChords = availableChords.filter(c => c.type === 'power').map(c => c.chord);
     const susChords = availableChords.filter(c => c.type === 'sus').map(c => c.chord);
-    const triads = availableChords.filter(c => c.type === 'triad').map(c => c.chord);
     
-    console.log('Raw power chords found:', powerChords);
-    console.log('Raw sus chords found:', susChords);
-    console.log('Raw triads found:', triads);
+    // For blues scales, we also want to include some extended chords that work well
+    const extendedChords = [];
     
-    // Remove duplicates and limit results
-    const uniqueTriads = [...new Set(triads)];
-    const uniquePowerChords = [...new Set(powerChords)];
-    const uniqueSusChords = [...new Set(susChords)];
+    // Look for 6th chords (root + major third + fifth + sixth)
+    for (let i = 0; i < scale.length; i++) {
+        const root = scale[i];
+        
+        // Try to find major third, fifth, and sixth in the scale
+        let hasThird = false, hasFifth = false, hasSixth = false;
+        
+        for (let j = 0; j < scale.length; j++) {
+            if (i === j) continue;
+            const interval = getIntervalBetweenNotes(root, scale[j]);
+            if (interval === 4) hasThird = true;      // Major third
+            if (interval === 7) hasFifth = true;      // Perfect fifth  
+            if (interval === 9) hasSixth = true;      // Major sixth
+        }
+        
+        if (hasThird && hasFifth && hasSixth) {
+            extendedChords.push(`${root}6`);
+        }
+    }
     
-    console.log('Unique power chords:', uniquePowerChords);
+    // Look for minor 7th chords (root + minor third + fifth + minor seventh)
+    for (let i = 0; i < scale.length; i++) {
+        const root = scale[i];
+        
+        let hasMinorThird = false, hasFifth = false, hasMinorSeventh = false;
+        
+        for (let j = 0; j < scale.length; j++) {
+            if (i === j) continue;
+            const interval = getIntervalBetweenNotes(root, scale[j]);
+            if (interval === 3) hasMinorThird = true;    // Minor third
+            if (interval === 7) hasFifth = true;         // Perfect fifth
+            if (interval === 10) hasMinorSeventh = true; // Minor seventh
+        }
+        
+        if (hasMinorThird && hasFifth && hasMinorSeventh) {
+            extendedChords.push(`${root}m7`);
+        }
+    }
     
-    // For blues scales, we'll provide some characteristic extended chords that work well
-    // but these should be based on the actual scale notes, not hardcoded
-    const root = scale[0];
-    const scaleNotes = new Set(scale);
-    
-    // Only suggest extended chords if their notes are available in the scale
-    let extendedChords = [];
-    
-    // Check for common blues extensions that can be built from scale notes
-    const possibleExtensions = [
-        `${root}7`, `${root}m7`, `${root}6`, `${root}add9`
-    ];
-    
-    // We won't hardcode specific extended chords since the user is right -
-    // blues scales have limited harmonic content and we should stick to what's actually buildable
+    console.log('Blues chords generated:', { triads, powerChords, susChords, extendedChords });
     
     return {
         chords: [
             {
-                type: 'Power Chords (Built from Scale)',
-                description: 'Essential blues harmony using only blues scale notes',
-                chords: uniquePowerChords.sort() // REMOVED THE LIMIT - show ALL power chords
-            },
-            {
-                type: 'Available Triads (Built from Scale)',
-                description: 'Limited triads possible from blues scale notes only',
-                chords: uniqueTriads.length > 0 ? uniqueTriads.slice(0, 2).sort() : ['Very limited - blues scales avoid traditional triads'],
+                type: 'Essential Blues Triads',
+                description: 'Core triads built from blues scale notes',
+                chords: triads.sort(),
                 emphasis: true
             },
             {
-                type: 'Suspended Chords (Built from Scale)', 
-                description: 'Sus chords using only blues scale notes',
-                chords: uniqueSusChords.slice(0, 2).sort()
+                type: 'Blues Extended Chords', 
+                description: 'Characteristic extended chords for blues harmony',
+                chords: extendedChords.sort(),
+                emphasis: true
+            },
+            {
+                type: 'Suspended Chords',
+                description: 'Sus2 and sus4 chords using blues scale notes',
+                chords: susChords.sort()
             },
             {
                 type: 'Scale Applications',
-                description: 'Works over 12-bar blues progressions and related chord changes',
-                chords: ['Use for blues improvisation', 'Creates characteristic blue note tensions', 'Avoid traditional triad-based harmony']
+                description: 'Perfect for 12-bar blues progressions and blues-based improvisation',
+                chords: ['Use over blues progressions', 'Great for blues rock and jazz blues', 'Creates authentic blues harmony']
             }
         ]
     };
-}
+} 
+
 
 function getAugmentedScaleChords(scale) {
     console.log('getAugmentedScaleChords called with scale:', scale);
