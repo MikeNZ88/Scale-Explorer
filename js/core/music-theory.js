@@ -646,6 +646,18 @@ function shouldDisplayChords(scaleType, scaleLength, category = null) {
         return false;
     }
     
+    // Hide chords for all pentatonic scales (5 notes)
+    if (scaleLength === 5) {
+        return false;
+    }
+    
+    // Hide chords for blues scales (6-note blues or 9-note hybrid blues)
+    if ((scaleLength === 6 && scaleType === 'blues') || 
+        (scaleLength === 9 && scaleType === 'hybrid-blues') ||
+        scaleType.includes('blues')) {
+        return false;
+    }
+    
     // Scales that don't traditionally use diatonic chord analysis
     const noChordScales = [
         'chromatic',
@@ -656,17 +668,6 @@ function shouldDisplayChords(scaleType, scaleLength, category = null) {
     // Check if it's a scale type that doesn't use traditional chord analysis
     if (noChordScales.includes(scaleType)) {
         return false;
-    }
-    
-    // Pentatonic scales can show chords but with limited functionality
-    if (scaleLength === 5) {
-        return true;
-    }
-    
-    // Blues scales can show chords (6-note blues or 9-note hybrid blues)
-    if ((scaleLength === 6 && scaleType === 'blues') || 
-        (scaleLength === 9 && scaleType === 'hybrid-blues')) {
-        return true;
     }
     
     // 8-note scales (diminished) can show chords but they're complex
@@ -680,14 +681,8 @@ function shouldDisplayChords(scaleType, scaleLength, category = null) {
     }
     
     // Very long scales (chromatic) or very short scales don't work well with chord analysis
-    // Exception: hybrid blues (9 notes) is allowed
     if (scaleLength < 5 || (scaleLength > 9)) {
         return false;
-    }
-    
-    // Allow 9-note scales if they are blues-related
-    if (scaleLength === 9 && scaleType.includes('blues')) {
-        return true;
     }
     
     return true;
