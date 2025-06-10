@@ -23,15 +23,6 @@ const scaleFormulas = {
     'lydian-sharp-2': [3, 1, 2, 1, 2, 2, 1],
     'altered-dominant': [1, 2, 1, 2, 2, 1, 3],
     
-    // Harmonic Major modes
-    'harmonic-major': [2, 2, 1, 2, 1, 3, 1],
-    'dorian-b5': [2, 1, 2, 1, 3, 1, 2],
-    'phrygian-b4': [1, 2, 1, 3, 1, 2, 2],
-    'lydian-b3': [2, 1, 3, 1, 2, 2, 1],
-    'mixolydian-b2': [1, 3, 1, 2, 2, 1, 2],
-    'lydian-augmented-sharp-2': [3, 1, 2, 2, 1, 2, 1],
-    'locrian-double-flat-7': [1, 2, 2, 1, 2, 1, 3],
-    
     // Melodic Minor modes
     'melodic-minor': [2, 1, 2, 2, 2, 2, 1],
     'dorian-b2': [1, 2, 2, 2, 2, 1, 2],
@@ -41,43 +32,9 @@ const scaleFormulas = {
     'locrian-natural-2': [2, 1, 2, 1, 2, 2, 2],
     'super-locrian': [1, 2, 1, 2, 2, 2, 2],
     
-    // Hungarian Minor modes
-    'hungarian-minor': [2, 1, 3, 1, 1, 3, 1],
-    'oriental': [1, 3, 1, 1, 3, 1, 2],
-    'ionian-augmented-sharp-2': [3, 1, 1, 3, 1, 2, 1],
-    'locrian-double-flat-3-double-flat-7': [1, 1, 3, 1, 2, 1, 3],
-    'double-harmonic-major': [1, 3, 1, 2, 1, 3, 1],
-    'lydian-sharp-2-sharp-6': [3, 1, 2, 1, 3, 1, 1],
-    'ultra-locrian': [1, 2, 1, 3, 1, 1, 3],
-    
-    // Neapolitan Minor modes
-    'neapolitan-minor': [1, 2, 2, 2, 1, 3, 1],
-    'leading-whole-tone': [2, 2, 2, 1, 3, 1, 1],
-    'lydian-augmented-dominant': [2, 2, 1, 3, 1, 1, 2],
-    'lydian-dominant-flat-6': [2, 1, 3, 1, 1, 2, 2],
-    'major-locrian': [1, 3, 1, 1, 2, 2, 2],
-    'half-diminished-flat-2': [3, 1, 1, 2, 2, 2, 1],
-    'altered-diminished': [1, 1, 2, 2, 2, 1, 3],
-    
-    // Neapolitan Major modes
-    'neapolitan-major': [1, 2, 2, 2, 2, 2, 1],
-    'leading-whole-tone-major': [2, 2, 2, 2, 2, 1, 1],
-    'lydian-augmented-major': [2, 2, 2, 2, 1, 1, 2],
-    'lydian-dominant-major': [2, 2, 2, 1, 1, 2, 2],
-    'major-locrian-major': [2, 2, 1, 1, 2, 2, 2],
-    'half-diminished-major': [2, 1, 1, 2, 2, 2, 2],
-    'altered-major': [1, 1, 2, 2, 2, 2, 2],
-    
     // Diminished modes
-    'diminished-modes': {
-        name: 'Octatonic/Diminished',
-        description: 'Two complementary eight-note symmetrical scales with 4 rotations each (only 2 unique transpositions)',
-        modes: ['wh-diminished', 'hw-diminished', 'wh-diminished', 'hw-diminished', 'wh-diminished', 'hw-diminished', 'wh-diminished', 'hw-diminished'],
-        formulas: {
-            'wh-diminished': [2, 1, 2, 1, 2, 1, 2, 1],  // W-H pattern
-            'hw-diminished': [1, 2, 1, 2, 1, 2, 1, 2]   // H-W pattern
-        }
-    },
+    'wh-diminished': [2, 1, 2, 1, 2, 1, 2, 1],  // W-H pattern
+    'hw-diminished': [1, 2, 1, 2, 1, 2, 1, 2],   // H-W pattern
     
     // Pentatonic scales
     'major-pentatonic': [2, 2, 3, 2, 3],
@@ -86,46 +43,20 @@ const scaleFormulas = {
     'ritusen': [2, 3, 2, 2, 3],
     'minor-pentatonic': [3, 2, 2, 3, 2],
     
-    // Symmetrical and other scales
-    'whole-tone': {
-        name: 'Whole Tone',
-        description: 'Six-note scale of equal whole steps (6 rotations, only 2 unique transpositions)',
-        modes: ['whole-tone-1', 'whole-tone-2', 'whole-tone-3', 'whole-tone-4', 'whole-tone-5', 'whole-tone-6'],
-        formulas: {
-            'whole-tone-1': [2, 2, 2, 2, 2, 2],  // Rotation 1
-            'whole-tone-2': [2, 2, 2, 2, 2, 2],  // Rotation 2
-            'whole-tone-3': [2, 2, 2, 2, 2, 2],  // Rotation 3
-            'whole-tone-4': [2, 2, 2, 2, 2, 2],  // Rotation 4
-            'whole-tone-5': [2, 2, 2, 2, 2, 2],  // Rotation 5
-            'whole-tone-6': [2, 2, 2, 2, 2, 2]   // Rotation 6
-        }
-    },
-    'chromatic': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    'augmented': [1, 3, 1, 3, 1, 3],
-    'bebop-major': [2, 2, 1, 2, 1, 1, 2, 1],
-    // 'major-6th-diminished': {
-    //     name: 'Major 6th Diminished',
-    //     description: 'Eight-note scales with added diminished passing tones',
-    //     modes: ['major-6th-diminished'],
-    //     formulas: {
-    //         'major-6th-diminished': [2, 2, 1, 2, 1, 1, 1, 2]
-    //     }
-    // },
-    // 'minor-6th-diminished': {
-    //     name: 'Minor 6th Diminished',
-    //     description: 'Eight-note scales with added diminished passing tones',
-    //     modes: ['minor-6th-diminished'],
-    //     formulas: {
-    //         'minor-6th-diminished': [2, 1, 2, 2, 2, 1, 1, 1]
-    //     }
-    // },
+    // Whole tone scales
+    'whole-tone-1': [2, 2, 2, 2, 2, 2],  // Rotation 1
+    'whole-tone-2': [2, 2, 2, 2, 2, 2],  // Rotation 2
+    'whole-tone-3': [2, 2, 2, 2, 2, 2],  // Rotation 3
+    'whole-tone-4': [2, 2, 2, 2, 2, 2],  // Rotation 4
+    'whole-tone-5': [2, 2, 2, 2, 2, 2],  // Rotation 5
+    'whole-tone-6': [2, 2, 2, 2, 2, 2],  // Rotation 6
+    
+    // Blues scales
     'blues-major': [2, 1, 1, 3, 2, 3],
     'blues-minor': [3, 2, 1, 1, 3, 2],
-    'hybrid-blues': [2, 1, 1, 1, 1, 1, 2, 1],
     
-    // Barry Harris scales
-    // 'major-6th-diminished': { number: 1, properName: 'Major 6th Diminished' },
-    // 'minor-6th-diminished': { number: 1, properName: 'Minor 6th Diminished' }
+    // Other scales
+    'chromatic': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 };
 
 // Scale Degree Weights for Color Calculation
@@ -172,7 +103,7 @@ const intervalColors = {
     '#6': '#CD6155'   // Augmented Sixth = b7 (same pitch, same color)
 };
 
-// Scale Categories and Metadata - REORDERED FROM SIMPLEST TO MOST COMPLEX
+// Scale Categories and Metadata
 const scaleCategories = {
     'major-modes': {
         name: 'Major',
@@ -240,7 +171,7 @@ const scaleCategories = {
     'diminished-modes': {
         name: 'Octatonic/Diminished',
         description: 'Two complementary eight-note symmetrical scales with 4 rotations each (only 2 unique transpositions)',
-        modes: ['wh-diminished', 'hw-diminished', 'wh-diminished', 'hw-diminished', 'wh-diminished', 'hw-diminished', 'wh-diminished', 'hw-diminished'],
+        modes: ['wh-diminished', 'hw-diminished'],
         formulas: {
             'wh-diminished': [2, 1, 2, 1, 2, 1, 2, 1],  // W-H pattern
             'hw-diminished': [1, 2, 1, 2, 1, 2, 1, 2]   // H-W pattern
@@ -266,107 +197,6 @@ const scaleCategories = {
         formulas: {
             'chromatic': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
         }
-    },
-    'japanese-pentatonic': {
-        name: 'Japanese Pentatonic',
-        description: 'The five traditional Japanese pentatonic scales (modes of Hirajoshi)',
-        modes: ['hirajoshi', 'iwato', 'kumoi', 'hon-kumoi-shiouzi', 'chinese-scale'],
-        formulas: {
-            'hirajoshi': [2, 1, 4, 1, 4],           // 1-2-b3-5-b6 (W-H-2W-H-2W)
-            'iwato': [1, 4, 1, 4, 2],               // 1-b2-4-b5-b7 (H-2W-H-2W-W)
-            'kumoi': [4, 1, 4, 2, 1],               // 1-3-4-6-7 (2W-H-2W-W-H)
-            'hon-kumoi-shiouzi': [1, 4, 2, 1, 4],  // 1-b2-4-5-b6 (H-2W-W-H-2W)
-            'chinese-scale': [4, 2, 1, 4, 1]       // 1-3-4-5-7 (2W-W-H-2W-H)
-        }
-    },
-    'hybrid-blues': {
-        name: 'Hybrid Blues',
-        description: 'Nine-note scale combining blues minor and blues major',
-        modes: ['hybrid-blues'],
-        formulas: {
-            'hybrid-blues': [2, 1, 1, 1, 1, 1, 2, 1]
-        }
-    },
-    // 'major-6th-diminished': {
-    //     name: 'Major 6th Diminished',
-    //     description: 'Eight-note scales with added diminished passing tones',
-    //     modes: ['major-6th-diminished'],
-    //     formulas: {
-    //         'major-6th-diminished': [2, 2, 1, 2, 1, 1, 1, 2]
-    //     }
-    // },
-    // 'minor-6th-diminished': {
-    //     name: 'Minor 6th Diminished',
-    //     description: 'Eight-note scales with added diminished passing tones',
-    //     modes: ['minor-6th-diminished'],
-    //     formulas: {
-    //         'minor-6th-diminished': [2, 1, 2, 2, 2, 1, 1, 1]
-    //     }
-    // },
-    'harmonic-major-modes': {
-        name: 'Harmonic Major',
-        description: 'The seven modes of the harmonic major scale',
-        modes: ['harmonic-major', 'dorian-b5', 'phrygian-b4', 'lydian-b3', 'mixolydian-b2', 'lydian-augmented-sharp-2', 'locrian-double-flat-7'],
-        formulas: {
-            'harmonic-major': [2, 2, 1, 2, 1, 3, 1],
-            'dorian-b5': [2, 1, 2, 1, 3, 1, 2],
-            'phrygian-b4': [1, 2, 1, 3, 1, 2, 2],
-            'lydian-b3': [2, 1, 3, 1, 2, 2, 1],
-            'mixolydian-b2': [1, 3, 1, 2, 2, 1, 2],
-            'lydian-augmented-sharp-2': [3, 1, 2, 2, 1, 2, 1],
-            'locrian-double-flat-7': [1, 2, 2, 1, 2, 1, 3]
-        }
-    },
-    'hungarian-minor-modes': {
-        name: 'Hungarian Minor',
-        description: 'The seven modes of the Hungarian minor scale',
-        modes: ['hungarian-minor', 'oriental', 'ionian-augmented-sharp-2', 'locrian-double-flat-3-double-flat-7', 'double-harmonic-major', 'lydian-sharp-2-sharp-6', 'ultra-locrian'],
-        formulas: {
-            'hungarian-minor': [2, 1, 3, 1, 1, 3, 1],
-            'oriental': [1, 3, 1, 1, 3, 1, 2],
-            'ionian-augmented-sharp-2': [3, 1, 1, 3, 1, 2, 1],
-            'locrian-double-flat-3-double-flat-7': [1, 1, 3, 1, 2, 1, 3],
-            'double-harmonic-major': [1, 3, 1, 2, 1, 3, 1],
-            'lydian-sharp-2-sharp-6': [3, 1, 2, 1, 3, 1, 1],
-            'ultra-locrian': [1, 2, 1, 3, 1, 1, 3]
-        }
-    },
-    'neapolitan-minor-modes': {
-        name: 'Neapolitan Minor',
-        description: 'The seven modes of the neapolitan minor scale',
-        modes: ['neapolitan-minor', 'leading-whole-tone', 'lydian-augmented-dominant', 'lydian-dominant-flat-6', 'major-locrian', 'half-diminished-flat-2', 'altered-diminished'],
-        formulas: {
-            'neapolitan-minor': [1, 2, 2, 2, 1, 3, 1],
-            'leading-whole-tone': [2, 2, 2, 1, 3, 1, 1],
-            'lydian-augmented-dominant': [2, 2, 1, 3, 1, 1, 2],
-            'lydian-dominant-flat-6': [2, 1, 3, 1, 1, 2, 2],
-            'major-locrian': [1, 3, 1, 1, 2, 2, 2],
-            'half-diminished-flat-2': [3, 1, 1, 2, 2, 2, 1],
-            'altered-diminished': [1, 1, 2, 2, 2, 1, 3]
-        }
-    },
-    'neapolitan-major-modes': {
-        name: 'Neapolitan Major',
-        description: 'The seven modes of the neapolitan major scale',
-        modes: ['neapolitan-major', 'leading-whole-tone-major', 'lydian-augmented-major', 'lydian-dominant-major', 'major-locrian-major', 'half-diminished-major', 'altered-major'],
-        formulas: {
-            'neapolitan-major': [1, 2, 2, 2, 2, 2, 1],
-            'leading-whole-tone-major': [2, 2, 2, 2, 2, 1, 1],
-            'lydian-augmented-major': [2, 2, 2, 2, 1, 1, 2],
-            'lydian-dominant-major': [2, 2, 2, 1, 1, 2, 2],
-            'major-locrian-major': [2, 2, 1, 1, 2, 2, 2],
-            'half-diminished-major': [2, 1, 1, 2, 2, 2, 2],
-            'altered-major': [1, 1, 2, 2, 2, 2, 2]
-        }
-    },
-    'augmented-scale': {
-        name: 'Augmented',
-        description: 'Six-note symmetrical scale',
-        modes: ['augmented', 'augmented-2'],
-        formulas: {
-            'augmented': [1, 3, 1, 3, 1, 3],
-            'augmented-2': [3, 1, 3, 1, 3, 1]
-        }
     }
 };
 
@@ -390,15 +220,6 @@ const modeMetadata = {
     'lydian-sharp-2': { mood: 'Exotic', description: 'Very exotic sound with unusual intervals', applications: ['World music', 'experimental'] },
     'altered-dominant': { mood: 'Jazzy', description: 'Ultimate jazz dominant sound with altered tensions', applications: ['Jazz', 'fusion'] },
     
-    // Harmonic major modes
-    'harmonic-major': { mood: 'Bright', description: 'Major scale with flat 6th, creates unique harmonic color', applications: ['Classical', 'jazz', 'film'] },
-    'dorian-b5': { mood: 'Diminished', description: 'Dorian with flat 5th, half-diminished character', applications: ['Jazz', 'experimental'] },
-    'phrygian-b4': { mood: 'Exotic', description: 'Phrygian with flat 4th, very exotic sound', applications: ['World music', 'experimental'] },
-    'lydian-b3': { mood: 'Modal', description: 'Lydian with flat 3rd, unique modal character', applications: ['Jazz', 'modal music'] },
-    'mixolydian-b2': { mood: 'Eastern', description: 'Mixolydian with flat 2nd, Eastern flavor', applications: ['World music', 'modal jazz'] },
-    'lydian-augmented-sharp-2': { mood: 'Complex', description: 'Complex lydian variation with multiple alterations', applications: ['Experimental', 'modern classical'] },
-    'locrian-double-flat-7': { mood: 'Unstable', description: 'Extremely unstable locrian variation', applications: ['Experimental', 'avant-garde'] },
-    
     // Melodic minor modes
     'melodic-minor': { mood: 'Ascending', description: 'Jazz minor, bright ascending character', applications: ['Jazz', 'classical', 'film'] },
     'dorian-b2': { mood: 'Phrygian', description: 'Dorian with flat 2nd, creates Phrygian-like character', applications: ['Jazz', 'world music'] },
@@ -407,33 +228,6 @@ const modeMetadata = {
     'mixolydian-b6': { mood: 'Hindu', description: 'Mixolydian with flat 6th, common in Indian music', applications: ['Jazz', 'world music', 'fusion'] },
     'locrian-natural-2': { mood: 'Half-diminished', description: 'Perfect for half-diminished chords', applications: ['Jazz', 'fusion'] },
     'super-locrian': { mood: 'Altered', description: 'The altered scale, ultimate jazz tension', applications: ['Jazz', 'fusion'] },
-    
-    // Hungarian minor modes
-    'hungarian-minor': { mood: 'Gypsy', description: 'Exotic scale with augmented 2nd intervals', applications: ['Gypsy', 'Eastern European', 'metal'] },
-    'oriental': { mood: 'Eastern', description: 'Oriental scale with distinctive Middle Eastern character', applications: ['World music', 'film scores'] },
-    'ionian-augmented-sharp-2': { mood: 'Exotic', description: 'Major scale with augmented intervals', applications: ['Experimental', 'world music'] },
-    'locrian-double-flat-3-double-flat-7': { mood: 'Dissonant', description: 'Extremely dissonant mode with double flats', applications: ['Experimental', 'avant-garde'] },
-    'double-harmonic-major': { mood: 'Arabic', description: 'Classic Arabic/Byzantine scale', applications: ['World music', 'metal', 'film'] },
-    'lydian-sharp-2-sharp-6': { mood: 'Complex', description: 'Lydian with multiple sharp alterations', applications: ['Experimental', 'modern classical'] },
-    'ultra-locrian': { mood: 'Unstable', description: 'Extremely unstable and dissonant', applications: ['Experimental', 'noise music'] },
-    
-    // Neapolitan minor modes
-    'neapolitan-minor': { mood: 'Classical', description: 'Classical minor scale with flat 2nd degree', applications: ['Classical', 'neoclassical'] },
-    'leading-whole-tone': { mood: 'Impressionist', description: 'Whole tone character with leading tone', applications: ['Impressionist', 'film'] },
-    'lydian-augmented-dominant': { mood: 'Complex', description: 'Lydian augmented with dominant function', applications: ['Jazz', 'experimental'] },
-    'lydian-dominant-flat-6': { mood: 'Modal', description: 'Lydian dominant with flat 6th', applications: ['Jazz', 'modal music'] },
-    'major-locrian': { mood: 'Paradoxical', description: 'Major scale with locrian instability', applications: ['Experimental', 'modern jazz'] },
-    'half-diminished-flat-2': { mood: 'Dark', description: 'Half-diminished with flat 2nd', applications: ['Jazz', 'experimental'] },
-    'altered-diminished': { mood: 'Tense', description: 'Altered scale with diminished character', applications: ['Jazz', 'fusion'] },
-    
-    // Neapolitan major modes
-    'neapolitan-major': { mood: 'Bright', description: 'Major version of Neapolitan scale', applications: ['Classical', 'experimental'] },
-    'leading-whole-tone-major': { mood: 'Impressionist', description: 'Major version of leading whole tone', applications: ['Impressionist', 'film'] },
-    'lydian-augmented-major': { mood: 'Ethereal', description: 'Major lydian augmented variation', applications: ['Film scores', 'ambient'] },
-    'lydian-dominant-major': { mood: 'Floating', description: 'Major lydian dominant variation', applications: ['Jazz', 'fusion'] },
-    'major-locrian-major': { mood: 'Unique', description: 'Unique major-locrian hybrid', applications: ['Experimental', 'modern classical'] },
-    'half-diminished-major': { mood: 'Complex', description: 'Major scale with half-diminished elements', applications: ['Jazz', 'experimental'] },
-    'altered-major': { mood: 'Colorful', description: 'Major scale with altered tensions', applications: ['Jazz', 'fusion'] },
     
     // Diminished modes
     'wh-diminished': { mood: 'Symmetrical', description: 'Eight-note symmetrical scale, alternating whole-half steps', applications: ['Jazz', 'classical', 'metal'] },
@@ -445,33 +239,21 @@ const modeMetadata = {
     'man-gong': { mood: 'Phrygian', description: 'Third mode of major pentatonic, known as Man Gong in Asian traditions', applications: ['Blues', 'rock', 'world music'] },
     'ritusen': { mood: 'Lydian', description: 'Fourth mode of major pentatonic, traditional Japanese Ritusen scale', applications: ['Country', 'folk', 'world music'] },
     'minor-pentatonic': { mood: 'Soulful', description: 'Classic minor pentatonic scale', applications: ['Blues', 'rock', 'jazz'] },
-    'hirajoshi': { mood: 'Japanese', description: 'Traditional Japanese pentatonic scale', applications: ['World music', 'ambient', 'film'] },
-    'iwato': { mood: 'Japanese', description: 'Traditional Japanese scale with distinctive character', applications: ['World music', 'ambient', 'film'] },
-    'kumoi': { mood: 'Japanese', description: 'Brighter Japanese pentatonic, works over major 7 and Lydian-based chords', applications: ['World music', 'jazz', 'film'] },
-    'hon-kumoi-shiouzi': { mood: 'Japanese', description: 'Japanese pentatonic with b2 and b6, works with Phrygian mode', applications: ['World music', 'ambient', 'experimental'] },
-    'chinese-scale': { mood: 'Asian', description: 'Also called "Chinese scale" or "Raga Amritavarsini", bright pentatonic character', applications: ['World music', 'meditation', 'film'] },
     
     // Blues scales
     'blues-major': { mood: 'Country', description: 'Six-note blues scale with chromatic passing tones (blue notes)', applications: ['Blues', 'country', 'rock'] },
     'blues-minor': { mood: 'Soulful', description: 'Six-note blues scale with characteristic blue notes', applications: ['Blues', 'rock', 'jazz'] },
-    'hybrid-blues': { mood: 'Complete', description: 'Nine-note scale combining blues minor and blues major (1-2-♭3-3-4-♭5-5-6-♭7)', applications: ['Blues', 'rock', 'jazz', 'fusion'] },
     
-    // Barry Harris scales
-    // 'major-6th-diminished': { mood: 'Sophisticated', description: 'Major scale with added diminished passing tone between 6th and 7th (1-2-3-4-5-♭6-6-7)', applications: ['Jazz', 'bebop', 'swing'] },
-    // 'minor-6th-diminished': { mood: 'Jazzy', description: 'Minor scale with added diminished passing tone between 6th and 7th (1-2-♭3-4-5-6-♭7-7)', applications: ['Jazz', 'bebop', 'swing'] },
+    // Whole tone scales
+    'whole-tone-1': { mood: 'Dreamy', description: 'First rotation of the whole tone scale, creates floating ambiguity', applications: ['Impressionist', 'jazz', 'film'] },
+    'whole-tone-2': { mood: 'Dreamy', description: 'Second rotation of the whole tone scale', applications: ['Impressionist', 'jazz', 'film'] },
+    'whole-tone-3': { mood: 'Dreamy', description: 'Third rotation of the whole tone scale', applications: ['Impressionist', 'jazz', 'film'] },
+    'whole-tone-4': { mood: 'Dreamy', description: 'Fourth rotation of the whole tone scale', applications: ['Impressionist', 'jazz', 'film'] },
+    'whole-tone-5': { mood: 'Dreamy', description: 'Fifth rotation of the whole tone scale', applications: ['Impressionist', 'jazz', 'film'] },
+    'whole-tone-6': { mood: 'Dreamy', description: 'Sixth rotation of the whole tone scale', applications: ['Impressionist', 'jazz', 'film'] },
     
     // Other scales
-    'whole-tone': { mood: 'Dreamy', description: 'Six notes separated by whole steps, creates floating ambiguity. The whole tone scale has rotations rather than modes - each rotation starts on a different note but maintains the same interval pattern (all whole steps), so they don\'t create new harmonic colors like traditional modes do. There are only two distinct whole tone scales that together contain all 12 chromatic notes.', applications: ['Impressionist', 'jazz', 'film'] },
-    'whole-tone-1': { mood: 'Dreamy', description: 'First mode of the whole tone scale', applications: ['Impressionist', 'jazz', 'film'] },
-    'whole-tone-2': { mood: 'Dreamy', description: 'Second mode of the whole tone scale', applications: ['Impressionist', 'jazz', 'film'] },
-    'whole-tone-3': { mood: 'Dreamy', description: 'Third mode of the whole tone scale', applications: ['Impressionist', 'jazz', 'film'] },
-    'whole-tone-4': { mood: 'Dreamy', description: 'Fourth mode of the whole tone scale', applications: ['Impressionist', 'jazz', 'film'] },
-    'whole-tone-5': { mood: 'Dreamy', description: 'Fifth mode of the whole tone scale', applications: ['Impressionist', 'jazz', 'film'] },
-    'whole-tone-6': { mood: 'Dreamy', description: 'Sixth mode of the whole tone scale', applications: ['Impressionist', 'jazz', 'film'] },
-    'chromatic': { mood: 'Chromatic', description: 'All twelve pitches, ultimate color and tension', applications: ['Jazz', 'classical', 'experimental'] },
-    'augmented': { mood: 'Symmetrical', description: 'Six-note symmetrical scale with augmented character', applications: ['Jazz', 'experimental', 'modern classical'] },
-    'augmented-2': { mood: 'Symmetrical', description: 'Second mode of the augmented scale, same symmetrical character', applications: ['Jazz', 'experimental', 'modern classical'] },
-    'bebop-major': { mood: 'Jazzy', description: 'Major scale with added chromatic passing tone', applications: ['Bebop jazz', 'jazz improvisation'] }
+    'chromatic': { mood: 'Chromatic', description: 'All twelve pitches, ultimate color and tension', applications: ['Jazz', 'classical', 'experimental'] }
 };
 
 // Mode Numbers and Names
@@ -494,15 +276,6 @@ const modeNumbers = {
     'lydian-sharp-2': { number: 6, properName: 'Lydian #2' },
     'altered-dominant': { number: 7, properName: 'Altered Dominant' },
     
-    // Harmonic Major modes
-    'harmonic-major': { number: 1, properName: 'Harmonic Major' },
-    'dorian-b5': { number: 2, properName: 'Dorian ♭5' },
-    'phrygian-b4': { number: 3, properName: 'Phrygian ♭4' },
-    'lydian-b3': { number: 4, properName: 'Lydian ♭3' },
-    'mixolydian-b2': { number: 5, properName: 'Mixolydian ♭2' },
-    'lydian-augmented-sharp-2': { number: 6, properName: 'Lydian Aug #2' },
-    'locrian-double-flat-7': { number: 7, properName: 'Locrian ♭♭7' },
-    
     // Melodic Minor modes
     'melodic-minor': { number: 1, properName: 'Melodic Minor' },
     'dorian-b2': { number: 2, properName: 'Dorian ♭2' },
@@ -511,33 +284,6 @@ const modeNumbers = {
     'mixolydian-b6': { number: 5, properName: 'Mixolydian ♭6' },
     'locrian-natural-2': { number: 6, properName: 'Locrian ♮2' },
     'super-locrian': { number: 7, properName: 'Super Locrian' },
-    
-    // Hungarian Minor modes
-    'hungarian-minor': { number: 1, properName: 'Hungarian Minor' },
-    'oriental': { number: 2, properName: 'Oriental' },
-    'ionian-augmented-sharp-2': { number: 3, properName: 'Ionian Aug #2' },
-    'locrian-double-flat-3-double-flat-7': { number: 4, properName: 'Locrian ♭♭3 ♭♭7' },
-    'double-harmonic-major': { number: 5, properName: 'Double Harmonic Major' },
-    'lydian-sharp-2-sharp-6': { number: 6, properName: 'Lydian #2 #6' },
-    'ultra-locrian': { number: 7, properName: 'Ultra Locrian' },
-    
-    // Neapolitan Minor modes
-    'neapolitan-minor': { number: 1, properName: 'Neapolitan Minor' },
-    'leading-whole-tone': { number: 2, properName: 'Leading Whole Tone' },
-    'lydian-augmented-dominant': { number: 3, properName: 'Lydian Aug Dom' },
-    'lydian-dominant-flat-6': { number: 4, properName: 'Lydian Dom ♭6' },
-    'major-locrian': { number: 5, properName: 'Major Locrian' },
-    'half-diminished-flat-2': { number: 6, properName: 'Half Dim ♭2' },
-    'altered-diminished': { number: 7, properName: 'Altered Diminished' },
-    
-    // Neapolitan Major modes
-    'neapolitan-major': { number: 1, properName: 'Neapolitan Major' },
-    'leading-whole-tone-major': { number: 2, properName: 'Leading Whole Tone Maj' },
-    'lydian-augmented-major': { number: 3, properName: 'Lydian Aug Major' },
-    'lydian-dominant-major': { number: 4, properName: 'Lydian Dom Major' },
-    'major-locrian-major': { number: 5, properName: 'Major Locrian Major' },
-    'half-diminished-major': { number: 6, properName: 'Half Dim Major' },
-    'altered-major': { number: 7, properName: 'Altered Major' },
     
     // Diminished modes
     'wh-diminished': { number: 1, properName: 'WH Diminished' },
@@ -549,33 +295,21 @@ const modeNumbers = {
     'man-gong': { number: 3, properName: 'Man Gong' },
     'ritusen': { number: 4, properName: 'Ritusen' },
     'minor-pentatonic': { number: 5, properName: 'Minor Pentatonic' },
-    'hirajoshi': { number: 1, properName: 'Hirajoshi' },
-    'iwato': { number: 2, properName: 'Iwato' },
-    'kumoi': { number: 3, properName: 'Kumoi' },
-    'hon-kumoi-shiouzi': { number: 4, properName: 'Hon Kumoi Shiouzi' },
-    'chinese-scale': { number: 5, properName: 'Chinese Scale' },
     
     // Blues scales
     'blues-major': { number: 1, properName: 'Blues Major' },
     'blues-minor': { number: 2, properName: 'Blues Minor' },
-    'hybrid-blues': { number: 1, properName: 'Hybrid Blues' },
     
-    // Barry Harris scales
-    // 'major-6th-diminished': { number: 1, properName: 'Major 6th Diminished' },
-    // 'minor-6th-diminished': { number: 1, properName: 'Minor 6th Diminished' },
+    // Whole tone scales
+    'whole-tone-1': { number: 1, properName: 'Whole Tone' },
+    'whole-tone-2': { number: 2, properName: 'Whole Tone' },
+    'whole-tone-3': { number: 3, properName: 'Whole Tone' },
+    'whole-tone-4': { number: 4, properName: 'Whole Tone' },
+    'whole-tone-5': { number: 5, properName: 'Whole Tone' },
+    'whole-tone-6': { number: 6, properName: 'Whole Tone' },
     
     // Other scales
-    'whole-tone': { number: 1, properName: 'Whole Tone' },
-    'whole-tone-1': { number: 1, properName: 'Rotation 1' },
-    'whole-tone-2': { number: 2, properName: 'Rotation 2' },
-    'whole-tone-3': { number: 3, properName: 'Rotation 3' },
-    'whole-tone-4': { number: 4, properName: 'Rotation 4' },
-    'whole-tone-5': { number: 5, properName: 'Rotation 5' },
-    'whole-tone-6': { number: 6, properName: 'Rotation 6' },
-    'chromatic': { number: 1, properName: 'Chromatic' },
-    'augmented': { number: 1, properName: 'Whole Half - Half' },
-    'augmented-2': { number: 2, properName: 'Half - Whole Half Augmented' },
-    'bebop-major': { number: 1, properName: 'Bebop Major' }
+    'chromatic': { number: 1, properName: 'Chromatic' }
 };
 
 // Export all constants
