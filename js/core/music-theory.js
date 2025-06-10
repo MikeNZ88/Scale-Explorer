@@ -658,8 +658,9 @@ function shouldDisplayChords(scaleType, scaleLength) {
         return true;
     }
     
-    // Blues scales can show chords
-    if (scaleLength === 6 && scaleType === 'blues') {
+    // Blues scales can show chords (6-note blues or 9-note hybrid blues)
+    if ((scaleLength === 6 && scaleType === 'blues') || 
+        (scaleLength === 9 && scaleType === 'hybrid-blues')) {
         return true;
     }
     
@@ -674,8 +675,14 @@ function shouldDisplayChords(scaleType, scaleLength) {
     }
     
     // Very long scales (chromatic) or very short scales don't work well with chord analysis
-    if (scaleLength < 5 || scaleLength > 8) {
+    // Exception: hybrid blues (9 notes) is allowed
+    if (scaleLength < 5 || (scaleLength > 9)) {
         return false;
+    }
+    
+    // Allow 9-note scales if they are blues-related
+    if (scaleLength === 9 && scaleType.includes('blues')) {
+        return true;
     }
     
     return true;
@@ -1857,90 +1864,130 @@ function getWholeToneScaleChords(scale) {
 function getBluesScaleChords(scale, scaleType) {
     console.log('getBluesScaleChords called with scale:', scale, 'scaleType:', scaleType);
     
-    if (!scale || scale.length !== 6) {
+    if (!scale || (scale.length !== 6 && scale.length !== 9)) {
         return { chords: [] };
     }
+
+    const root = scale[0]; // Tonic (I chord)
     
-    // Use the existing buildChordsFromScale function to generate chords dynamically
-    const availableChords = buildChordsFromScale(scale);
-    
-    // Organize chords by type
-    const triads = availableChords.filter(c => c.type === 'triad').map(c => c.chord);
-    const powerChords = availableChords.filter(c => c.type === 'power').map(c => c.chord);
-    const susChords = availableChords.filter(c => c.type === 'sus').map(c => c.chord);
-    
-    // For blues scales, we also want to include some extended chords that work well
-    const extendedChords = [];
-    
-    // Look for 6th chords (root + major third + fifth + sixth)
-    for (let i = 0; i < scale.length; i++) {
-        const root = scale[i];
+    if (scale.length === 9) {
+        // Hybrid blues scale: C-D-Eb-E-F-Gb-G-A-Bb (for C root)
+        // Use actual scale notes for practical blues chords
         
-        // Try to find major third, fifth, and sixth in the scale
-        let hasThird = false, hasFifth = false, hasSixth = false;
+        // Find the key harmonic notes in the scale
+        const second = scale[1];     // D
+        const minorThird = scale[2]; // Eb  
+        const majorThird = scale[3]; // E
+        const fourth = scale[4];     // F
+        const tritone = scale[5];    // Gb
+        const fifth = scale[6];      // G
+        const sixth = scale[7];      // A
+        const minorSeventh = scale[8]; // Bb
         
-        for (let j = 0; j < scale.length; j++) {
-            if (i === j) continue;
-            const interval = getIntervalBetweenNotes(root, scale[j]);
-            if (interval === 4) hasThird = true;      // Major third
-            if (interval === 7) hasFifth = true;      // Perfect fifth  
-            if (interval === 9) hasSixth = true;      // Major sixth
-        }
-        
-        if (hasThird && hasFifth && hasSixth) {
-            extendedChords.push(`${root}6`);
-        }
+        return {
+            chords: [
+                {
+                    type: "Core Blues Triads",
+                    description: "Essential triads built from the hybrid blues scale notes",
+                    chords: [
+                        `${root}`,      // C major (C-E-G)
+                        `${root}m`,     // C minor (C-Eb-G) 
+                        `${sixth}m`     // A minor (A-C-E) - vi chord
+                    ],
+                    emphasis: true
+                },
+                {
+                    type: "Blues Seventh Chords", 
+                    description: "Dominant and minor 7th chords for blues progressions",
+                    chords: [
+                        `${root}7`,        // C7 (C-E-G-Bb)
+                        `${fourth}7`,      // F7 (F-A-C-E) - IV7 chord
+                        `${root}m7`,       // Cm7 (C-Eb-G-Bb)
+                        `${sixth}m7`       // Am7 (A-C-E-G) - vi7 chord
+                    ],
+                    emphasis: true
+                },
+                {
+                    type: "Passing & Color Chords",
+                    description: "Diminished passing chords and chromatic movement", 
+                    chords: [
+                        `${tritone}°7`,     // Gb°7 - tritone diminished (legitimate passing chord)
+                        `${minorThird}°7`   // Eb°7 - passing chord between ii and iii
+                    ]
+                },
+                {
+                    type: "Blues Extensions & Alterations",
+                    description: "Jazzy blues colors and Hendrix-style chords",
+                    chords: [
+                        `${root}7#9`,      // C7#9 (Hendrix chord)
+                        `${root}7b5`,      // C7b5 (altered blues)
+                        `${root}9`,        // C9 (jazz blues)
+                        `${root}13`,       // C13 (jazz extension)
+                        `${fourth}9`       // F9 (subdominant color)
+                    ]
+                }
+            ],
+            applications: {
+                description: "Perfect for sophisticated blues harmony and jazz-blues fusion",
+                suggestions: [
+                    "Use over complex 12-bar blues progressions",
+                    "Great for jazz-blues and blues-rock fusion", 
+                    "Combines major and minor blues characteristics",
+                    "Excellent for blues improvisation in any key"
+                ]
+            }
+        };
     }
     
-    // Look for minor 7th chords (root + minor third + fifth + minor seventh)
-    for (let i = 0; i < scale.length; i++) {
-        const root = scale[i];
-        
-        let hasMinorThird = false, hasFifth = false, hasMinorSeventh = false;
-        
-        for (let j = 0; j < scale.length; j++) {
-            if (i === j) continue;
-            const interval = getIntervalBetweenNotes(root, scale[j]);
-            if (interval === 3) hasMinorThird = true;    // Minor third
-            if (interval === 7) hasFifth = true;         // Perfect fifth
-            if (interval === 10) hasMinorSeventh = true; // Minor seventh
-        }
-        
-        if (hasMinorThird && hasFifth && hasMinorSeventh) {
-            extendedChords.push(`${root}m7`);
-        }
-    }
+    // Traditional 6-note blues scales
+    const triads = buildChordsFromScale(scale);
+    console.log('Generated triads for 6-note blues:', triads);
     
-    console.log('Blues chords generated:', { triads, powerChords, susChords, extendedChords });
+    // Organize traditional blues chords into categories
+    const coreTriads = triads.filter(chord => 
+        chord.quality === 'major' || chord.quality === 'minor'
+    ).slice(0, 3);
+    
+    const powerChords = triads.filter(chord => 
+        chord.symbol.includes('5') || chord.quality === 'power'
+    ).slice(0, 3);
+    
+    const suspendedChords = triads.filter(chord => 
+        chord.symbol.includes('sus')
+    ).slice(0, 2);
+    
+    const extendedChords = triads.filter(chord => 
+        chord.symbol.includes('7') || chord.symbol.includes('6')
+    ).slice(0, 4);
+    
+    console.log('Organized blues chords:', { coreTriads, powerChords, suspendedChords, extendedChords });
     
     return {
         chords: [
             {
-                type: 'Essential Blues Triads',
-                description: 'Core triads built from blues scale notes',
-                chords: triads.sort(),
+                type: "Core Blues Triads",
+                description: "Essential triads for traditional blues",
+                chords: coreTriads.map(chord => chord.symbol),
                 emphasis: true
             },
             {
-                type: 'Blues Extended Chords', 
-                description: 'Characteristic extended chords for blues harmony',
-                chords: extendedChords.sort(),
-                emphasis: true
+                type: "Blues Power Chords",
+                description: "Power chords and perfect fifths",
+                chords: powerChords.map(chord => chord.symbol)
             },
             {
-                type: 'Suspended Chords',
-                description: 'Sus2 and sus4 chords using blues scale notes',
-                chords: susChords.sort()
+                type: "Suspended Chords",
+                description: "Sus2 and sus4 chords for color",
+                chords: suspendedChords.map(chord => chord.symbol)
             },
             {
-                type: 'Scale Applications',
-                description: 'Perfect for 12-bar blues progressions and blues-based improvisation',
-                chords: ['Use over blues progressions', 'Great for blues rock and jazz blues', 'Creates authentic blues harmony']
+                type: "Blues Extensions",
+                description: "6th and 7th chords for blues progressions",
+                chords: extendedChords.map(chord => chord.symbol)
             }
         ]
     };
-} 
-
+}
 
 function getAugmentedScaleChords(scale) {
     console.log('getAugmentedScaleChords called with scale:', scale);
