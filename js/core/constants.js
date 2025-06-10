@@ -269,11 +269,14 @@ const scaleCategories = {
     },
     'japanese-pentatonic': {
         name: 'Japanese Pentatonic',
-        description: 'Traditional Japanese pentatonic scales',
-        modes: ['hirojoshi-pentatonic', 'iwato-scale'],
+        description: 'The five traditional Japanese pentatonic scales (modes of Hirajoshi)',
+        modes: ['hirajoshi', 'iwato', 'kumoi', 'hon-kumoi-shiouzi', 'chinese-scale'],
         formulas: {
-            'hirojoshi-pentatonic': [2, 1, 4, 1, 4],
-            'iwato-scale': [1, 4, 1, 4, 2]
+            'hirajoshi': [2, 1, 4, 1, 4],           // 1-2-b3-5-b6 (W-H-2W-H-2W)
+            'iwato': [1, 4, 1, 4, 2],               // 1-b2-4-b5-b7 (H-2W-H-2W-W)
+            'kumoi': [4, 1, 4, 2, 1],               // 1-3-4-6-7 (2W-H-2W-W-H)
+            'hon-kumoi-shiouzi': [1, 4, 2, 1, 4],  // 1-b2-4-5-b6 (H-2W-W-H-2W)
+            'chinese-scale': [4, 2, 1, 4, 1]       // 1-3-4-5-7 (2W-W-H-2W-H)
         }
     },
     'hybrid-blues': {
@@ -442,8 +445,11 @@ const modeMetadata = {
     'man-gong': { mood: 'Phrygian', description: 'Third mode of major pentatonic, known as Man Gong in Asian traditions', applications: ['Blues', 'rock', 'world music'] },
     'ritusen': { mood: 'Lydian', description: 'Fourth mode of major pentatonic, traditional Japanese Ritusen scale', applications: ['Country', 'folk', 'world music'] },
     'minor-pentatonic': { mood: 'Soulful', description: 'Classic minor pentatonic scale', applications: ['Blues', 'rock', 'jazz'] },
-    'hirojoshi-pentatonic': { mood: 'Japanese', description: 'Traditional Japanese pentatonic scale', applications: ['World music', 'ambient', 'film'] },
-    'iwato-scale': { mood: 'Japanese', description: 'Traditional Japanese scale with distinctive character', applications: ['World music', 'ambient', 'film'] },
+    'hirajoshi': { mood: 'Japanese', description: 'Traditional Japanese pentatonic scale', applications: ['World music', 'ambient', 'film'] },
+    'iwato': { mood: 'Japanese', description: 'Traditional Japanese scale with distinctive character', applications: ['World music', 'ambient', 'film'] },
+    'kumoi': { mood: 'Japanese', description: 'Brighter Japanese pentatonic, works over major 7 and Lydian-based chords', applications: ['World music', 'jazz', 'film'] },
+    'hon-kumoi-shiouzi': { mood: 'Japanese', description: 'Japanese pentatonic with b2 and b6, works with Phrygian mode', applications: ['World music', 'ambient', 'experimental'] },
+    'chinese-scale': { mood: 'Asian', description: 'Also called "Chinese scale" or "Raga Amritavarsini", bright pentatonic character', applications: ['World music', 'meditation', 'film'] },
     
     // Blues scales
     'blues-major': { mood: 'Country', description: 'Six-note blues scale with chromatic passing tones (blue notes)', applications: ['Blues', 'country', 'rock'] },
@@ -543,8 +549,11 @@ const modeNumbers = {
     'man-gong': { number: 3, properName: 'Man Gong' },
     'ritusen': { number: 4, properName: 'Ritusen' },
     'minor-pentatonic': { number: 5, properName: 'Minor Pentatonic' },
-    'hirojoshi-pentatonic': { number: 1, properName: 'Hirojoshi Pentatonic' },
-    'iwato-scale': { number: 2, properName: 'Iwato Scale' },
+    'hirajoshi': { number: 1, properName: 'Hirajoshi' },
+    'iwato': { number: 2, properName: 'Iwato' },
+    'kumoi': { number: 3, properName: 'Kumoi' },
+    'hon-kumoi-shiouzi': { number: 4, properName: 'Hon Kumoi Shiouzi' },
+    'chinese-scale': { number: 5, properName: 'Chinese Scale' },
     
     // Blues scales
     'blues-major': { number: 1, properName: 'Blues Major' },

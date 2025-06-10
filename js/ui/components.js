@@ -26,9 +26,9 @@ let modalFretboardState = {
 // Helper function to convert note names to chromatic indices (handles both sharps and flats)
 function noteToIndex(note) {
     const noteMapping = {
-        'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4,
-        'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9,
-        'A#': 10, 'Bb': 10, 'B': 11,
+            'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4,
+            'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9,
+            'A#': 10, 'Bb': 10, 'B': 11,
         // Add double accidentals
         'C##': 2, 'D##': 4, 'F##': 7, 'G##': 9, 'A##': 11,
         'Dbb': 0, 'Ebb': 2, 'Gbb': 5, 'Abb': 7, 'Bbb': 9,
@@ -652,7 +652,7 @@ function displayScale(scale, intervals, formula, scaleType, key, category) {
     displayNotes(scale);
     displayIntervals(intervals);
     displayFormula(formula);
-    displayChords(scale, scaleType);
+    displayChords(scale, scaleType, category);
     updateScaleColor(intervals);
     updateParentScale(scaleType, key, category);
     updateModeName();
@@ -888,8 +888,8 @@ function createRelatedModes(currentMode, category, currentKey) {
         'wh-diminished': 0, 'hw-diminished': 1,
         // Major Pentatonic modes (correct offsets)
         'major-pentatonic': 0, 'suspended-pentatonic': 2, 'man-gong': 4, 'ritusen': 7, 'minor-pentatonic': 9,
-        // Japanese Pentatonic scales (independent scales, not modes)
-        'hirojoshi-pentatonic': 0, 'iwato-scale': 0,
+        // Japanese Pentatonic modes (modes of Hirajoshi scale)
+        'hirajoshi': 0, 'iwato': 2, 'kumoi': 5, 'hon-kumoi-shiouzi': 7, 'chinese-scale': 10,
         // Blues scales
         'blues-major': 0, 'blues-minor': 9,
         'hybrid-blues': 0,
@@ -963,7 +963,8 @@ function createRelatedModes(currentMode, category, currentKey) {
             
             // Add click handler to change to this mode
             button.addEventListener('click', () => {
-                // Update the app state to use this mode and key
+                // Update the app state to use this mode and key directly
+                // No need to convert spelling - modeKey already has correct enharmonic spelling
                 AppController.setState({
                     key: modeKey,
                     category: category,
@@ -1117,8 +1118,10 @@ function createRelatedModes(currentMode, category, currentKey) {
         const modeData = MusicConstants.modeNumbers[mode];
         if (!modeData) return;
         
-        // Use the actual scale note for this mode (maintaining consistent spelling)
-        const modeKey = parentScaleNotes[index] || finalParentRoot;
+        // Calculate the correct note for this mode using mode offset instead of array index
+        const modeOffset = modeOffsets[mode] || 0;
+        const modeRootIndex = (parentRootIndex + modeOffset) % 12;
+        const modeKey = getConsistentNoteSpelling(modeRootIndex, spellingConvention);
         
         const button = document.createElement('button');
         button.className = `mode-button ${mode === currentMode ? 'active' : ''}`;
@@ -1129,12 +1132,10 @@ function createRelatedModes(currentMode, category, currentKey) {
         
         // Add click handler to change to this mode
         button.addEventListener('click', () => {
-            // Convert the modeKey to proper enharmonic spelling
-            const properKey = getProperEnharmonicSpelling(modeKey);
-            
-            // Update the app state to use this mode and proper key
+            // Update the app state to use this mode and key directly
+            // No need to convert spelling - modeKey already has correct enharmonic spelling
             AppController.setState({
-                key: properKey,
+                key: modeKey,
                 category: category,
                 mode: mode
             });
@@ -1867,24 +1868,23 @@ function hideSuggestions() {
     }, 150); // Small delay to allow for click events
 }
 
-function displayChords(scale, scaleType) {
+function displayChords(scale, scaleType, category) {
     console.log('=== displayChords DEBUG START ===');
     console.log('Scale:', scale);
-    console.log('Scale Type:', scaleType);
-    console.log('Scale Length:', scale?.length);
+    console.log('Scale type:', scaleType);
+    console.log('Category:', category);
+    console.log('Scale length:', scale.length);
     
     const chordsSection = document.querySelector('.chords-section');
-    const chordsList = document.getElementById('chords-list');
+    if (!chordsSection) {
+        console.log('No chords section found');
+        return;
+    }
     
-    console.log('DOM elements found:', { chordsSection: !!chordsSection, chordsList: !!chordsList });
-    
-    if (!scale || scale.length < 3 || !chordsSection || !chordsList) {
-        console.log('Early return due to missing requirements:', { 
-            scale: scale, 
-            scaleLength: scale?.length, 
-            chordsSection: !!chordsSection, 
-            chordsList: !!chordsList 
-        });
+    // Hide chords section for Japanese pentatonic scales
+    if (category === 'japanese-pentatonic') {
+        console.log('Hiding chords section for Japanese pentatonic');
+        chordsSection.style.display = 'none';
         return;
     }
     

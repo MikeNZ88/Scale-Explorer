@@ -1,0 +1,1 @@
+    // Hide chords for hybrid blues scales (9 notes)
