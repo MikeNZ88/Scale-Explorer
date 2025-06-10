@@ -911,7 +911,7 @@ function createRelatedModes(currentMode, category, currentKey) {
     const parentRoot = getConsistentNoteSpelling(parentRootIndex, 'sharp'); // Get sharp version first
     const parentRootFlat = getConsistentNoteSpelling(parentRootIndex, 'flat'); // Get flat version
     
-    // Determine which spelling convention to use based on standard key signatures
+    // Determine which spelling convention to use based on standard key signatures AND scale type
     let spellingConvention;
     
     // Keys that use flats in their key signatures
@@ -919,7 +919,12 @@ function createRelatedModes(currentMode, category, currentKey) {
     // Keys that use sharps in their key signatures  
     const sharpKeys = ['G', 'D', 'A', 'E', 'B', 'F#', 'C#'];
     
-    if (flatKeys.includes(parentRootFlat)) {
+    // Minor scales (harmonic minor, melodic minor) typically use flat spellings
+    // due to their characteristic flat intervals (b3, b6, etc.)
+    const parentScaleType = getScaleTypeFromCategory(category);
+    if (parentScaleType === 'harmonic-minor' || parentScaleType === 'melodic-minor') {
+        spellingConvention = 'flat';
+    } else if (flatKeys.includes(parentRootFlat)) {
         spellingConvention = 'flat';
     } else if (sharpKeys.includes(parentRoot)) {
         spellingConvention = 'sharp';
@@ -1113,6 +1118,14 @@ function createRelatedModes(currentMode, category, currentKey) {
     const parentFormula = categoryData.formulas[categoryData.modes[0]]; // Get the first mode's formula (the parent scale)
     const parentScaleNotes = calculateScaleWithConsistentSpelling(finalParentRoot, parentFormula, scaleType, spellingConvention);
     
+    console.log('=== DEBUG MODE GENERATION ===');
+    console.log('finalParentRoot:', finalParentRoot);
+    console.log('spellingConvention:', spellingConvention);
+    console.log('parentFormula:', parentFormula);
+    console.log('parentScaleNotes:', parentScaleNotes);
+    console.log('parentScaleNotes contents:', parentScaleNotes.join(', '));
+    console.log('category:', category);
+    
     // Create mode buttons for each mode in the category
     categoryData.modes.forEach((mode, index) => {
         const modeData = MusicConstants.modeNumbers[mode];
@@ -1141,17 +1154,20 @@ function createRelatedModes(currentMode, category, currentKey) {
             const scaleDegree = modeScaleDegrees[mode];
             if (scaleDegree !== undefined && parentScaleNotes[scaleDegree]) {
                 modeKey = parentScaleNotes[scaleDegree];
+                console.log(`Mode ${mode}: using scale degree ${scaleDegree} = ${modeKey}`);
             } else {
                 // Fallback to offset calculation for modes not in the lookup
                 const modeOffset = modeOffsets[mode] || 0;
                 const modeRootIndex = (parentRootIndex + modeOffset) % 12;
                 modeKey = getConsistentNoteSpelling(modeRootIndex, spellingConvention);
+                console.log(`Mode ${mode}: using fallback offset ${modeOffset} = ${modeKey}`);
             }
         } else {
             // For non-traditional scales (pentatonic, blues, etc.), use offset calculation
             const modeOffset = modeOffsets[mode] || 0;
             const modeRootIndex = (parentRootIndex + modeOffset) % 12;
             modeKey = getConsistentNoteSpelling(modeRootIndex, spellingConvention);
+            console.log(`Mode ${mode}: using non-traditional offset ${modeOffset} = ${modeKey}`);
         }
         
         const button = document.createElement('button');
