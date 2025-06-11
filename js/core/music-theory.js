@@ -166,10 +166,6 @@ function calculateScaleWithDegrees(root, formula, scaleType = 'major') {
         return calculateBluesScale(root, formula, rootNoteIndex, rootChromaticIndex, noteNames, noteToIndex);
     }
     
-    if (scaleType === 'hybrid-blues') {
-        return calculateHybridBluesScale(root, formula, rootNoteIndex, rootChromaticIndex, noteNames, noteToIndex);
-    }
-    
     if (scaleType === 'augmented') {
         return calculateAugmentedScale(root, formula, rootChromaticIndex, noteToIndex);
     }
@@ -403,7 +399,7 @@ function getChromatic(chromaticIndex, key, scaleType = 'major') {
     
     // Chromatic scale with proper enharmonics based on key signature
     let chromaticScale;
-    if (scaleType === 'hybrid-blues' || scaleType === 'blues') {
+    if (scaleType === 'blues') {
         // Blues scales generally prefer flats for altered notes
         chromaticScale = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
     } else if (usesSharps) {
@@ -648,7 +644,6 @@ function shouldDisplayChords(scaleType, scaleLength, category = null) {
     
     // Handle blues scales specifically - don't show chords for any blues type
     if ((scaleLength === 6 && scaleType === 'blues') || 
-        (scaleLength === 9 && scaleType === 'hybrid-blues') ||
         scaleType.includes('blues')) {
         return false;
     }
@@ -1074,73 +1069,9 @@ function analyzeSeventhChordComprehensive(thirdInterval, fifthInterval, seventhI
         return { quality: 'Augmented 7th', symbol: '+7', isNonStandard: false, description: 'Augmented dominant seventh' };
     }
     
-    // Minor major seventh
+    // Minor major seventh (characteristic of harmonic minor)
     if (thirdInterval === 3 && fifthInterval === 7 && seventhInterval === 11) {
         return { quality: 'minor Major 7th', symbol: 'mMaj7', isNonStandard: false, description: 'Minor major seventh' };
-    }
-    
-    // SPECIFIC FIXES FOR EXOTIC SCALES - Add these before the generic patterns
-    
-    // Fix for Neapolitan Minor: B(♭2♭4♭6) - Notes: B - Db - F - Ab
-    if (thirdInterval === 2 && fifthInterval === 6 && seventhInterval === 9) {
-        return { quality: 'cluster chord', symbol: '(2♭5♭6)', isNonStandard: false, description: 'Cluster chord with major 2nd, tritone, and major 6th' };
-    }
-    
-    // Fix for Hungarian Minor: D7♯11 - Notes: D - F# - Ab - C  
-    if (thirdInterval === 4 && fifthInterval === 6 && seventhInterval === 10) {
-        return { quality: 'Dominant 7♯11', symbol: '7♯11', isNonStandard: false, description: 'Dominant seventh sharp eleventh' };
-    }
-    
-    // Fix for Hungarian Minor: F#°7 - Notes: F# - Ab - C - Eb
-    if (thirdInterval === 2 && fifthInterval === 5 && seventhInterval === 8) {
-        return { quality: 'diminished 7th', symbol: '°7', isNonStandard: false, description: 'Diminished seventh chord' };
-    }
-    
-    // Fix for Neapolitan Major: G7♭5 - Notes: G - B - Db - F
-    if (thirdInterval === 4 && fifthInterval === 6 && seventhInterval === 10) {
-        return { quality: 'Dominant 7♭5', symbol: '7♭5', isNonStandard: false, description: 'Dominant seventh flat fifth' };
-    }
-    
-    // Extended and altered seventh chords for exotic scales
-    if (thirdInterval === 2 && fifthInterval === 6 && seventhInterval === 10) {
-        return { quality: 'sus2♭5 7th', symbol: '7sus2♭5', isNonStandard: false, description: 'Suspended second flat fifth seventh' };
-    }
-    if (thirdInterval === 5 && fifthInterval === 6 && seventhInterval === 10) {
-        return { quality: 'sus4♭5 7th', symbol: '7sus4♭5', isNonStandard: false, description: 'Suspended fourth flat fifth seventh' };
-    }
-    if (thirdInterval === 4 && fifthInterval === 6 && seventhInterval === 11) {
-        return { quality: 'Major♭5 Maj7', symbol: 'maj7♭5', isNonStandard: false, description: 'Major flat fifth major seventh' };
-    }
-    if (thirdInterval === 3 && fifthInterval === 8 && seventhInterval === 11) {
-        return { quality: 'minor#5 Maj7', symbol: 'mMaj7#5', isNonStandard: false, description: 'Minor sharp fifth major seventh' };
-    }
-    if (thirdInterval === 1 && fifthInterval === 7 && seventhInterval === 10) {
-        return { quality: '♭9 7th', symbol: '7♭9', isNonStandard: false, description: 'Dominant seventh flat ninth' };
-    }
-    if (thirdInterval === 5 && fifthInterval === 8 && seventhInterval === 10) {
-        return { quality: '11th♯5', symbol: '11♯5', isNonStandard: false, description: 'Eleventh sharp fifth' };
-    }
-    
-    // Complex exotic scale seventh chords
-    if (thirdInterval === 2 && fifthInterval === 5 && seventhInterval === 10) {
-        return { quality: 'quartal 7th', symbol: '2/4/7', isNonStandard: false, description: 'Quartal seventh harmony' };
-    }
-    if (thirdInterval === 1 && fifthInterval === 6 && seventhInterval === 9) {
-        return { quality: 'diminished cluster', symbol: 'dimCluster', isNonStandard: false, description: 'Diminished chromatic cluster' };
-    }
-    if (thirdInterval === 6 && fifthInterval === 10 && seventhInterval === 2) {
-        return { quality: 'tritone maj6/9', symbol: '♭5maj6/9', isNonStandard: false, description: 'Tritone major sixth add ninth' };
-    }
-    
-    // Hungarian minor and related exotic scales
-    if (thirdInterval === 1 && fifthInterval === 5 && seventhInterval === 8) {
-        return { quality: 'Hungarian 7th', symbol: 'Hung7', isNonStandard: false, description: 'Hungarian seventh chord' };
-    }
-    if (thirdInterval === 3 && fifthInterval === 5 && seventhInterval === 11) {
-        return { quality: 'Neapolitan Maj7', symbol: 'Neap Maj7', isNonStandard: false, description: 'Neapolitan major seventh' };
-    }
-    if (thirdInterval === 4 && fifthInterval === 9 && seventhInterval === 11) {
-        return { quality: 'Lydian Maj7', symbol: 'LydMaj7', isNonStandard: false, description: 'Lydian major seventh' };
     }
     
     // Suspended seventh variations
@@ -1163,39 +1094,6 @@ function analyzeSeventhChordComprehensive(thirdInterval, fifthInterval, seventhI
     }
     if (thirdInterval === 3 && fifthInterval === 7 && seventhInterval === 2) {
         return { quality: 'minor add9', symbol: 'madd9', isNonStandard: true, description: 'Minor add ninth (no 7th)' };
-    }
-    if (thirdInterval === 4 && fifthInterval === 9 && seventhInterval === 10) {
-        return { quality: '13th', symbol: '13', isNonStandard: true, description: 'Dominant thirteenth (implied)' };
-    }
-    if (thirdInterval === 3 && fifthInterval === 9 && seventhInterval === 10) {
-        return { quality: 'minor 13th', symbol: 'm13', isNonStandard: true, description: 'Minor thirteenth (implied)' };
-    }
-    
-    // Missing intervals in seventh chords
-    if (thirdInterval === 0 && fifthInterval === 7 && seventhInterval === 10) {
-        return { quality: '7(no3)', symbol: '7(no3)', isNonStandard: true, description: 'Seventh no third' };
-    }
-    if (thirdInterval === 4 && fifthInterval === 0 && seventhInterval === 10) {
-        return { quality: '7(no5)', symbol: '7(no5)', isNonStandard: true, description: 'Seventh no fifth' };
-    }
-    if (thirdInterval === 3 && fifthInterval === 0 && seventhInterval === 10) {
-        return { quality: 'm7(no5)', symbol: 'm7(no5)', isNonStandard: true, description: 'Minor seventh no fifth' };
-    }
-    
-    // Quartal seventh harmony (common in pentatonic/modal contexts)
-    if (thirdInterval === 5 && fifthInterval === 10 && seventhInterval === 2) {
-        return { quality: 'quartal 7th', symbol: '4/7/9', isNonStandard: true, description: 'Quartal seventh harmony' };
-    }
-    if (thirdInterval === 2 && fifthInterval === 5 && seventhInterval === 10) {
-        return { quality: 'quartal stack', symbol: '2/4/7', isNonStandard: true, description: 'Quartal interval stack' };
-    }
-    
-    // Polychord sevenths (stacked intervals)
-    if (thirdInterval === 1 && fifthInterval === 6 && seventhInterval === 10) {
-        return { quality: 'cluster 7th', symbol: 'b2/♭5/7', isNonStandard: true, description: 'Chromatic cluster seventh' };
-    }
-    if (thirdInterval === 6 && fifthInterval === 9 && seventhInterval === 11) {
-        return { quality: 'tritone maj7', symbol: '♭5/6/7', isNonStandard: true, description: 'Tritone major seventh cluster' };
     }
     
     // Check for seventh chord inversions
@@ -1223,30 +1121,27 @@ function analyzeSeventhChordComprehensive(thirdInterval, fifthInterval, seventhI
     // Enhanced fallback with proper chord names instead of interval numbers
     if (thirdInterval === 3 && fifthInterval === 7) {
         // Minor triad with various sevenths
-        if (seventhInterval === 9) return { quality: 'minor♭7', symbol: 'm♭7', isNonStandard: false, description: 'Minor flat seventh' };
-        if (seventhInterval === 1) return { quality: 'minor♭9', symbol: 'm♭9', isNonStandard: false, description: 'Minor flat ninth' };
+        if (seventhInterval === 9) return { quality: 'minor♭7', symbol: 'm♭7', isNonStandard: true, description: 'Minor flat seventh' };
         return { quality: 'minor complex', symbol: 'm(alt)', isNonStandard: true, description: 'Minor chord with altered extension' };
     } else if (thirdInterval === 4 && fifthInterval === 7) {
         // Major triad with various sevenths
-        if (seventhInterval === 9) return { quality: 'Major♭7', symbol: '♭7', isNonStandard: false, description: 'Major flat seventh' };
-        if (seventhInterval === 1) return { quality: 'Major♭9', symbol: '♭9', isNonStandard: false, description: 'Major flat ninth' };
+        if (seventhInterval === 9) return { quality: 'Major♭7', symbol: '♭7', isNonStandard: true, description: 'Major flat seventh' };
         return { quality: 'Major complex', symbol: 'Maj(alt)', isNonStandard: true, description: 'Major chord with altered extension' };
     } else if (thirdInterval === 3 && fifthInterval === 6) {
         // Diminished base with various sevenths
-        if (seventhInterval === 8) return { quality: 'diminished♭6', symbol: '°♭6', isNonStandard: false, description: 'Diminished flat sixth' };
-        if (seventhInterval === 11) return { quality: 'diminished Maj7', symbol: '°Maj7', isNonStandard: false, description: 'Diminished major seventh' };
+        if (seventhInterval === 8) return { quality: 'diminished♭6', symbol: '°♭6', isNonStandard: true, description: 'Diminished flat sixth' };
+        if (seventhInterval === 11) return { quality: 'diminished Maj7', symbol: '°Maj7', isNonStandard: true, description: 'Diminished major seventh' };
         return { quality: 'diminished complex', symbol: '°(alt)', isNonStandard: true, description: 'Diminished chord with altered extension' };
     } else if (thirdInterval === 4 && fifthInterval === 8) {
         // Augmented base with various sevenths
         return { quality: 'Augmented complex', symbol: '+(alt)', isNonStandard: true, description: 'Augmented chord with extension' };
     } else {
-        // Exotic harmony - name by intervallic structure with proper chord terminology
-        const baseName = getExoticChordName(thirdInterval, fifthInterval, seventhInterval);
+        // Exotic harmony - create simple descriptive names
         return {
-            quality: baseName,
-            symbol: getExoticChordSymbol(thirdInterval, fifthInterval, seventhInterval),
+            quality: `chord ${thirdInterval}/${fifthInterval}/${seventhInterval}`,
+            symbol: `(${thirdInterval}/${fifthInterval}/${seventhInterval})`,
             isNonStandard: true,
-            description: `Exotic seventh chord: ${baseName}`
+            description: `Non-standard chord structure`
         };
     }
 }
@@ -1559,7 +1454,7 @@ function getCharacteristicChords(scale, scaleType) {
     console.log('scale && scale.length === 6:', scale && scale.length === 6);
     
     if (scaleType === 'blues' || scaleType === 'blues-major' || scaleType === 'blues-minor' || 
-        scaleType === 'hybrid-blues' || scaleType.includes('blues') || 
+        scaleType.includes('blues') || 
         (scale && scale.length === 6 && isBluesPattern(scale, scale[0]))) {
         console.log('Detected blues scale, calling getBluesScaleChords');
         return getBluesScaleChords(scale, scaleType);
