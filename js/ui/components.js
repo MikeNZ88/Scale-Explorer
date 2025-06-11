@@ -80,6 +80,13 @@ function createFretboard(scale) {
     // Add toggle functionality
     document.getElementById('toggle-display').addEventListener('click', () => {
         fretboardState.showIntervals = !fretboardState.showIntervals;
+        
+        // Show/hide interval info in comparison mode
+        const intervalInfo = document.getElementById('interval-info');
+        if (intervalInfo) {
+            intervalInfo.style.display = fretboardState.showIntervals ? 'block' : 'none';
+        }
+        
         createFretboard(scale);
     });
     
@@ -3237,7 +3244,7 @@ function showComparisonSelector(controlsDiv) {
     comparisonDiv.className = 'comparison-selector';
     
     comparisonDiv.innerHTML = `
-        <h4>Select Comparison Scale</h4>
+        <h4 style="color: #f97316;">Select Comparison Scale</h4>
         <div class="comparison-controls">
             <label for="comparison-root">Root Note:</label>
             <select id="comparison-root" name="comparison-root">
@@ -3276,7 +3283,6 @@ function showComparisonSelector(controlsDiv) {
     const legend = document.createElement('div');
     legend.className = 'comparison-legend';
     legend.innerHTML = `
-        <h4>Scale Comparison Legend</h4>
         <div class="legend-items">
             <div class="legend-item">
                 <span class="legend-color shared-note"></span>
@@ -3290,6 +3296,10 @@ function showComparisonSelector(controlsDiv) {
                 <span class="legend-color comparison-only"></span>
                 <span id="comparison-scale-name">Comparison scale only</span>
             </div>
+        </div>
+        <div id="interval-info" class="interval-info" style="display: none;">
+            <p><strong>Interval Mode:</strong> Intervals are shown relative to each scale's root. 
+            Notes in both scales show the primary scale's intervals.</p>
         </div>
     `;
     comparisonDiv.appendChild(legend);
@@ -3583,6 +3593,8 @@ function renderComparisonFretboard(svg, scale1, scale2, displayFrets, fretWidth)
             let isInScale1 = false;
             let isInScale2 = false;
             let isShared = false;
+            let scale1Index = -1;
+            let scale2Index = -1;
             
             // Check if this note is in scale1
             for (let i = 0; i < scale1.length; i++) {
@@ -3592,12 +3604,14 @@ function renderComparisonFretboard(svg, scale1, scale2, displayFrets, fretWidth)
                     if (MusicTheory.areEnharmonicEquivalents(chromaticNoteName, scaleNote)) {
                         displayNote = scaleNote;
                         isInScale1 = true;
+                        scale1Index = i;
                         break;
                     }
                 } else {
                     if (chromaticNoteName === scaleNote) {
                         displayNote = scaleNote;
                         isInScale1 = true;
+                        scale1Index = i;
                         break;
                     }
                 }
@@ -3611,12 +3625,14 @@ function renderComparisonFretboard(svg, scale1, scale2, displayFrets, fretWidth)
                     if (MusicTheory.areEnharmonicEquivalents(chromaticNoteName, scaleNote)) {
                         if (!displayNote) displayNote = scaleNote;
                         isInScale2 = true;
+                        scale2Index = i;
                         break;
                     }
                 } else {
                     if (chromaticNoteName === scaleNote) {
                         if (!displayNote) displayNote = scaleNote;
                         isInScale2 = true;
+                        scale2Index = i;
                         break;
                     }
                 }
@@ -3667,8 +3683,30 @@ function renderComparisonFretboard(svg, scale1, scale2, displayFrets, fretWidth)
                 text.setAttribute('font-size', '10');
                 text.setAttribute('font-weight', 'bold');
                 
-                // In comparison mode, always show notes for clarity
-                text.textContent = displayNote;
+                // Determine what to display based on toggle state
+                let displayText = displayNote; // Default to note name
+                
+                if (fretboardState.showIntervals) {
+                    // For intervals, prioritize scale1 if the note is in both scales
+                    let intervalText = '';
+                    if (isInScale1 && scale1Index >= 0) {
+                        // Get interval from scale1
+                        const scale1Root = scale1[0];
+                        const intervals1 = MusicTheory.getIntervals(scale1, scale1Root);
+                        intervalText = intervals1[scale1Index] || '1';
+                    } else if (isInScale2 && scale2Index >= 0) {
+                        // Get interval from scale2
+                        const scale2Root = scale2[0];
+                        const intervals2 = MusicTheory.getIntervals(scale2, scale2Root);
+                        intervalText = intervals2[scale2Index] || '1';
+                    }
+                    
+                    if (intervalText) {
+                        displayText = intervalText;
+                    }
+                }
+                
+                text.textContent = displayText;
                 svg.appendChild(text);
             }
         }
