@@ -921,9 +921,17 @@ function createRelatedModes(currentMode, category, currentKey) {
     
     // Minor scales (harmonic minor, melodic minor) typically use flat spellings
     // due to their characteristic flat intervals (b3, b6, etc.)
+    // However, for certain root notes, we need to be smarter about avoiding double flats
     const parentScaleType = getScaleTypeFromCategory(category);
     if (parentScaleType === 'harmonic-minor' || parentScaleType === 'melodic-minor') {
-        spellingConvention = 'flat';
+        // Use smart spelling for minor scales to avoid problematic double flats
+        // For roots with flats (Ab, Eb, Bb, Db, Gb), use mixed spelling to avoid double flats
+        if (parentRootFlat.includes('b')) {
+            // For flat roots, use a hybrid approach that prioritizes readability
+            spellingConvention = 'mixed-minor';
+        } else {
+            spellingConvention = 'flat';
+        }
     } else if (flatKeys.includes(parentRootFlat)) {
         spellingConvention = 'flat';
     } else if (sharpKeys.includes(parentRoot)) {
@@ -1240,7 +1248,19 @@ function getConsistentNoteSpelling(noteIndex, spellingConvention) {
     const doubleSharpChromatic = ['B#', 'C##', 'D', 'D##', 'E#', 'F', 'F##', 'G', 'G##', 'A', 'A##', 'B'];
     const doubleFlatChromatic = ['C', 'Dbb', 'D', 'Ebb', 'E', 'Fb', 'Gbb', 'G', 'Abb', 'A', 'Bbb', 'Cb'];
     
-    if (spellingConvention === 'flat') {
+    if (spellingConvention === 'mixed-minor') {
+        // For mixed-minor, avoid double flats by using smart enharmonic choices
+        // Use flats for most notes but sharps when it avoids double flats
+        const flatVersion = flatChromatic[normalizedIndex];
+        const sharpVersion = sharpChromatic[normalizedIndex];
+        
+        // Avoid double flats - these are problematic for readability
+        if (flatVersion.includes('bb')) {
+            return sharpVersion;
+        } else {
+            return flatVersion;
+        }
+    } else if (spellingConvention === 'flat') {
         return flatChromatic[normalizedIndex];
     } else if (spellingConvention === 'double-sharp') {
         return doubleSharpChromatic[normalizedIndex];
@@ -1389,9 +1409,16 @@ function calculateScaleWithConsistentSpelling(root, formula, scaleType, spelling
             }
         } else if (chromaticDifference === 2) {
             // Two semitones up - use double sharp or flat
-            if (spellingConvention === 'flat') {
+            if (spellingConvention === 'flat' || spellingConvention === 'mixed-minor') {
                 const nextDegreeIndex = (scaleDegreeIndex + 1) % 7;
-                noteName = noteNames[nextDegreeIndex] + 'bb';
+                const candidateName = noteNames[nextDegreeIndex] + 'bb';
+                
+                // For mixed-minor, avoid double flats
+                if (spellingConvention === 'mixed-minor' && candidateName.includes('bb')) {
+                    noteName = baseNoteName + '##';
+                } else {
+                    noteName = candidateName;
+                }
             } else {
                 noteName = baseNoteName + '##';
             }
@@ -1400,6 +1427,15 @@ function calculateScaleWithConsistentSpelling(root, formula, scaleType, spelling
             if (spellingConvention === 'sharp') {
                 const prevDegreeIndex = (scaleDegreeIndex - 1 + 7) % 7;
                 noteName = noteNames[prevDegreeIndex] + '##';
+            } else if (spellingConvention === 'mixed-minor') {
+                // For mixed-minor, avoid double flats
+                const candidateName = baseNoteName + 'bb';
+                if (candidateName.includes('bb')) {
+                    // Use enharmonic equivalent instead
+                    noteName = getConsistentNoteSpelling(currentChromaticIndex, 'sharp');
+                } else {
+                    noteName = candidateName;
+                }
             } else {
                 noteName = baseNoteName + 'bb';
             }
