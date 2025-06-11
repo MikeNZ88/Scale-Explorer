@@ -2345,12 +2345,15 @@ function displayTraditionalChords(scale, scaleType, category) {
     const seventhChords = MusicTheory.calculateSeventhChords(scale, scaleType, category);
     console.log('Generated 7th chords:', seventhChords);
 
+    // Determine if extended chords should be available
+    const showExtendedChords = scaleType === 'major' || (category && category.toLowerCase().includes('major'));
+    
     // Calculate extended chords (only for major modes)
     let ninthChords = [];
     let eleventhChords = [];
     let thirteenthChords = [];
 
-    if (scaleType === 'major' || (category && category.toLowerCase().includes('major'))) {
+    if (showExtendedChords) {
         ninthChords = MusicTheory.calculateNinthChords(scale, scaleType, category);
         eleventhChords = MusicTheory.calculateEleventhChords(scale, scaleType, category);
         thirteenthChords = MusicTheory.calculateThirteenthChords(scale, scaleType, category);
@@ -2358,6 +2361,24 @@ function displayTraditionalChords(scale, scaleType, category) {
         console.log('Generated 11th chords:', eleventhChords);
         console.log('Generated 13th chords:', thirteenthChords);
     }
+
+    // Show/hide extended chord buttons based on scale type
+    const extendedChordButtons = document.querySelectorAll('.chord-type-btn[data-type="ninths"], .chord-type-btn[data-type="elevenths"], .chord-type-btn[data-type="thirteenths"]');
+    extendedChordButtons.forEach(button => {
+        if (showExtendedChords) {
+            button.style.display = 'inline-block';
+        } else {
+            button.style.display = 'none';
+            // If the hidden button was active, switch to triads
+            if (button.classList.contains('active')) {
+                button.classList.remove('active');
+                const triadsButton = document.querySelector('.chord-type-btn[data-type="triads"]');
+                if (triadsButton) {
+                    triadsButton.classList.add('active');
+                }
+            }
+        }
+    });
 
     // Display triads by default
     displayChordType('triads', triads);
