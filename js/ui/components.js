@@ -2851,6 +2851,8 @@ window.UIComponents = {
     closeFretboardModal,
     openChordModal,
     closeChordModal,
+    openChordVoicingModal,
+    closeChordVoicingModal,
     renderChordFretboard,
     setOptimalModalSize,
     handleMobileOrientation,
@@ -3676,5 +3678,32 @@ function renderComparisonFretboard(svg, scale1, scale2, displayFrets, fretWidth)
                 svg.appendChild(text);
             }
         }
+    }
+}
+
+// Chord Voicing Practices Modal Functions
+function openChordVoicingModal() {
+    const modal = document.getElementById('chord-voicing-modal');
+    if (!modal) return;
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    modal.style.display = 'block';
+    
+    // Add escape key listener
+    document.addEventListener('keydown', handleChordVoicingModalEscape);
+}
+
+function closeChordVoicingModal() {
+    const modal = document.getElementById('chord-voicing-modal');
+    modal.classList.add('hidden');
+    
+    // Remove escape key listener
+    document.removeEventListener('keydown', handleChordVoicingModalEscape);
+}
+
+function handleChordVoicingModalEscape(e) {
+    if (e.key === 'Escape') {
+        closeChordVoicingModal();
     }
 }

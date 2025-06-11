@@ -147,6 +147,7 @@
                         <button class="chord-type-btn" data-type="ninths">9th Chords</button>
                         <button class="chord-type-btn" data-type="elevenths">11th Chords</button>
                         <button class="chord-type-btn" data-type="thirteenths">13th Chords</button>
+                        <button class="voicing-help-btn" onclick="UIComponents.openChordVoicingModal()" title="Guitar Chord Voicing Practices">ℹ️</button>
                     </div>
                     <div class="chords-container">
                         <div class="chords-list" id="chords-list">
@@ -190,6 +191,92 @@
                 </div>
                 <div class="chord-fretboard-container" id="chord-fretboard-container">
                     <!-- Chord fretboard will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chord Voicing Practices Modal -->
+    <div class="modal hidden" id="chord-voicing-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Guitar Chord Voicing Practices</h3>
+                <button class="close-modal" onclick="UIComponents.closeChordVoicingModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="voicing-content">
+                    <div class="voicing-section">
+                        <h4>⚠️ Important Note About Chord Diagrams</h4>
+                        <p>The chord diagrams show <strong>theoretical full fretboard positions</strong> for educational purposes. Many extended chords (especially 9th, 11th, and 13th chords) contain 5-7 notes and <strong>cannot be physically played</strong> on a 6-string guitar as shown.</p>
+                        <p><strong>Note:</strong> This application displays standard tertian harmony chords (triads, 7ths, 9ths, 11ths, 13ths) built from scale degrees. Other chord types (such as 6th chords, sus chords, add chords, slash chords, etc.) are not included in this site.</p>
+                    </div>
+                    
+                    <div class="voicing-section">
+                        <h4>🎸 Practical Guitar Voicing</h4>
+                        <p>In practice, guitarists use <strong>note omission</strong> to create playable voicings. Here's the established hierarchy:</p>
+                        
+                        <div class="omission-hierarchy">
+                            <div class="omission-item priority-1">
+                                <span class="priority-number">1</span>
+                                <div class="omission-details">
+                                    <strong>Fifth (5th) - First to Omit</strong>
+                                    <p>The fifth is "harmonically inert" and doesn't define major/minor quality. It's implied in the overtones of the root.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="omission-item priority-2">
+                                <span class="priority-number">2</span>
+                                <div class="omission-details">
+                                    <strong>Root - Context Dependent</strong>
+                                    <p>Can be omitted when playing with a bass player or other harmonic instruments that provide the root.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="omission-item priority-3">
+                                <span class="priority-number">3</span>
+                                <div class="omission-details">
+                                    <strong>Extensions (9th, 11th) - Situational</strong>
+                                    <p>For 13th chords, the 9th and 11th can be omitted while retaining the characteristic 13th extension.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="omission-item essential">
+                                <span class="essential-icon">🚫</span>
+                                <div class="omission-details">
+                                    <strong>Never Omit: Third and Seventh</strong>
+                                    <p>The 3rd defines major/minor quality. The 7th determines dominant vs. major 7th character. These are essential for chord identity.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="voicing-section">
+                        <h4>💡 Practical Examples</h4>
+                        <div class="example-grid">
+                            <div class="example-item">
+                                <strong>C13 Chord (7 notes)</strong>
+                                <div class="theory-notes">Theory: C-E-G-B♭-D-F-A</div>
+                                <div class="practical-notes">Practical: C-E-B♭-A (omit 5th, 9th, 11th)</div>
+                            </div>
+                            
+                            <div class="example-item">
+                                <strong>Shell Voicing</strong>
+                                <div class="theory-notes">Essential: 3rd + 7th only</div>
+                                <div class="practical-notes">Example: E-B♭ (for C7)</div>
+                            </div>
+                            
+                            <div class="example-item">
+                                <strong>Rootless Voicing</strong>
+                                <div class="theory-notes">With bass player: omit root</div>
+                                <div class="practical-notes">Example: E-B♭-D-A (for C13)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="voicing-section special-case">
+                        <h4>⚠️ Special Case: Major 6th Chords</h4>
+                        <p>For maj6 chords, you <strong>must include the fifth</strong> to avoid sounding like the relative minor triad. Cmaj6 without the 5th (C-E-A) sounds like Am (A-C-E).</p>
+                    </div>
                 </div>
             </div>
         </div>
