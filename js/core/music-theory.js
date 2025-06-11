@@ -1043,6 +1043,474 @@ function calculateSeventhChords(scale, scaleType = 'major', category = null) {
     return seventhChords;
 }
 
+function calculateNinthChords(scale, scaleType = 'major', category = null) {
+    if (!scale || scale.length < 7) {
+        return [];
+    }
+    
+    // Only calculate extended chords for major modes
+    if (scaleType !== 'major' || !category || category !== 'major-modes') {
+        return [];
+    }
+    
+    const ninthChords = [];
+    
+    for (let i = 0; i < scale.length; i++) {
+        const root = scale[i];
+        
+        // Calculate scale degrees for chord tones
+        const thirdIndex = (i + 2) % scale.length;
+        const fifthIndex = (i + 4) % scale.length;
+        const seventhIndex = (i + 6) % scale.length;
+        const ninthIndex = (i + 1) % scale.length; // 9th is the same as 2nd
+        
+        const third = scale[thirdIndex];
+        const fifth = scale[fifthIndex];
+        const seventh = scale[seventhIndex];
+        const ninth = scale[ninthIndex];
+        
+        // Calculate intervals from the chord root
+        let thirdInterval = getIntervalBetweenNotes(root, third);
+        let fifthInterval = getIntervalBetweenNotes(root, fifth);
+        let seventhInterval = getIntervalBetweenNotes(root, seventh);
+        let ninthInterval = getIntervalBetweenNotes(root, ninth);
+        
+        // Normalize ninth interval (should be in the second octave: 13-15 semitones)
+        if (ninthInterval < 12) ninthInterval += 12;
+        
+        // Analyze the ninth chord
+        const chordAnalysis = analyzeNinthChord(thirdInterval, fifthInterval, seventhInterval, ninthInterval);
+        
+        ninthChords.push({
+            degree: i + 1,
+            roman: getRomanNumeral(i + 1, chordAnalysis.quality),
+            root: root,
+            notes: [root, third, fifth, seventh, ninth],
+            quality: chordAnalysis.quality,
+            symbol: chordAnalysis.symbol,
+            name: `${root}${chordAnalysis.symbol}`,
+            intervals: [thirdInterval, fifthInterval, seventhInterval, ninthInterval],
+            function: getChordFunction(i + 1, scaleType),
+            isNonStandard: chordAnalysis.isNonStandard || false,
+            description: chordAnalysis.description
+        });
+    }
+    
+    return ninthChords;
+}
+
+function calculateEleventhChords(scale, scaleType = 'major', category = null) {
+    if (!scale || scale.length < 7) {
+        return [];
+    }
+    
+    // Only calculate extended chords for major modes
+    if (scaleType !== 'major' || !category || category !== 'major-modes') {
+        return [];
+    }
+    
+    const eleventhChords = [];
+    
+    for (let i = 0; i < scale.length; i++) {
+        const root = scale[i];
+        
+        // Calculate scale degrees for chord tones
+        const thirdIndex = (i + 2) % scale.length;
+        const fifthIndex = (i + 4) % scale.length;
+        const seventhIndex = (i + 6) % scale.length;
+        const ninthIndex = (i + 1) % scale.length; // 9th is the same as 2nd
+        const eleventhIndex = (i + 3) % scale.length; // 11th is the same as 4th
+        
+        const third = scale[thirdIndex];
+        const fifth = scale[fifthIndex];
+        const seventh = scale[seventhIndex];
+        const ninth = scale[ninthIndex];
+        const eleventh = scale[eleventhIndex];
+        
+        // Calculate intervals from the chord root
+        let thirdInterval = getIntervalBetweenNotes(root, third);
+        let fifthInterval = getIntervalBetweenNotes(root, fifth);
+        let seventhInterval = getIntervalBetweenNotes(root, seventh);
+        let ninthInterval = getIntervalBetweenNotes(root, ninth);
+        let eleventhInterval = getIntervalBetweenNotes(root, eleventh);
+        
+        // Normalize ninth interval (should be in the second octave: 13-15 semitones)
+        if (ninthInterval < 12) ninthInterval += 12;
+        
+        // Normalize eleventh interval (should be in the second octave: 16-18 semitones)
+        if (eleventhInterval < 12) eleventhInterval += 12;
+        
+        // Analyze the eleventh chord
+        const chordAnalysis = analyzeEleventhChord(thirdInterval, fifthInterval, seventhInterval, ninthInterval, eleventhInterval);
+        
+        eleventhChords.push({
+            degree: i + 1,
+            roman: getRomanNumeral(i + 1, chordAnalysis.quality),
+            root: root,
+            notes: [root, third, fifth, seventh, ninth, eleventh],
+            quality: chordAnalysis.quality,
+            symbol: chordAnalysis.symbol,
+            name: `${root}${chordAnalysis.symbol}`,
+            intervals: [thirdInterval, fifthInterval, seventhInterval, ninthInterval, eleventhInterval],
+            function: getChordFunction(i + 1, scaleType),
+            isNonStandard: chordAnalysis.isNonStandard || false,
+            description: chordAnalysis.description
+        });
+    }
+    
+    return eleventhChords;
+}
+
+function calculateThirteenthChords(scale, scaleType = 'major', category = null) {
+    if (!scale || scale.length < 7) {
+        return [];
+    }
+    
+    // Only calculate extended chords for major modes
+    if (scaleType !== 'major' || !category || category !== 'major-modes') {
+        return [];
+    }
+    
+    const thirteenthChords = [];
+    
+    for (let i = 0; i < scale.length; i++) {
+        const root = scale[i];
+        
+        // Calculate scale degrees for chord tones
+        const thirdIndex = (i + 2) % scale.length;
+        const fifthIndex = (i + 4) % scale.length;
+        const seventhIndex = (i + 6) % scale.length;
+        const ninthIndex = (i + 1) % scale.length; // 9th is the same as 2nd
+        const eleventhIndex = (i + 3) % scale.length; // 11th is the same as 4th
+        const thirteenthIndex = (i + 5) % scale.length; // 13th is the same as 6th
+        
+        const third = scale[thirdIndex];
+        const fifth = scale[fifthIndex];
+        const seventh = scale[seventhIndex];
+        const ninth = scale[ninthIndex];
+        const eleventh = scale[eleventhIndex];
+        const thirteenth = scale[thirteenthIndex];
+        
+        // Calculate intervals from the chord root
+        let thirdInterval = getIntervalBetweenNotes(root, third);
+        let fifthInterval = getIntervalBetweenNotes(root, fifth);
+        let seventhInterval = getIntervalBetweenNotes(root, seventh);
+        let ninthInterval = getIntervalBetweenNotes(root, ninth);
+        let eleventhInterval = getIntervalBetweenNotes(root, eleventh);
+        let thirteenthInterval = getIntervalBetweenNotes(root, thirteenth);
+        
+        // Normalize ninth interval (should be in the second octave: 13-15 semitones)
+        if (ninthInterval < 12) ninthInterval += 12;
+        
+        // Normalize eleventh interval (should be in the second octave: 16-18 semitones)
+        if (eleventhInterval < 12) eleventhInterval += 12;
+        
+        // Normalize thirteenth interval (should be in the second octave: 19-21 semitones)
+        if (thirteenthInterval < 12) thirteenthInterval += 12;
+        
+        // Analyze the thirteenth chord
+        const chordAnalysis = analyzeThirteenthChord(thirdInterval, fifthInterval, seventhInterval, ninthInterval, eleventhInterval, thirteenthInterval);
+        
+        thirteenthChords.push({
+            degree: i + 1,
+            roman: getRomanNumeral(i + 1, chordAnalysis.quality),
+            root: root,
+            notes: [root, third, fifth, seventh, ninth, eleventh, thirteenth],
+            quality: chordAnalysis.quality,
+            symbol: chordAnalysis.symbol,
+            name: `${root}${chordAnalysis.symbol}`,
+            intervals: [thirdInterval, fifthInterval, seventhInterval, ninthInterval, eleventhInterval, thirteenthInterval],
+            function: getChordFunction(i + 1, scaleType),
+            isNonStandard: chordAnalysis.isNonStandard || false,
+            description: chordAnalysis.description
+        });
+    }
+    
+    return thirteenthChords;
+}
+
+function analyzeNinthChord(thirdInterval, fifthInterval, seventhInterval, ninthInterval) {
+    // Determine base chord quality from third interval
+    let baseQuality, baseSymbol;
+    if (thirdInterval === 3) {
+        baseQuality = 'minor';
+        baseSymbol = 'm';
+    } else if (thirdInterval === 4) {
+        baseQuality = 'Major';
+        baseSymbol = '';  // Major chords don't need 'maj' prefix for dominant 7ths
+    } else {
+        // Handle sus chords or other structures
+        if (thirdInterval === 2) {
+            baseQuality = 'sus2';
+            baseSymbol = 'sus2';
+        } else if (thirdInterval === 5) {
+            baseQuality = 'sus4';
+            baseSymbol = 'sus4';
+        } else {
+            baseQuality = 'altered';
+            baseSymbol = 'alt';
+        }
+    }
+    
+    // Determine seventh quality and adjust base symbol accordingly
+    let seventhQuality = '';
+    if (seventhInterval === 11) {
+        // Major 7th - use 'maj' for major chords
+        if (baseQuality === 'Major') {
+            baseSymbol = 'maj';
+            seventhQuality = '';
+        } else {
+            seventhQuality = 'Maj';
+        }
+    } else if (seventhInterval === 10) {
+        // Dominant 7th - no modifier needed for major chords, keep 'm' for minor
+        seventhQuality = '';
+    }
+    
+    // Handle fifth alterations
+    let fifthAlteration = '';
+    if (fifthInterval === 6) {
+        fifthAlteration = '♭5';
+    } else if (fifthInterval === 8) {
+        fifthAlteration = '#5';
+    }
+    
+    // Handle ninth alterations
+    let ninthAlteration = '';
+    if (ninthInterval === 13) {
+        ninthAlteration = '♭9';
+    } else if (ninthInterval === 15) {
+        ninthAlteration = '#9';
+    }
+    
+    // Construct the symbol
+    let symbol = baseSymbol;
+    if (seventhQuality) symbol += seventhQuality;
+    
+    // Only add base extension if there are no alterations
+    if (ninthAlteration) {
+        symbol += ninthAlteration;
+    } else {
+        symbol += '9';
+    }
+    
+    if (fifthAlteration) symbol += fifthAlteration;
+    
+    // Construct the quality name
+    let quality = baseQuality;
+    if (seventhInterval === 11) quality += ' Major';
+    else if (seventhInterval === 10 && baseQuality === 'Major') quality = 'Dominant';
+    
+    quality += ' 9th';
+    if (ninthAlteration) quality += ` ${ninthAlteration}`;
+    if (fifthAlteration) quality += ` ${fifthAlteration}`;
+    
+    return { 
+        quality: quality, 
+        symbol: symbol, 
+        description: `${quality} chord`,
+        isNonStandard: ninthAlteration || fifthAlteration || baseQuality === 'altered'
+    };
+}
+
+function analyzeEleventhChord(thirdInterval, fifthInterval, seventhInterval, ninthInterval, eleventhInterval) {
+    // Determine base chord quality from third interval
+    let baseQuality, baseSymbol;
+    if (thirdInterval === 3) {
+        baseQuality = 'minor';
+        baseSymbol = 'm';
+    } else if (thirdInterval === 4) {
+        baseQuality = 'Major';
+        baseSymbol = '';  // Major chords don't need 'maj' prefix for dominant 7ths
+    } else {
+        // Handle sus chords or other structures
+        if (thirdInterval === 2) {
+            baseQuality = 'sus2';
+            baseSymbol = 'sus2';
+        } else if (thirdInterval === 5) {
+            baseQuality = 'sus4';
+            baseSymbol = 'sus4';
+        } else {
+            baseQuality = 'altered';
+            baseSymbol = 'alt';
+        }
+    }
+    
+    // Determine seventh quality and adjust base symbol accordingly
+    let seventhQuality = '';
+    if (seventhInterval === 11) {
+        // Major 7th - use 'maj' for major chords
+        if (baseQuality === 'Major') {
+            baseSymbol = 'maj';
+            seventhQuality = '';
+        } else {
+            seventhQuality = 'Maj';
+        }
+    } else if (seventhInterval === 10) {
+        // Dominant 7th - no modifier needed for major chords, keep 'm' for minor
+        seventhQuality = '';
+    }
+    
+    // Handle fifth alterations
+    let fifthAlteration = '';
+    if (fifthInterval === 6) {
+        fifthAlteration = '♭5';
+    } else if (fifthInterval === 8) {
+        fifthAlteration = '#5';
+    }
+    
+    // Handle ninth alterations
+    let ninthAlteration = '';
+    if (ninthInterval === 13) {
+        ninthAlteration = '♭9';
+    } else if (ninthInterval === 15) {
+        ninthAlteration = '#9';
+    }
+    
+    // Handle eleventh alterations
+    let eleventhAlteration = '';
+    if (eleventhInterval === 18) {
+        eleventhAlteration = '#11';
+    } else if (eleventhInterval === 16) {
+        eleventhAlteration = '♭11';
+    }
+    
+    // Construct the symbol
+    let symbol = baseSymbol;
+    if (seventhQuality) symbol += seventhQuality;
+    
+    // Only add base extension if there are no alterations to the 11th
+    if (eleventhAlteration) {
+        symbol += eleventhAlteration;
+    } else {
+        symbol += '11';
+    }
+    
+    if (ninthAlteration) symbol += ninthAlteration;
+    if (fifthAlteration) symbol += fifthAlteration;
+    
+    // Construct the quality name
+    let quality = baseQuality;
+    if (seventhInterval === 11) quality += ' Major';
+    else if (seventhInterval === 10 && baseQuality === 'Major') quality = 'Dominant';
+    
+    quality += ' 11th';
+    if (ninthAlteration) quality += ` ${ninthAlteration}`;
+    if (eleventhAlteration) quality += ` ${eleventhAlteration}`;
+    if (fifthAlteration) quality += ` ${fifthAlteration}`;
+    
+    return { 
+        quality: quality, 
+        symbol: symbol, 
+        description: `${quality} chord`,
+        isNonStandard: ninthAlteration || eleventhAlteration || fifthAlteration || baseQuality === 'altered'
+    };
+}
+
+function analyzeThirteenthChord(thirdInterval, fifthInterval, seventhInterval, ninthInterval, eleventhInterval, thirteenthInterval) {
+    // Determine base chord quality from third interval
+    let baseQuality, baseSymbol;
+    if (thirdInterval === 3) {
+        baseQuality = 'minor';
+        baseSymbol = 'm';
+    } else if (thirdInterval === 4) {
+        baseQuality = 'Major';
+        baseSymbol = '';  // Major chords don't need 'maj' prefix for dominant 7ths
+    } else {
+        // Handle sus chords or other structures
+        if (thirdInterval === 2) {
+            baseQuality = 'sus2';
+            baseSymbol = 'sus2';
+        } else if (thirdInterval === 5) {
+            baseQuality = 'sus4';
+            baseSymbol = 'sus4';
+        } else {
+            baseQuality = 'altered';
+            baseSymbol = 'alt';
+        }
+    }
+    
+    // Determine seventh quality and adjust base symbol accordingly
+    let seventhQuality = '';
+    if (seventhInterval === 11) {
+        // Major 7th - use 'maj' for major chords
+        if (baseQuality === 'Major') {
+            baseSymbol = 'maj';
+            seventhQuality = '';
+        } else {
+            seventhQuality = 'Maj';
+        }
+    } else if (seventhInterval === 10) {
+        // Dominant 7th - no modifier needed for major chords, keep 'm' for minor
+        seventhQuality = '';
+    }
+    
+    // Handle fifth alterations
+    let fifthAlteration = '';
+    if (fifthInterval === 6) {
+        fifthAlteration = '♭5';
+    } else if (fifthInterval === 8) {
+        fifthAlteration = '#5';
+    }
+    
+    // Handle ninth alterations
+    let ninthAlteration = '';
+    if (ninthInterval === 13) {
+        ninthAlteration = '♭9';
+    } else if (ninthInterval === 15) {
+        ninthAlteration = '#9';
+    }
+    
+    // Handle eleventh alterations
+    let eleventhAlteration = '';
+    if (eleventhInterval === 18) {
+        eleventhAlteration = '#11';
+    } else if (eleventhInterval === 16) {
+        eleventhAlteration = '♭11';
+    }
+    
+    // Handle thirteenth alterations
+    let thirteenthAlteration = '';
+    if (thirteenthInterval === 20) {
+        thirteenthAlteration = '♭13';
+    } else if (thirteenthInterval === 22) {
+        thirteenthAlteration = '#13';
+    }
+    
+    // Construct the symbol
+    let symbol = baseSymbol;
+    if (seventhQuality) symbol += seventhQuality;
+    
+    // Only add base extension if there are no alterations to the 13th
+    if (thirteenthAlteration) {
+        symbol += thirteenthAlteration;
+    } else {
+        symbol += '13';
+    }
+    
+    if (ninthAlteration) symbol += ninthAlteration;
+    if (eleventhAlteration) symbol += eleventhAlteration;
+    if (fifthAlteration) symbol += fifthAlteration;
+    
+    // Construct the quality name
+    let quality = baseQuality;
+    if (seventhInterval === 11) quality += ' Major';
+    else if (seventhInterval === 10 && baseQuality === 'Major') quality = 'Dominant';
+    
+    quality += ' 13th';
+    if (ninthAlteration) quality += ` ${ninthAlteration}`;
+    if (eleventhAlteration) quality += ` ${eleventhAlteration}`;
+    if (thirteenthAlteration) quality += ` ${thirteenthAlteration}`;
+    if (fifthAlteration) quality += ` ${fifthAlteration}`;
+    
+    return { 
+        quality: quality, 
+        symbol: symbol, 
+        description: `${quality} chord`,
+        isNonStandard: ninthAlteration || eleventhAlteration || thirteenthAlteration || fifthAlteration || baseQuality === 'altered'
+    };
+}
+
 function analyzeSeventhChordComprehensive(thirdInterval, fifthInterval, seventhInterval, scale, rootIndex, scaleType) {
     // Standard seventh chords
     if (thirdInterval === 4 && fifthInterval === 7 && seventhInterval === 11) {
@@ -2044,6 +2512,9 @@ window.MusicTheory = {
     shouldDisplayChords,
     calculateTriads,
     calculateSeventhChords,
+    calculateNinthChords,
+    calculateEleventhChords,
+    calculateThirteenthChords,
     getIntervalBetweenNotes,
     getRomanNumeral,
     getChordFunction,

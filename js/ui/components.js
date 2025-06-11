@@ -2328,39 +2328,48 @@ function getScaleApplicationData(scaleType) {
 }
 
 function displayTraditionalChords(scale, scaleType, category) {
-    const chordsList = document.getElementById('chords-list');
-    const chordsSection = document.querySelector('.chords-section');
-    
-    // Update section title
-    const sectionTitle = chordsSection.querySelector('h3');
-    sectionTitle.textContent = 'Diatonic Chords';
-    
-    // Show traditional chord type buttons
-    const chordControls = document.querySelector('.chord-controls');
-    chordControls.style.display = 'block';
-    
-    // Calculate both triads and 7th chords
-    const triads = MusicTheory.calculateTriads(scale, scaleType, category);
-    const seventhChords = MusicTheory.calculateSeventhChords(scale, scaleType, category);
-    
-    // If no chords can be calculated, hide the section
-    if (triads.length === 0 && seventhChords.length === 0) {
-        chordsSection.style.display = 'none';
+    // Check if chords should be displayed for this scale type
+    if (!MusicTheory.shouldDisplayChords(scaleType, scale.length, category)) {
+        const chordsList = document.getElementById('chords-list');
+        if (chordsList) {
+            chordsList.innerHTML = '<p class="no-chords-message">Chord display not available for this scale type.</p>';
+        }
         return;
     }
-    
-    // Store chord data for switching between types
-    chordsList.dataset.triads = JSON.stringify(triads);
-    chordsList.dataset.seventhChords = JSON.stringify(seventhChords);
-    
+
+    // Calculate triads
+    const triads = MusicTheory.calculateTriads(scale, scaleType, category);
+    console.log('Generated triads:', triads);
+
+    // Calculate seventh chords
+    const seventhChords = MusicTheory.calculateSeventhChords(scale, scaleType, category);
+    console.log('Generated 7th chords:', seventhChords);
+
+    // Calculate extended chords (only for major modes)
+    let ninthChords = [];
+    let eleventhChords = [];
+    let thirteenthChords = [];
+
+    if (scaleType === 'major' || (category && category.toLowerCase().includes('major'))) {
+        ninthChords = MusicTheory.calculateNinthChords(scale, scaleType, category);
+        eleventhChords = MusicTheory.calculateEleventhChords(scale, scaleType, category);
+        thirteenthChords = MusicTheory.calculateThirteenthChords(scale, scaleType, category);
+        console.log('Generated 9th chords:', ninthChords);
+        console.log('Generated 11th chords:', eleventhChords);
+        console.log('Generated 13th chords:', thirteenthChords);
+    }
+
     // Display triads by default
     displayChordType('triads', triads);
-    
-    // Update audio controls with chord data
+
+    // Update audio controls with triads initially
     if (window.audioControls) {
         window.audioControls.updateChords({
             triads: triads,
-            sevenths: seventhChords
+            sevenths: seventhChords,
+            ninths: ninthChords,
+            elevenths: eleventhChords,
+            thirteenths: thirteenthChords
         });
     }
     
@@ -2385,6 +2394,48 @@ function displayTraditionalChords(scale, scaleType, category) {
                 // Update audio controls with 7th chords
                 if (window.audioControls) {
                     window.audioControls.updateChords(seventhChords);
+                }
+            } else if (chordType === 'ninths') {
+                if (ninthChords.length > 0) {
+                    displayChordType('ninths', ninthChords);
+                    // Update audio controls with 9th chords
+                    if (window.audioControls) {
+                        window.audioControls.updateChords(ninthChords);
+                    }
+                } else {
+                    displayChordType('ninths', []);
+                    const chordsList = document.getElementById('chords-list');
+                    if (chordsList) {
+                        chordsList.innerHTML = '<p class="no-chords-message">9th chords are only available for major modes.</p>';
+                    }
+                }
+            } else if (chordType === 'elevenths') {
+                if (eleventhChords.length > 0) {
+                    displayChordType('elevenths', eleventhChords);
+                    // Update audio controls with 11th chords
+                    if (window.audioControls) {
+                        window.audioControls.updateChords(eleventhChords);
+                    }
+                } else {
+                    displayChordType('elevenths', []);
+                    const chordsList = document.getElementById('chords-list');
+                    if (chordsList) {
+                        chordsList.innerHTML = '<p class="no-chords-message">11th chords are only available for major modes.</p>';
+                    }
+                }
+            } else if (chordType === 'thirteenths') {
+                if (thirteenthChords.length > 0) {
+                    displayChordType('thirteenths', thirteenthChords);
+                    // Update audio controls with 13th chords
+                    if (window.audioControls) {
+                        window.audioControls.updateChords(thirteenthChords);
+                    }
+                } else {
+                    displayChordType('thirteenths', []);
+                    const chordsList = document.getElementById('chords-list');
+                    if (chordsList) {
+                        chordsList.innerHTML = '<p class="no-chords-message">13th chords are only available for major modes.</p>';
+                    }
                 }
             }
         });

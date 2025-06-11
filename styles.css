@@ -2812,6 +2812,7 @@ body {
     gap: 0.5rem;
     margin-bottom: 1rem;
     justify-content: center;
+    flex-wrap: wrap;
 }
 
 .chord-type-btn {
@@ -3624,4 +3625,43 @@ body {
     background: rgba(107, 114, 128, 0.1);
     border: 1px solid rgba(107, 114, 128, 0.2);
     color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+    .chord-controls {
+        gap: 0.3rem;
+    }
+    
+    .chord-type-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+        flex: 1 1 auto;
+        min-width: 70px;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .chord-controls {
+        gap: 0.25rem;
+        flex-direction: row;
+    }
+    
+    .chord-type-btn {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+        flex: 1 1 auto;
+        min-width: 60px;
+    }
+}
+
+.no-chords-message {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    margin: 1rem 0;
 }
