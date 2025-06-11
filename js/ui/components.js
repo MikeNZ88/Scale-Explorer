@@ -2481,17 +2481,6 @@ function displayChordType(type, chords) {
     
     chordsList.innerHTML = '';
     
-    // Add a note about exotic chords if any are present
-    const hasNonStandardChords = chords.some(chord => chord.isNonStandard);
-    if (hasNonStandardChords) {
-        const noteElement = document.createElement('div');
-        noteElement.className = 'chord-note';
-        noteElement.innerHTML = `
-            <p><strong>Note:</strong> This scale contains non-standard chord intervals. Some chords may have unusual qualities due to the unique interval structure of this scale.</p>
-        `;
-        chordsList.appendChild(noteElement);
-    }
-    
     chords.forEach((chord, index) => {
         const chordElement = document.createElement('div');
         chordElement.className = `chord-item ${chord.isNonStandard ? 'non-standard' : ''}`;
