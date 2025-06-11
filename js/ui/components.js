@@ -238,20 +238,14 @@ function getScaleTypeFromCategory(category) {
     switch (category) {
         case 'major-modes': return 'major';
         case 'harmonic-minor-modes': return 'harmonic-minor';
-        case 'harmonic-major-modes': return 'harmonic-major';
         case 'melodic-minor-modes': return 'melodic-minor';
-        case 'hungarian-minor-modes': return 'hungarian-minor';
-        case 'neapolitan-minor-modes': return 'neapolitan-minor';
-        case 'neapolitan-major-modes': return 'neapolitan-major';
         case 'diminished-modes': return 'diminished';
-        case 'pentatonic': return 'pentatonic';
-        case 'japanese-pentatonic': return 'pentatonic';
+        case 'pentatonic-modes': return 'major-pentatonic';
         case 'blues-modes': return 'blues';
         case 'blues-scales': return 'blues';
-        case 'hybrid-blues': return 'hybrid-blues';
+        case 'barry-harris': return 'major-6th-diminished';
         case 'whole-tone': return 'whole-tone';
-        case 'chromatic-scale': return 'chromatic';
-        case 'augmented-scale': return 'augmented';
+        case 'chromatic': return 'chromatic';
         default: return 'major';
     }
 }
@@ -830,7 +824,6 @@ function createRelatedModes(currentMode, category, currentKey) {
     
     // Define non-modal scales (scales that don't have modes and should be treated as single entities)
     const nonModalScales = [
-        'hybrid-blues',
         'major-6th-diminished', 
         'minor-6th-diminished',
         'chromatic-scale'
@@ -875,30 +868,18 @@ function createRelatedModes(currentMode, category, currentKey) {
         // Melodic minor modes
         'melodic-minor': 0, 'dorian-b2': 2, 'lydian-augmented': 3, 'lydian-dominant': 5,
         'mixolydian-b6': 7, 'locrian-natural-2': 9, 'super-locrian': 11,
-        // Hungarian minor modes
-        'hungarian-minor': 0, 'oriental': 2, 'ionian-augmented-sharp-2': 3, 'locrian-double-flat-3-double-flat-7': 5,
-        'double-harmonic-major': 7, 'lydian-sharp-2-sharp-6': 8, 'ultra-locrian': 11,
-        // Neapolitan minor modes
-        'neapolitan-minor': 0, 'leading-whole-tone': 1, 'lydian-augmented-dominant': 3, 'lydian-dominant-flat-6': 5,
-        'major-locrian': 7, 'half-diminished-flat-2': 8, 'altered-diminished': 11,
-        // Neapolitan major modes
-        'neapolitan-major': 0, 'leading-whole-tone-major': 1, 'lydian-augmented-major': 3, 'lydian-dominant-major': 5,
-        'major-locrian-major': 7, 'half-diminished-major': 9, 'altered-major': 11,
         // Diminished modes
         'wh-diminished': 0, 'hw-diminished': 1,
         // Major Pentatonic modes (correct offsets)
         'major-pentatonic': 0, 'suspended-pentatonic': 2, 'man-gong': 4, 'ritusen': 7, 'minor-pentatonic': 9,
-        // Japanese Pentatonic modes (modes of Hirajoshi scale)
-        'hirajoshi': 0, 'iwato': 2, 'kumoi': 5, 'hon-kumoi-shiouzi': 7, 'chinese-scale': 10,
         // Blues scales
         'blues-major': 0, 'blues-minor': 9,
-        'hybrid-blues': 0,
         // Barry Harris scales
         'major-6th-diminished': 0, 'minor-6th-diminished': 0,
         // Other scales
         'whole-tone': 0, 
         'whole-tone-1': 0, 'whole-tone-2': 2, 'whole-tone-3': 4, 'whole-tone-4': 6, 'whole-tone-5': 8, 'whole-tone-6': 10,
-        'chromatic': 0, 'augmented': 0, 'bebop-major': 0
+        'chromatic': 0
     };
     
     const currentModeOffset = modeOffsets[currentMode] || 0;
@@ -1577,10 +1558,7 @@ function calculateAugmentedScaleSpelling(root, formula, spellingConvention) {
 }
 
 function getParentScaleName(category, parentRoot) {
-    const categoryData = MusicConstants.scaleCategories[category];
-    if (!categoryData) return `${parentRoot} Scale`;
-    
-    switch (category) {
+    switch(category) {
         case 'major-modes':
             return `${parentRoot} Major`;
         case 'harmonic-minor-modes':
@@ -1589,23 +1567,21 @@ function getParentScaleName(category, parentRoot) {
             return `${parentRoot} Harmonic Major`;
         case 'melodic-minor-modes':
             return `${parentRoot} Melodic Minor`;
-        case 'hungarian-minor-modes':
-            return `${parentRoot} Hungarian Minor`;
-        case 'neapolitan-minor-modes':
-            return `${parentRoot} Neapolitan Minor`;
-        case 'neapolitan-major-modes':
-            return `${parentRoot} Neapolitan Major`;
         case 'diminished-modes':
-            return `${parentRoot} Diminished`;
-        case 'pentatonic':
+            return `Diminished Scale starting from ${parentRoot}`;
+        case 'pentatonic-modes':
             return `${parentRoot} Major Pentatonic`;
-        case 'japanese-pentatonic':
-            return `${parentRoot} Japanese Pentatonic`;
         case 'blues-modes':
         case 'blues-scales':
-            return `${parentRoot} Blues`;
+            return `${parentRoot} Blues Scale`;
+        case 'barry-harris':
+            return `${parentRoot} 6th Diminished Scale`;
+        case 'whole-tone':
+            return `Whole Tone Scale`;
+        case 'chromatic':
+            return `Chromatic Scale`;
         default:
-            return `${parentRoot} ${categoryData.name}`;
+            return `${parentRoot} Scale`;
     }
 }
 
@@ -3408,26 +3384,31 @@ function formatModeName(mode) {
 
 // Helper function to get scale type from category (same logic as main app)
 function getScaleTypeFromCategory(category) {
-    const typeMap = {
-        'major-modes': 'major',
-        'harmonic-minor-modes': 'harmonic-minor',
-        'harmonic-major-modes': 'harmonic-major',
-        'melodic-minor-modes': 'melodic-minor',
-        'hungarian-minor-modes': 'hungarian-minor',
-        'neapolitan-minor-modes': 'neapolitan-minor',
-        'neapolitan-major-modes': 'neapolitan-major',
-        'diminished-modes': 'diminished',
-        'pentatonic': 'pentatonic',
-        'japanese-pentatonic': 'pentatonic',
-        'blues-modes': 'blues',
-        'blues-scales': 'blues',
-        'hybrid-blues': 'hybrid-blues',
-        'whole-tone': 'whole-tone',
-        'chromatic-scale': 'chromatic',
-        'augmented-scale': 'augmented'
-    };
-    
-    return typeMap[category] || 'major';
+    switch(category) {
+        case 'major-modes':
+            return 'major';
+        case 'harmonic-minor-modes':
+            return 'harmonic-minor';
+        case 'harmonic-major-modes':
+            return 'harmonic-major';
+        case 'melodic-minor-modes':
+            return 'melodic-minor';
+        case 'diminished-modes':
+            return 'diminished';
+        case 'pentatonic-modes':
+            return 'major-pentatonic';
+        case 'blues-modes':
+        case 'blues-scales':
+            return 'blues';
+        case 'barry-harris':
+            return 'major-6th-diminished';
+        case 'whole-tone':
+            return 'whole-tone';
+        case 'chromatic':
+            return 'chromatic';
+        default:
+            return category;
+    }
 }
 
 function renderSingleScale(svg, scale, displayFrets, fretWidth) {

@@ -68,15 +68,38 @@ function handleKeyChange(event) {
 }
 
 function handleCategoryChange(event) {
+    console.log('=== CATEGORY CHANGE DEBUG ===');
+    console.log('Previous category:', currentState.category);
+    console.log('New category from dropdown:', event.target.value);
+    
     currentState.category = event.target.value;
+    
+    console.log('Updated currentState.category:', currentState.category);
+    console.log('Category data:', MusicConstants.scaleCategories[currentState.category]);
+    
     populateModeSelect();
     updateScale();
+    
+    console.log('=== END CATEGORY CHANGE DEBUG ===');
 }
 
 function handleModeChange(event) {
     currentState.mode = event.target.value;
     updateScale();
 }
+
+// Debug function to check state
+function debugState() {
+    console.log('=== CURRENT STATE DEBUG ===');
+    console.log('currentState:', currentState);
+    console.log('Category dropdown value:', document.getElementById('category-select')?.value);
+    console.log('Mode dropdown value:', document.getElementById('mode-select')?.value);
+    console.log('Key dropdown value:', document.getElementById('key-select')?.value);
+    console.log('=== END STATE DEBUG ===');
+}
+
+// Make debug function globally available
+window.debugState = debugState;
 
 // Scale calculation and display
 function updateScale() {
@@ -94,18 +117,6 @@ function updateScale() {
         if (!modeFormula) {
             console.error('Invalid mode for category:', mode, category);
             return;
-        }
-        
-        // DEBUG: Log formula retrieval for augmented scale
-        if (category === 'augmented-scale') {
-            console.log('=== AUGMENTED SCALE DEBUG ===');
-            console.log('Category:', category);
-            console.log('Mode:', mode);
-            console.log('CategoryData:', categoryData);
-            console.log('Available formulas:', categoryData.formulas);
-            console.log('Retrieved formula:', modeFormula);
-            console.log('Expected formula for augmented:', [1, 3, 1, 3, 1, 3]);
-            console.log('Formula matches expected:', JSON.stringify(modeFormula) === JSON.stringify([1, 3, 1, 3, 1, 3]));
         }
         
         // Get scale type
@@ -145,20 +156,13 @@ function getScaleType(category) {
     const typeMap = {
         'major-modes': 'major',
         'harmonic-minor-modes': 'harmonic-minor',
-        'harmonic-major-modes': 'harmonic-major',
         'melodic-minor-modes': 'melodic-minor',
-        'hungarian-minor-modes': 'hungarian-minor',
-        'neapolitan-minor-modes': 'neapolitan-minor',
-        'neapolitan-major-modes': 'neapolitan-major',
         'diminished-modes': 'diminished',
         'pentatonic': 'pentatonic',
-        'japanese-pentatonic': 'pentatonic',
         'blues-modes': 'blues',
         'blues-scales': 'blues',
-        'hybrid-blues': 'hybrid-blues',
         'whole-tone': 'whole-tone',
-        'chromatic-scale': 'chromatic',
-        'augmented-scale': 'augmented'
+        'chromatic-scale': 'chromatic'
     };
     
     return typeMap[category] || 'major';
@@ -193,7 +197,6 @@ function populateModeSelect() {
     
     // Define non-modal scales (scales that don't have modes and should be treated as single entities)
     const nonModalScales = [
-        'hybrid-blues',
         'major-6th-diminished', 
         'minor-6th-diminished',
         'chromatic-scale'
