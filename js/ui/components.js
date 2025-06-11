@@ -674,21 +674,13 @@ function displayNotes(notes) {
     const playControlsContainer = document.createElement('div');
     playControlsContainer.className = 'play-controls';
     
-    // Create play button
+    // Create play button (only ascending, no direction toggle)
     const playButton = document.createElement('button');
     playButton.className = 'play-btn';
     playButton.textContent = 'Play Scale';
     playButton.setAttribute('data-section', 'notes');
     
-    // Create direction toggle button
-    const directionButton = document.createElement('button');
-    directionButton.className = 'direction-btn';
-    directionButton.textContent = '→';
-    directionButton.setAttribute('data-direction', 'ascending');
-    directionButton.setAttribute('title', 'Ascending');
-    
     playControlsContainer.appendChild(playButton);
-    playControlsContainer.appendChild(directionButton);
     notesContainer.appendChild(playControlsContainer);
     
     // Create notes display container
@@ -710,9 +702,8 @@ function displayNotes(notes) {
     
     notesContainer.appendChild(notesDisplay);
     
-    // Add event listeners
+    // Add event listener - always ascending
     playButton.addEventListener('click', () => playScale(notes, 'notes'));
-    directionButton.addEventListener('click', () => toggleDirection(directionButton));
 }
 
 function displayIntervals(intervals) {
@@ -2930,14 +2921,9 @@ async function playScale(data, section) {
         return;
     }
     
-    // Get direction from the button in the notes section
-    const notesContainer = document.querySelector('.notes');
-    const directionButton = notesContainer.querySelector('.direction-btn');
-    const direction = directionButton.getAttribute('data-direction');
+    console.log('Playing direction: ascending (only option)');
     
-    console.log('Playing direction:', direction);
-    
-    // Add octave note for playback (but don't show it yet)
+    // Add octave note for playback
     const octaveNote = notes[0]; // Root note an octave higher
     
     try {
@@ -2946,20 +2932,8 @@ async function playScale(data, section) {
             await window.AudioEngine.initialize();
         }
         
-        // Play the scale based on direction
-        switch (direction) {
-            case 'ascending':
-                await playScaleSequence([...notes, octaveNote], true, section);
-                break;
-            case 'descending':
-                await playScaleSequence([...notes, octaveNote], false, section);
-                break;
-            case 'both':
-                await playScaleSequence([...notes, octaveNote], true, section);
-                await new Promise(resolve => setTimeout(resolve, 500)); // Brief pause
-                await playScaleSequence([...notes, octaveNote], false, section);
-                break;
-        }
+        // Play the scale ascending only (octave visual will be added during playback)
+        await playScaleSequence([...notes, octaveNote], true, section);
         
     } catch (error) {
         console.error('Error playing scale:', error);
@@ -2975,8 +2949,8 @@ async function playScaleSequence(notes, ascending, section) {
     
     // Get audio context timing for precise synchronization
     const audioContext = window.AudioEngine.audioContext;
-    const startTime = audioContext.currentTime;
     const noteDuration = 0.6; // Duration for each note
+    const noteSpacing = noteDuration * 0.7; // Time between note starts
     
     for (let i = 0; i < playOrder.length; i++) {
         const note = playOrder[i];
@@ -2985,40 +2959,25 @@ async function playScaleSequence(notes, ascending, section) {
         // Use the calculated octave for proper pitch progression
         const noteWithOctave = notesWithOctaves[i];
         
-        // Show octave visual at the same time as highlighting (no delay)
+        // Add octave visual only when we reach the octave note
         if (isOctave && !octaveElement) {
             octaveElement = await addOctaveVisual(notes.slice(0, -1), note, section);
         }
         
-        // For the first note, highlight immediately. For subsequent notes, calculate timing.
-        if (i === 0) {
-            // First note - highlight immediately
+        // Highlight current note immediately
         highlightCurrentNote(note, isOctave);
-        } else {
-            // Calculate precise timing for subsequent notes
-            const noteStartTime = startTime + (i * noteDuration * 0.7);
-            const visualDelay = Math.max(0, (noteStartTime - audioContext.currentTime) * 1000);
-            
-            // Schedule visual highlight to sync with audio
-            setTimeout(() => {
-                highlightCurrentNote(note, isOctave);
-            }, visualDelay);
-        }
         
         // Play the note with precise Web Audio timing
         await window.AudioEngine.playNote(noteWithOctave, noteDuration * 0.8);
         
-        // Schedule highlight removal - immediate for first note, calculated for others
-        const highlightDuration = i === 0 ? (noteDuration * 800) : 
-            Math.max(0, (startTime + (i * noteDuration * 0.7) - audioContext.currentTime) * 1000) + (noteDuration * 800);
-        
+        // Schedule highlight removal after note duration
         setTimeout(() => {
             removeNoteHighlight();
-        }, highlightDuration);
+        }, noteDuration * 800);
         
         // Wait before next note (only if not the last note)
         if (i < playOrder.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, noteDuration * 1000 * 0.7));
+            await new Promise(resolve => setTimeout(resolve, noteSpacing * 1000));
         }
     }
     
@@ -3095,6 +3054,24 @@ function addOctaveVisual(notes, octaveNote, section) {
             resolve(null);
             return;
         }
+
+        // Check if octave elements already exist (prevent duplicates)
+        const existingOctaveNote = notesContainer.querySelector('.octave-note');
+        const existingOctaveInterval = intervalsContainer.querySelector('.octave-interval');
+        
+        if (existingOctaveNote && existingOctaveInterval) {
+            // Return existing elements
+            resolve({ noteElement: existingOctaveNote, intervalElement: existingOctaveInterval });
+            return;
+        }
+        
+        // Remove any existing octave elements first (cleanup)
+        const oldOctaveElements = document.querySelectorAll('.octave-note, .octave-interval');
+        oldOctaveElements.forEach(element => {
+            if (element.parentNode) {
+                element.parentNode.removeChild(element);
+            }
+        });
         
         // Add octave to notes section (no separator) - with root note styling
         const octaveNoteElement = document.createElement('span');
