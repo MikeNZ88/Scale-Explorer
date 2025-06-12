@@ -481,7 +481,7 @@ function getIntervals(notes, root, scaleType = 'major') {
     }
     
     if (notes.length === 7) {
-        // Check for harmonic minor pattern
+        // Check for Locrian pattern first (it has the distinctive ♭5)
         const intervalPattern = [];
         for (let i = 0; i < notes.length; i++) {
             const noteIndex = noteToIndex(notes[i]);
@@ -489,6 +489,13 @@ function getIntervals(notes, root, scaleType = 'major') {
             intervalPattern.push(interval);
         }
         
+        // Locrian pattern: [0, 1, 3, 5, 6, 8, 10] = [1, b2, b3, 4, b5, b6, b7]
+        const locrianIntervals = [0, 1, 3, 5, 6, 8, 10];
+        if (JSON.stringify(intervalPattern.sort((a, b) => a - b)) === JSON.stringify(locrianIntervals)) {
+            return ['1', 'b2', 'b3', '4', 'b5', 'b6', 'b7'];
+        }
+        
+        // Check for harmonic minor pattern
         if (isHarmonicMinorPattern(notes, root)) {
             return ['1', '2', 'b3', '4', '5', 'b6', '7'];
         }
