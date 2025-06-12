@@ -126,7 +126,7 @@ function updateScale() {
         const modeNotes = MusicTheory.calculateScale(key, modeFormula, scaleType);
         
         // Get intervals
-        const intervals = MusicTheory.getIntervals(modeNotes, modeNotes[0]);
+        const intervals = MusicTheory.getIntervals(modeNotes, modeNotes[0], scaleType, mode);
         
         // Update state
         currentState.scaleType = scaleType;

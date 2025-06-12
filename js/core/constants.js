@@ -202,32 +202,116 @@ const scaleCategories = {
 
 // Mode Metadata
 const modeMetadata = {
-    // Major modes
-    major: { mood: 'Happy', description: 'Bright and uplifting, the foundation of Western music. Also known as the Major scale.', applications: ['Pop', 'rock', 'folk', 'classical'] },
-    dorian: { mood: 'Sophisticated', description: 'Minor with a natural 6th, creating a sophisticated, jazzy sound', applications: ['Jazz', 'folk', 'modal jazz'] },
-    phrygian: { mood: 'Exotic', description: 'Dark and mysterious with a distinctive Spanish/Middle Eastern flavor', applications: ['Flamenco', 'metal', 'world music'] },
-    lydian: { mood: 'Dreamy', description: 'Major with a raised 4th, creating an ethereal, floating quality', applications: ['Film scores', 'prog rock', 'jazz'] },
-    mixolydian: { mood: 'Bluesy', description: 'Major with a flat 7th, the sound of blues and rock', applications: ['Blues', 'rock', 'country', 'folk'] },
-    aeolian: { mood: 'Melancholy', description: 'Natural minor scale, emotional and introspective', applications: ['Pop', 'rock', 'classical', 'folk'] },
-    locrian: { mood: 'Unstable', description: 'The most dissonant mode, rarely used as a tonal center', applications: ['Jazz', 'experimental', 'metal'] },
+    // Major modes (Church Modes)
+    major: { 
+        mood: 'Bright', 
+        description: 'Bright, stable, foundational. The most familiar sound in Western music. Happy, optimistic, resolved, uplifting.', 
+        applications: ['Pop', 'rock', 'country', 'classical', 'folk'] 
+    },
+    dorian: { 
+        mood: 'Sophisticated', 
+        description: 'Sophisticated minor with a brighter edge due to the natural 6th. Contemplative, bittersweet, smooth, hopeful melancholy.', 
+        applications: ['Jazz', 'Celtic music', 'progressive rock', 'blues'] 
+    },
+    phrygian: { 
+        mood: 'Exotic', 
+        description: 'Dark and exotic with distinctive ♭2 half-step descent. Mysterious, dramatic, intense, exotic.', 
+        applications: ['Flamenco', 'metal', 'Spanish music', 'Middle Eastern'] 
+    },
+    lydian: { 
+        mood: 'Dreamy', 
+        description: 'Dreamy and floating with the characteristic ♯4 "lift." Ethereal, magical, expansive, otherworldly.', 
+        applications: ['Film scores', 'jazz', 'progressive music', 'ambient'] 
+    },
+    mixolydian: { 
+        mood: 'Bluesy', 
+        description: 'Bluesy and rock-oriented with dominant chord foundation. Relaxed, confident, groove-oriented, earthy.', 
+        applications: ['Blues', 'rock', 'country', 'folk'] 
+    },
+    aeolian: { 
+        mood: 'Melancholy', 
+        description: 'The standard minor scale, balanced and emotionally rich. Sad, introspective, dramatic, melancholic.', 
+        applications: ['Classical', 'pop ballads', 'emotional songs', 'minor key harmony'] 
+    },
+    locrian: { 
+        mood: 'Unstable', 
+        description: 'Highly unstable due to diminished 5th, rarely used as tonal center. Unsettled, tense, angular, unresolved.', 
+        applications: ['Jazz over half-diminished chords', 'metal', 'experimental music'] 
+    },
     
     // Harmonic minor modes
-    'harmonic-minor': { mood: 'Dramatic', description: 'Classical minor scale with raised 7th, very dramatic', applications: ['Classical', 'neoclassical metal', 'film'] },
-    'locrian-natural-6': { mood: 'Dark', description: 'Locrian with natural 6th, still unstable but more usable', applications: ['Jazz', 'experimental'] },
-    'ionian-sharp-5': { mood: 'Augmented', description: 'Major scale with augmented 5th, creates tension', applications: ['Jazz', 'experimental'] },
-    'dorian-sharp-4': { mood: 'Ukrainian', description: 'Dorian with raised 4th, common in Eastern European music', applications: ['Folk', 'world music'] },
-    'phrygian-dominant': { mood: 'Spanish', description: 'The quintessential Spanish/Arabic sound', applications: ['Flamenco', 'metal', 'world music'] },
-    'lydian-sharp-2': { mood: 'Exotic', description: 'Very exotic sound with unusual intervals', applications: ['World music', 'experimental'] },
-    'altered-dominant': { mood: 'Jazzy', description: 'Ultimate jazz dominant sound with altered tensions', applications: ['Jazz', 'fusion'] },
+    'harmonic-minor': { 
+        mood: 'Dramatic', 
+        description: 'Classical minor with raised 7th creating strong leading tone and augmented 2nd interval. Dramatic, exotic, tension-filled, classical.', 
+        applications: ['Classical composition', 'traditional Jewish music', 'jazz minor harmony'] 
+    },
+    'locrian-natural-6': { 
+        mood: 'Dark', 
+        description: 'Improved version of Locrian with natural 6th adding stability. Dark but less unstable, more usable than standard Locrian.', 
+        applications: ['Jazz over half-diminished chords', 'alternative to regular Locrian'] 
+    },
+    'ionian-sharp-5': { 
+        mood: 'Augmented', 
+        description: 'Major scale with augmented 5th creating sophisticated tension. Bright but unsettled, sophisticated, surreal.', 
+        applications: ['Jazz over major 7♯5 chords', 'sophisticated pop harmony'] 
+    },
+    'dorian-sharp-4': { 
+        mood: 'Ukrainian', 
+        description: 'Dorian with exotic ♯4 creating distinctive folk flavor. Mysterious, folk-like, exotic, Eastern European character.', 
+        applications: ['Eastern European folk', 'world music', 'jazz for exotic colors'] 
+    },
+    'phrygian-dominant': { 
+        mood: 'Spanish', 
+        description: 'Highly exotic with major 3rd over Phrygian ♭2, creates dominant function. Intensely exotic, passionate, fiery, dramatic.', 
+        applications: ['Flamenco', 'Middle Eastern music', 'klezmer', 'metal', 'jazz altered dominants'] 
+    },
+    'lydian-sharp-2': { 
+        mood: 'Exotic', 
+        description: 'Extremely bright and ethereal with both ♯2 and ♯4. Otherworldly, transcendent, floating, mystical.', 
+        applications: ['Film scoring', 'ambient music', 'progressive compositions'] 
+    },
+    'altered-dominant': { 
+        mood: 'Jazzy', 
+        description: 'Extremely unstable with maximum alterations. Chaotic, highly tense, demanding resolution.', 
+        applications: ['Experimental music', 'extreme tension effects'] 
+    },
     
-    // Melodic minor modes
-    'melodic-minor': { mood: 'Ascending', description: 'Jazz minor, bright ascending character', applications: ['Jazz', 'classical', 'film'] },
-    'dorian-b2': { mood: 'Phrygian', description: 'Dorian with flat 2nd, creates Phrygian-like character', applications: ['Jazz', 'world music'] },
-    'lydian-augmented': { mood: 'Ethereal', description: 'Lydian with augmented 5th, very ethereal', applications: ['Jazz', 'film scores'] },
-    'lydian-dominant': { mood: 'Floating', description: 'The Lydian b7 scale, perfect for dominant chords', applications: ['Jazz', 'fusion', 'prog rock'] },
-    'mixolydian-b6': { mood: 'Hindu', description: 'Mixolydian with flat 6th, common in Indian music', applications: ['Jazz', 'world music', 'fusion'] },
-    'locrian-natural-2': { mood: 'Half-diminished', description: 'Perfect for half-diminished chords', applications: ['Jazz', 'fusion'] },
-    'super-locrian': { mood: 'Altered', description: 'The altered scale, ultimate jazz tension', applications: ['Jazz', 'fusion'] },
+    // Melodic minor modes (Jazz Minor System)
+    'melodic-minor': { 
+        mood: 'Ascending', 
+        description: 'Sophisticated minor combining minor 3rd with major scale upper structure. Complex, bittersweet, sophisticated, jazzy.', 
+        applications: ['Jazz over minor-major 7th chords', 'sophisticated minor harmony'] 
+    },
+    'dorian-b2': { 
+        mood: 'Phrygian', 
+        description: 'Phrygian character softened by natural 6th. Mysterious, exotic, less dark than pure Phrygian.', 
+        applications: ['Jazz over suspended ♭9 chords', 'exotic minor passages'] 
+    },
+    'lydian-augmented': { 
+        mood: 'Ethereal', 
+        description: 'Maximum brightness combining Lydian ♯4 with augmented 5th. Brilliant, floating, highly sophisticated, unstable.', 
+        applications: ['Jazz over major 7♯5♯11 chords', 'sophisticated harmony'] 
+    },
+    'lydian-dominant': { 
+        mood: 'Floating', 
+        description: 'Perfect fusion of Lydian brightness with dominant function. Sophisticated, bright, floating yet functional.', 
+        applications: ['Jazz over dominant 7♯11 chords', 'tritone substitutions', 'non-resolving dominants'] 
+    },
+    'mixolydian-b6': { 
+        mood: 'Hindu', 
+        description: 'Dominant scale with exotic ♭6 adding Eastern flavor. Exotic, Eastern, sophisticated, groove-oriented.', 
+        applications: ['Jazz over dominant 7♭13 chords', 'Indian classical influences', 'minor key dominants'] 
+    },
+    'locrian-natural-2': { 
+        mood: 'Half-diminished', 
+        description: 'More stable than regular Locrian due to natural 2nd. Tense but manageable, sophisticated, usable.', 
+        applications: ['Jazz over minor 7♭5 chords', 'preferred alternative to standard Locrian'] 
+    },
+    'super-locrian': { 
+        mood: 'Altered', 
+        description: 'Ultimate altered dominant containing all common alterations (♭9, ♯9, ♯11, ♭13). Intensely tense, sophisticated, demanding immediate resolution.', 
+        applications: ['Jazz over altered dominant chords', 'maximum tension before resolution'] 
+    },
     
     // Diminished modes
     'wh-diminished': { mood: 'Symmetrical', description: 'Eight-note symmetrical scale, alternating whole-half steps', applications: ['Jazz', 'classical', 'metal'] },

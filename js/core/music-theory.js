@@ -79,7 +79,34 @@ function enhanceScaleColor(baseColor, scaleIntervals) {
 }
 
 function getIntervalColor(interval) {
-    return MusicConstants.intervalColors[interval] || '#8B5CF6';
+    // First try direct lookup
+    let color = MusicConstants.intervalColors[interval];
+    
+    // If not found, try enharmonic equivalent
+    if (!color) {
+        // Inline enharmonic equivalent mapping for performance
+        const enharmonicMap = {
+            '#4': 'b5', 'b5': '#4',
+            '#1': 'b2', 'b2': '#1',
+            '#2': 'b3', 'b3': '#2',
+            '#5': 'b6', 'b6': '#5',
+            '#6': 'b7', 'b7': '#6',
+            'b4': '3', '#3': '4',  // b4 = 3, #3 = 4
+            'bb7': '6', '##1': '2', 
+            '##2': '3', '##4': '5',
+            '##5': '6', '##6': '7',
+            '#7': '1', 'bb2': '1',
+            'bb3': '2', 'bb4': '3',
+            'bb5': '4', 'bb6': '5'
+        };
+        
+        const enharmonicEquivalent = enharmonicMap[interval];
+        if (enharmonicEquivalent) {
+            color = MusicConstants.intervalColors[enharmonicEquivalent];
+        }
+    }
+    
+    return color || '#8B5CF6';
 }
 
 function lightenColor(hex, percent = 50) {
@@ -425,7 +452,7 @@ function getModeNotes(parentScale, modeIndex, parentFormula, scaleType = 'major'
     return calculateScale(modeRoot, modeFormula, scaleType);
 }
 
-function getIntervals(notes, root, scaleType = 'major') {
+function getIntervals(notes, root, scaleType = 'major', mode = null) {
     if (!notes || !Array.isArray(notes) || notes.length === 0) {
         return [];
     }
@@ -481,6 +508,59 @@ function getIntervals(notes, root, scaleType = 'major') {
     }
     
     if (notes.length === 7) {
+        // Handle specific modes with correct interval spellings
+        if (mode) {
+            // Harmonic Minor System modes
+            switch (mode) {
+                case 'harmonic-minor':
+                    return ['1', '2', 'b3', '4', '5', 'b6', '7'];
+                case 'locrian-natural-6':
+                    return ['1', 'b2', 'b3', '4', 'b5', '6', 'b7'];
+                case 'ionian-sharp-5':
+                    return ['1', '2', '3', '4', '#5', '6', '7'];
+                case 'dorian-sharp-4':
+                    return ['1', '2', 'b3', '#4', '5', '6', 'b7'];
+                case 'phrygian-dominant':
+                    return ['1', 'b2', '3', '4', '5', 'b6', 'b7'];
+                case 'lydian-sharp-2':
+                    return ['1', '#2', '3', '#4', '5', '6', '7'];
+                case 'altered-dominant':
+                    return ['1', 'b2', 'b3', 'b4', 'b5', 'b6', 'bb7'];
+                    
+                // Melodic Minor System modes
+                case 'melodic-minor':
+                    return ['1', '2', 'b3', '4', '5', '6', '7'];
+                case 'dorian-b2':
+                    return ['1', 'b2', 'b3', '4', '5', '6', 'b7'];
+                case 'lydian-augmented':
+                    return ['1', '2', '3', '#4', '#5', '6', '7'];
+                case 'lydian-dominant':
+                    return ['1', '2', '3', '#4', '5', '6', 'b7'];
+                case 'mixolydian-b6':
+                    return ['1', '2', '3', '4', '5', 'b6', 'b7'];
+                case 'locrian-natural-2':
+                    return ['1', '2', 'b3', '4', 'b5', 'b6', 'b7'];
+                case 'super-locrian':
+                    return ['1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7'];
+                    
+                // Major modes (Church modes)
+                case 'major':
+                    return ['1', '2', '3', '4', '5', '6', '7'];
+                case 'dorian':
+                    return ['1', '2', 'b3', '4', '5', '6', 'b7'];
+                case 'phrygian':
+                    return ['1', 'b2', 'b3', '4', '5', 'b6', 'b7'];
+                case 'lydian':
+                    return ['1', '2', '3', '#4', '5', '6', '7'];
+                case 'mixolydian':
+                    return ['1', '2', '3', '4', '5', '6', 'b7'];
+                case 'aeolian':
+                    return ['1', '2', 'b3', '4', '5', 'b6', 'b7'];
+                case 'locrian':
+                    return ['1', 'b2', 'b3', '4', 'b5', 'b6', 'b7'];
+            }
+        }
+        
         // Check for Locrian pattern first (it has the distinctive ♭5)
         const intervalPattern = [];
         for (let i = 0; i < notes.length; i++) {
@@ -2497,6 +2577,117 @@ function isAugmentedScale2(scale) {
     return true;
 }
 
+/**
+ * Get enharmonic equivalent for a note
+ * @param {string} note - The note to find enharmonic equivalent for
+ * @returns {string|null} - The enharmonic equivalent or null if none
+ */
+function getEnharmonicEquivalent(note) {
+    const enharmonicMap = {
+        // Double accidentals to natural notes
+        'B#': 'C',
+        'C##': 'D', 
+        'D##': 'E',
+        'E#': 'F',
+        'F##': 'G',
+        'G##': 'A',
+        'A##': 'B',
+        'Cb': 'B',
+        'Dbb': 'C',
+        'Ebb': 'D',
+        'Fb': 'E',
+        'Gbb': 'F',
+        'Abb': 'G',
+        'Bbb': 'A',
+        
+        // Single accidentals (bidirectional)
+        'C#': 'Db',
+        'Db': 'C#',
+        'D#': 'Eb',
+        'Eb': 'D#',
+        'F#': 'Gb',
+        'Gb': 'F#',
+        'G#': 'Ab',
+        'Ab': 'G#',
+        'A#': 'Bb',
+        'Bb': 'A#'
+    };
+    
+    return enharmonicMap[note] || null;
+}
+
+/**
+ * Get enharmonic equivalent for an interval
+ * @param {string} interval - The interval to find enharmonic equivalent for
+ * @returns {string|null} - The enharmonic equivalent or null if none
+ */
+function getIntervalEnharmonicEquivalent(interval) {
+    const intervalEnharmonicMap = {
+        // Double accidentals to simpler equivalents
+        'bb7': '6',
+        '##1': '2', 
+        '##2': '3',
+        '##4': '5',
+        '##5': '6',
+        '##6': '7',
+        '#7': '1',
+        'bb2': '1',
+        'bb3': '2',
+        'bb4': '3',
+        'bb5': '4',
+        'bb6': '5',
+        
+        // Augmented/diminished equivalents
+        '#4': 'b5',
+        'b5': '#4',
+        '#1': 'b2',
+        'b2': '#1',
+        '#2': 'b3',
+        'b3': '#2',
+        'b4': '3',    // Diminished fourth = Major third
+        '#3': '4',    // Augmented third = Perfect fourth
+        '#5': 'b6',
+        'b6': '#5',
+        '#6': 'b7',
+        'b7': '#6'
+    };
+    
+    return intervalEnharmonicMap[interval] || null;
+}
+
+/**
+ * Get practical spelling tooltip for notes and intervals
+ * @param {string} value - The note or interval
+ * @param {string} type - 'note' or 'interval'
+ * @returns {string|null} - Tooltip text or null if no practical spelling needed
+ */
+function getEnharmonicTooltip(value, type = 'note') {
+    if (type === 'note') {
+        const equivalent = getEnharmonicEquivalent(value);
+        if (equivalent) {
+            // Check if it's a double accidental to natural conversion
+            if (value.includes('##') || value.includes('bb') || 
+                ['B#', 'E#', 'Cb', 'Fb'].includes(value)) {
+                return `Practical spelling: ${equivalent}`;
+            } else {
+                return `Enharmonic equivalent: ${equivalent}`;
+            }
+        }
+    } else if (type === 'interval') {
+        const equivalent = getIntervalEnharmonicEquivalent(value);
+        if (equivalent) {
+            // Check if it's a double accidental
+            if (value.includes('bb') || value.includes('##')) {
+                return `Practical spelling: ${equivalent}`;
+            } else {
+                return `Enharmonic equivalent: ${equivalent}`;
+            }
+        }
+    }
+    
+    return null;
+}
+
 // Export all functions
 window.MusicTheory = {
     hexToRgb,
@@ -2538,5 +2729,8 @@ window.MusicTheory = {
     isAugmentedScale,
     isAugmentedScale2,
     getAugmentedScaleChords,
-    getChromaticScaleChords
+    getChromaticScaleChords,
+    getEnharmonicEquivalent,
+    getIntervalEnharmonicEquivalent,
+    getEnharmonicTooltip
 };

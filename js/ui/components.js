@@ -484,6 +484,21 @@ function renderModalFretboard(container, scale) {
                     text.setAttribute('font-weight', 'bold');
                     // Use the same display mode as the main fretboard
                     text.textContent = fretboardState.showIntervals ? interval : displayNote;
+                    
+                    // Add tooltip for enharmonic equivalents
+                    const currentDisplay = fretboardState.showIntervals ? interval : displayNote;
+                    const tooltipType = fretboardState.showIntervals ? 'interval' : 'note';
+                    const tooltip = MusicTheory.getEnharmonicTooltip(currentDisplay, tooltipType);
+                    if (tooltip) {
+                        const titleElement = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                        titleElement.textContent = tooltip;
+                        
+                        // Add title to both circle and text for better UX
+                        const titleClone = titleElement.cloneNode(true);
+                        circle.appendChild(titleElement);
+                        text.appendChild(titleClone);
+                    }
+                    
                     svg.appendChild(text);
                 }
             }
@@ -693,6 +708,12 @@ function displayNotes(notes) {
         noteElement.textContent = note;
         noteElement.setAttribute('data-note', note);
         
+        // Add enharmonic tooltip if available
+        const tooltip = MusicTheory.getEnharmonicTooltip(note, 'note');
+        if (tooltip) {
+            noteElement.title = tooltip;
+        }
+        
         if (index === 0) {
             noteElement.classList.add('root-note');
         }
@@ -722,6 +743,12 @@ function displayIntervals(intervals) {
         intervalElement.textContent = interval;
         intervalElement.setAttribute('data-interval', interval);
         intervalElement.setAttribute('data-index', index);
+        
+        // Add enharmonic tooltip if available
+        const tooltip = MusicTheory.getEnharmonicTooltip(interval, 'interval');
+        if (tooltip) {
+            intervalElement.title = tooltip;
+        }
         
         // Set background color based on interval using the consistent color scheme
         const color = window.colorsVisible ? 
@@ -3561,6 +3588,21 @@ function renderSingleScale(svg, scale, displayFrets, fretWidth) {
                 text.setAttribute('font-weight', 'bold');
                 // Show intervals or notes based on toggle state
                 text.textContent = fretboardState.showIntervals ? interval : displayNote;
+                
+                // Add tooltip for enharmonic equivalents
+                const currentDisplay = fretboardState.showIntervals ? interval : displayNote;
+                const tooltipType = fretboardState.showIntervals ? 'interval' : 'note';
+                const tooltip = MusicTheory.getEnharmonicTooltip(currentDisplay, tooltipType);
+                if (tooltip) {
+                    const titleElement = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                    titleElement.textContent = tooltip;
+                    
+                    // Add title to both circle and text for better UX
+                    const titleClone = titleElement.cloneNode(true);
+                    circle.appendChild(titleElement);
+                    text.appendChild(titleClone);
+                }
+                
                 svg.appendChild(text);
             }
         }
@@ -3708,6 +3750,20 @@ function renderComparisonFretboard(svg, scale1, scale2, displayFrets, fretWidth)
                 }
                 
                 text.textContent = displayText;
+                
+                // Add tooltip for enharmonic equivalents
+                const tooltipType = fretboardState.showIntervals ? 'interval' : 'note';
+                const tooltip = MusicTheory.getEnharmonicTooltip(displayText, tooltipType);
+                if (tooltip) {
+                    const titleElement = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                    titleElement.textContent = tooltip;
+                    
+                    // Add title to both circle and text for better UX
+                    const titleClone = titleElement.cloneNode(true);
+                    circle.appendChild(titleElement);
+                    text.appendChild(titleClone);
+                }
+                
                 svg.appendChild(text);
             }
         }
