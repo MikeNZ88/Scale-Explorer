@@ -48,10 +48,10 @@
                 <label for="color-toggle">
                     <input type="checkbox" id="color-toggle" checked>
                     <span class="color-toggle-container">
-                        <span class="color-toggle-label">🎨 Colors</span>
+                        <span class="color-toggle-label">🎨 Colours</span>
                     </span>
                 </label>
-                <button class="info-btn" onclick="UIComponents.openIntervalInfoModal()" title="Interval Spelling & Color Guide">ℹ️</button>
+                <button class="info-btn" onclick="UIComponents.openIntervalInfoModal()" title="Interval Spelling & Colour Guide">ℹ️</button>
             </div>
         </div>
 
@@ -271,49 +271,44 @@
     <div class="modal hidden" id="interval-info-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Interval Spelling & Color Guide</h3>
+                <h3>Interval Spelling & Colour Guide</h3>
                 <button class="close-modal" onclick="UIComponents.closeIntervalInfoModal()">×</button>
             </div>
             <div class="modal-body">
                 <div class="info-content">
                     <div class="info-section">
-                        <h4>🎵 Understanding Interval Spelling</h4>
-                        <p>In music theory, intervals must follow the <strong>consecutive numbering rule</strong>. This means every scale degree (1, 2, 3, 4, 5, 6, 7) must be represented exactly once.</p>
+                        <h4>Understanding Interval Spelling</h4>
+                        <p>In music theory, intervals must follow the <strong>consecutive numbering rule</strong>. For <strong>7-note scales</strong> (like major scale, harmonic minor scale, and melodic minor scale), every scale degree (1, 2, 3, 4, 5, 6, 7) must be represented exactly once.</p>
                         
                         <div class="example-grid">
                             <div class="example-item">
-                                <span style="color: #2E7D32;">✅ Correct:</span><br>
+                                <span style="color: #2E7D32;">✅ Correct (C Natural Minor / Aeolian):</span><br>
                                 <strong>Intervals:</strong> 1, 2, ♭3, 4, 5, ♭6, ♭7<br>
-                                <strong>Notes (C minor):</strong> C, D, E♭, F, G, A♭, B♭<br>
+                                <strong>Notes:</strong> C, D, E♭, F, G, A♭, B♭<br>
                                 <small>(each number 1-7 used once)</small>
                             </div>
                             <div class="example-item">
-                                <span style="color: #C62828;">❌ Incorrect:</span><br>
+                                <span style="color: #C62828;">❌ Incorrect (same C Natural Minor scale):</span><br>
                                 <strong>Intervals:</strong> 1, 2, ♯2, 4, 5, ♯5, ♭7<br>
                                 <strong>Notes (wrong):</strong> C, D, D♯, F, G, G♯, B♭<br>
                                 <small>(missing 3 & 6, has duplicate 2 & 5)</small>
                             </div>
                         </div>
                         
-                        <div class="example-grid">
-                            <div class="example-item">
-                                <span style="color: #2E7D32;">✅ Correct:</span><br>
-                                <strong>Intervals:</strong> 1, ♭2, 3, ♯4, 5, 6, 7<br>
-                                <strong>Notes (F# major):</strong> F♯, G, A♯, B♯, C♯, D♯, E♯<br>
-                                <small>(interval spelling forces note spelling)</small>
-                            </div>
-                            <div class="example-item">
-                                <span style="color: #C62828;">❌ Incorrect:</span><br>
-                                <strong>Intervals:</strong> 1, ♭2, 3, ♯4, 5, 6, ♭1<br>
-                                <strong>Notes (wrong):</strong> F♯, G, A♯, B♯, C♯, D♯, F<br>
-                                <small>(can't use "1" twice - must be "7")</small>
-                            </div>
+                        <div class="scale-types-note">
+                            <h5>📝 Different Scale Types:</h5>
+                            <ul>
+                                <li><strong>7-note scales (Major scale, Harmonic minor scale, Melodic minor scale):</strong> Use all 7 numbers (1, 2, 3, 4, 5, 6, 7) exactly once</li>
+                                <li><strong>5-note scales (Pentatonic, Blues):</strong> Derived from major scale with missing intervals. Pentatonic omits 4 and 7 (e.g., 1, 2, 3, 5, 6). Blues scale adds ♭5 as a passing tone but still counts as 5-note because ♭5 is viewed as chromatic ornamentation, not a structural scale degree</li>
+                                <li><strong>6-note scales (Whole Tone):</strong> Use all 6 numbers (1, 2, 3, ♯4, ♯5, ♯6)</li>
+                                <li><strong>8-note scales (Diminished/Octatonic):</strong> Too large for 1-7 system, may repeat numbers with different accidentals (e.g., both ♭6 and 6)</li>
+                            </ul>
+                            <p><em>The key principle: interval spelling determines note spelling using consecutive letters. <strong>Exceptions:</strong> Pentatonic scales skip certain letters to match their missing intervals, and diminished scales may repeat letters due to their size exceeding the 7-letter system.</em></p>
                         </div>
                     </div>
 
                     <div class="info-section">
-                        <h4>🌈 Complete Interval Color System</h4>
-                        <p>Our color system maps musical intervals to colors based on their <strong>harmonic tension and emotional characteristics</strong>. Each interval receives a specific color that reflects its psychological and musical effect.</p>
+                        <h4>🌈 Interval Colour System</h4>
                         
                         <div class="interval-display">
                             <div class="interval-item">
@@ -404,34 +399,23 @@
                     </div>
 
                     <div class="info-section">
-                        <h4>🎨 Color Theory Foundation</h4>
+                        <h4>🎨 Colour Theory Foundation</h4>
                         <div class="color-theory-section">
-                            <p>The interval color system is based on academic research in music psychology, cross-modal perception, and color theory. Colors represent the <strong>harmonic tension and emotional characteristics</strong> of each interval:</p>
+                            <p>My interval colour system is based on academic research in music psychology, cross-modal perception, and colour theory. Colours represent the <strong>harmonic tension and emotional characteristics</strong> of each interval.</p>
                             
-                            <ul class="benefits-list">
-                                <li><strong>White (Root):</strong> Complete stability and resolution - the gravitational center of all harmony</li>
-                                <li><strong>Yellow (Major Third):</strong> Brightness and happiness - defines major chord quality</li>
-                                <li><strong>Blue (Perfect Fifth):</strong> Stability and trust - acoustically stable (3:2 ratio)</li>
-                                <li><strong>Red (Perfect Fourth):</strong> Structural tension and suspension - demands resolution</li>
-                                <li><strong>Dark Red (Tritone):</strong> Maximum harmonic danger - the "devil's interval"</li>
-                                <li><strong>Purple (Minor Third):</strong> Sadness and emotional depth - defines minor chord quality</li>
-                                <li><strong>Orange (Seconds):</strong> Movement and mild tension - creates forward motion</li>
-                                <li><strong>Green (Major Sixth):</strong> Yearning and natural beauty - hopeful longing</li>
-                            </ul>
-                            
-                            <p>This system synthesizes research from:</p>
+                            <p>This system synthesises research from:</p>
                             <ul class="benefits-list">
                                 <li>Music theory research on interval emotional characteristics</li>
-                                <li>Color psychology studies on universal color-emotion associations</li>
-                                <li>Cross-modal perception research on music-color mappings</li>
-                                <li>Educational research on color-enhanced learning</li>
+                                <li>Colour psychology studies on universal colour-emotion associations</li>
+                                <li>Cross-modal perception research on music-colour mappings</li>
+                                <li>Educational research on colour-enhanced learning</li>
                             </ul>
                         </div>
                     </div>
 
                     <div class="info-section">
                         <h4>🔄 Enharmonic Equivalents</h4>
-                        <p>Intervals that sound the same but are spelled differently share <strong>identical colors</strong>:</p>
+                        <p>Intervals that sound the same but are spelled differently share <strong>identical colours</strong>:</p>
                         
                         <div class="example-grid">
                             <div class="example-item">
