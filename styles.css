@@ -571,29 +571,29 @@ body {
 .fretboard-svg {
     max-width: 100%;
     height: auto;
-    background: #fafafa;
-    border: 1px solid #e2e8f0;
+    background: #2d3748;
+    border: 1px solid #4a5568;
     border-radius: 8px;
 }
 
 .fret-line {
-    stroke: #d1d5db;
+    stroke: #718096;
     stroke-width: 1;
 }
 
 .string-line {
-    stroke: #9ca3af;
+    stroke: #a0aec0;
     stroke-width: 2;
 }
 
 .fret-number {
-    fill: #6b7280;
+    fill: #e2e8f0;
     font-size: 12px;
     font-weight: 600;
 }
 
 .string-label {
-    fill: #6b7280;
+    fill: #e2e8f0;
     font-size: 11px;
     font-weight: 600;
 }
@@ -636,8 +636,8 @@ body {
 }
 
 .inlay-dot {
-    fill: #e5e7eb;
-    stroke: #d1d5db;
+    fill: #4a5568;
+    stroke: #718096;
     stroke-width: 1;
 }
 
@@ -791,11 +791,11 @@ body {
 
 /* Fretboard container */
 .fretboard-container {
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(45, 55, 72, 0.9);
     border-radius: 12px;
     padding: 1rem;
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     min-height: 300px;
 }
 
@@ -1086,7 +1086,7 @@ body {
     align-items: center !important;
     justify-content: center !important;
     overflow: auto !important;
-    background: #ffffff !important;
+    background: #2d3748 !important;
     padding: 0.125rem !important;
     min-height: 0 !important;
 }
@@ -1201,6 +1201,13 @@ body {
         max-width: 1400px !important;
         max-height: 800px !important;
     }
+}
+
+/* Scale Fretboard SVG Dark Background */
+#fretboard-modal .fretboard-svg {
+    background: #2d3748 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* Modal Resize Handle */
@@ -1380,6 +1387,9 @@ body {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
+    background: #2d3748;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .fretboard-modal .fretboard-toggle-container {
@@ -1668,28 +1678,29 @@ body {
 .fretboard-svg {
     display: block;
     margin: 0 auto;
-    background: #ffffff;
+    background: #2d3748;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .fretboard-svg .note-dot {
-    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.2));
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.4));
 }
 
 .fretboard-svg .note-dot.root {
     stroke-width: 4;
-    filter: drop-shadow(2px 2px 6px rgba(0, 0, 0, 0.3));
+    filter: drop-shadow(2px 2px 6px rgba(0, 0, 0, 0.5));
 }
 
 .fretboard-svg .note-text {
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
     dominant-baseline: central;
     text-anchor: middle;
 }
 
 .fretboard-svg .inlay-dot {
-    opacity: 0.6;
+    opacity: 0.4;
+    fill: #718096;
 }
 
 .modal-toggle {
@@ -2367,9 +2378,10 @@ body {
 
 .control-group {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    align-items: flex-start;
+    flex-direction: row;
+    gap: 12px;
+    align-items: center;
+    justify-content: flex-start;
 }
 
 .control-group label {
@@ -2691,6 +2703,11 @@ body {
     font-weight: 500;
     font-size: 0.9em;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Override text color for root note intervals */
+.interval[data-interval="1"] {
+    color: black !important;
 }
 
 .octave-separator {
@@ -3352,10 +3369,11 @@ body {
 
 /* Chord Modal Fretboard SVG Styles (matching main fretboard) */
 #chord-modal .fretboard-svg {
-    max-width: 100% !important;
-    max-height: 100% !important;
-    height: auto !important;
-    width: auto !important;
+    width: 100%;
+    height: 350px;
+    background: #2d3748;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 #chord-modal .fret-line {
@@ -3961,4 +3979,263 @@ body {
     line-height: 1.4;
 }
 
-/* Scale section styling */
+/* Info Button */
+.info-btn {
+    background: linear-gradient(135deg, #DC6C27 0%, #B8541F 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin-left: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    vertical-align: middle;
+}
+
+.info-btn:hover {
+    background: linear-gradient(135deg, #B8541F 0%, #A0471B 100%);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+}
+
+.info-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Interval Info Modal */
+#interval-info-modal .modal-content {
+    max-width: 1000px;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: #2A2A2A;
+    color: #E8E8E8;
+    display: flex;
+    flex-direction: column;
+}
+
+#interval-info-modal .modal-header {
+    background: linear-gradient(135deg, #DC6C27, #B8541F);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 12px 12px 0 0;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+#interval-info-modal .modal-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+#interval-info-modal .modal-body {
+    padding: 2rem;
+    background: #2A2A2A;
+    color: #E8E8E8;
+    border-radius: 0 0 12px 12px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.info-section {
+    margin-bottom: 2rem;
+}
+
+.info-section:last-child {
+    margin-bottom: 0;
+}
+
+.info-section h4 {
+    color: #DC6C27;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #404040;
+    padding-bottom: 0.5rem;
+}
+
+.info-section p {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+    color: #C8C8C8;
+}
+
+.interval-display {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+    max-width: 100%;
+}
+
+.interval-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    background: #1A1A1A;
+    border-radius: 8px;
+    border: 1px solid #404040;
+}
+
+.interval-dot {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: #000;
+    margin-bottom: 0.5rem;
+    border: 2px solid #666;
+}
+
+/* Ensure root interval dots use black text for visibility */
+.interval-dot[style*="background-color: #FFFFFF"], 
+.interval-dot[style*="background-color: #ffffff"],
+.interval-dot[style*="background-color: rgb(255, 255, 255)"] {
+    color: #000 !important;
+}
+
+.interval-labels {
+    text-align: center;
+}
+
+.interval-name {
+    font-size: 0.8rem;
+    color: #A0A0A0;
+    margin-bottom: 0.25rem;
+}
+
+.interval-number {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #E8E8E8;
+}
+
+.color-theory-section {
+    background: #1A1A1A;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #404040;
+    margin: 1.5rem 0;
+}
+
+.benefits-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+}
+
+.benefits-list li {
+    padding: 0.5rem 0;
+    position: relative;
+    padding-left: 1.5rem;
+    color: #C8C8C8;
+}
+
+.benefits-list li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #DC6C27;
+    font-weight: bold;
+}
+
+.example-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.example-item {
+    padding: 0.75rem;
+    background: transparent;
+    border-radius: 6px;
+    border: 1px solid #404040;
+    text-align: center;
+    color: white;
+}
+
+.example-item .correct {
+    color: #2E8B57;
+    font-weight: 600;
+}
+
+.example-item .incorrect {
+    color: #E74C3C;
+    font-weight: 600;
+}
+
+.hover-tip {
+    background: #404040;
+    border: 1px solid #DC6C27;
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin: 1rem 0;
+}
+
+.hover-tip strong {
+    color: #DC6C27;
+}
+
+.research-citation {
+    font-size: 0.85rem;
+    color: #888;
+    font-style: italic;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #404040;
+}
+
+@media (max-width: 768px) {
+    #interval-info-modal .modal-content {
+        max-width: 95%;
+        margin: 1rem auto;
+    }
+    
+    #interval-info-modal .modal-header {
+        padding: 1rem;
+    }
+    
+    #interval-info-modal .modal-header h3 {
+        font-size: 1.25rem;
+    }
+    
+    #interval-info-modal .modal-body {
+        padding: 1.5rem;
+    }
+    
+    .interval-display {
+        grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+        gap: 0.5rem;
+    }
+    
+    .interval-dot {
+        width: 30px;
+        height: 30px;
+        font-size: 0.8rem;
+    }
+    
+    .example-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Override for interval spelling examples - make them transparent */
+#interval-info-modal .example-item {
+    background: transparent !important;
+    color: white !important;
+}

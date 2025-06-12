@@ -72,8 +72,10 @@ const scaleDegreeWeights = {
 
 // Interval Color Mappings
 const intervalColors = {
-    // STABLE INTERVALS (Low Tension) - Warm, stable tones
-    '1': '#E8B4B8',   // Unison/Root - Dusty rose pink (stability, completeness) - much better contrast
+    // Stable Intervals (Consonant)
+    '1': '#FFFFFF',  // Root/Unison - changed to white for dark backgrounds
+    'P1': '#FFFFFF', // Perfect Unison
+    'P8': '#FFFFFF', // Perfect Octave (same as root)
     '3': '#F4D03F',   // Major Third - Warm golden yellow (happiness, brightness)
     '5': '#5DADE2',   // Perfect Fifth - Soft blue (stability, consonance)
     

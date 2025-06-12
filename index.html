@@ -51,6 +51,7 @@
                         <span class="color-toggle-label">🎨 Colors</span>
                     </span>
                 </label>
+                <button class="info-btn" onclick="UIComponents.openIntervalInfoModal()" title="Interval Spelling & Color Guide">ℹ️</button>
             </div>
         </div>
 
@@ -260,6 +261,198 @@
                     <div class="voicing-section special-case">
                         <h4>⚠️ Special Case: Major 6th Chords</h4>
                         <p>For maj6 chords, you <strong>must include the fifth</strong> to avoid sounding like the relative minor triad. Cmaj6 without the 5th (C-E-A) sounds like Am (A-C-E).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interval Information Modal -->
+    <div class="modal hidden" id="interval-info-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Interval Spelling & Color Guide</h3>
+                <button class="close-modal" onclick="UIComponents.closeIntervalInfoModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-content">
+                    <div class="info-section">
+                        <h4>🎵 Understanding Interval Spelling</h4>
+                        <p>In music theory, intervals must follow the <strong>consecutive numbering rule</strong>. This means every scale degree (1, 2, 3, 4, 5, 6, 7) must be represented exactly once.</p>
+                        
+                        <div class="example-grid">
+                            <div class="example-item">
+                                <span style="color: #2E7D32;">✅ Correct:</span><br>
+                                <strong>Intervals:</strong> 1, 2, ♭3, 4, 5, ♭6, ♭7<br>
+                                <strong>Notes (C minor):</strong> C, D, E♭, F, G, A♭, B♭<br>
+                                <small>(each number 1-7 used once)</small>
+                            </div>
+                            <div class="example-item">
+                                <span style="color: #C62828;">❌ Incorrect:</span><br>
+                                <strong>Intervals:</strong> 1, 2, ♯2, 4, 5, ♯5, ♭7<br>
+                                <strong>Notes (wrong):</strong> C, D, D♯, F, G, G♯, B♭<br>
+                                <small>(missing 3 & 6, has duplicate 2 & 5)</small>
+                            </div>
+                        </div>
+                        
+                        <div class="example-grid">
+                            <div class="example-item">
+                                <span style="color: #2E7D32;">✅ Correct:</span><br>
+                                <strong>Intervals:</strong> 1, ♭2, 3, ♯4, 5, 6, 7<br>
+                                <strong>Notes (F# major):</strong> F♯, G, A♯, B♯, C♯, D♯, E♯<br>
+                                <small>(interval spelling forces note spelling)</small>
+                            </div>
+                            <div class="example-item">
+                                <span style="color: #C62828;">❌ Incorrect:</span><br>
+                                <strong>Intervals:</strong> 1, ♭2, 3, ♯4, 5, 6, ♭1<br>
+                                <strong>Notes (wrong):</strong> F♯, G, A♯, B♯, C♯, D♯, F<br>
+                                <small>(can't use "1" twice - must be "7")</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h4>🌈 Complete Interval Color System</h4>
+                        <p>Our color system maps musical intervals to colors based on their <strong>harmonic tension and emotional characteristics</strong>. Each interval receives a specific color that reflects its psychological and musical effect.</p>
+                        
+                        <div class="interval-display">
+                            <div class="interval-item">
+                                <div class="interval-dot" style="background-color: #FFFFFF; color: #000;">1</div>
+                                <div class="interval-labels">
+                                    <div class="interval-name">Root/Unison</div>
+                                    <div class="interval-number">1</div>
+                                </div>
+                            </div>
+                            <div class="interval-item">
+                                <div class="interval-dot" style="background-color: #D35400; color: #fff;">♭2</div>
+                                <div class="interval-labels">
+                                    <div class="interval-name">Minor Second</div>
+                                    <div class="interval-number">♭2</div>
+                                </div>
+                            </div>
+                            <div class="interval-item">
+                                <div class="interval-dot" style="background-color: #E67E22; color: #fff;">2</div>
+                                <div class="interval-labels">
+                                    <div class="interval-name">Major Second</div>
+                                    <div class="interval-number">2</div>
+                                </div>
+                            </div>
+                            <div class="interval-item">
+                                <div class="interval-dot" style="background-color: #8E44AD; color: #fff;">♭3</div>
+                                <div class="interval-labels">
+                                    <div class="interval-name">Minor Third</div>
+                                    <div class="interval-number">♭3</div>
+                                </div>
+                            </div>
+                            <div class="interval-item">
+                                <div class="interval-dot" style="background-color: #F4D03F; color: #000;">3</div>
+                                <div class="interval-labels">
+                                    <div class="interval-name">Major Third</div>
+                                    <div class="interval-number">3</div>
+                                </div>
+                            </div>
+                            <div class="interval-item">
+                                <div class="interval-dot" style="background-color: #E74C3C; color: #fff;">4</div>
+                                <div class="interval-labels">
+                                    <div class="interval-name">Perfect Fourth</div>
+                                    <div class="interval-number">4</div>
+                                </div>
+                            </div>
+                            <div class="interval-item">
+                                <div class="interval-dot" style="background-color: #922B21; color: #fff;">♯4</div>
+                                <div class="interval-labels">
+                                    <div class="interval-name">Tritone</div>
+                                    <div class="interval-number">♯4/♭5</div>
+                                </div>
+                            </div>
+                            <div class="interval-item">
+                                <div class="interval-dot" style="background-color: #5DADE2; color: #000;">5</div>
+                                <div class="interval-labels">
+                                    <div class="interval-name">Perfect Fifth</div>
+                                    <div class="interval-number">5</div>
+                                </div>
+                            </div>
+                            <div class="interval-item">
+                                <div class="interval-dot" style="background-color: #85929E; color: #fff;">♭6</div>
+                                <div class="interval-labels">
+                                    <div class="interval-name">Minor Sixth</div>
+                                    <div class="interval-number">♭6</div>
+                                </div>
+                            </div>
+                            <div class="interval-item">
+                                <div class="interval-dot" style="background-color: #58D68D; color: #000;">6</div>
+                                <div class="interval-labels">
+                                    <div class="interval-name">Major Sixth</div>
+                                    <div class="interval-number">6</div>
+                                </div>
+                            </div>
+                            <div class="interval-item">
+                                <div class="interval-dot" style="background-color: #CD6155; color: #fff;">♭7</div>
+                                <div class="interval-labels">
+                                    <div class="interval-name">Minor Seventh</div>
+                                    <div class="interval-number">♭7</div>
+                                </div>
+                            </div>
+                            <div class="interval-item">
+                                <div class="interval-dot" style="background-color: #C0392B; color: #fff;">7</div>
+                                <div class="interval-labels">
+                                    <div class="interval-name">Major Seventh</div>
+                                    <div class="interval-number">7</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h4>🎨 Color Theory Foundation</h4>
+                        <div class="color-theory-section">
+                            <p>The interval color system is based on academic research in music psychology, cross-modal perception, and color theory. Colors represent the <strong>harmonic tension and emotional characteristics</strong> of each interval:</p>
+                            
+                            <ul class="benefits-list">
+                                <li><strong>White (Root):</strong> Complete stability and resolution - the gravitational center of all harmony</li>
+                                <li><strong>Yellow (Major Third):</strong> Brightness and happiness - defines major chord quality</li>
+                                <li><strong>Blue (Perfect Fifth):</strong> Stability and trust - acoustically stable (3:2 ratio)</li>
+                                <li><strong>Red (Perfect Fourth):</strong> Structural tension and suspension - demands resolution</li>
+                                <li><strong>Dark Red (Tritone):</strong> Maximum harmonic danger - the "devil's interval"</li>
+                                <li><strong>Purple (Minor Third):</strong> Sadness and emotional depth - defines minor chord quality</li>
+                                <li><strong>Orange (Seconds):</strong> Movement and mild tension - creates forward motion</li>
+                                <li><strong>Green (Major Sixth):</strong> Yearning and natural beauty - hopeful longing</li>
+                            </ul>
+                            
+                            <p>This system synthesizes research from:</p>
+                            <ul class="benefits-list">
+                                <li>Music theory research on interval emotional characteristics</li>
+                                <li>Color psychology studies on universal color-emotion associations</li>
+                                <li>Cross-modal perception research on music-color mappings</li>
+                                <li>Educational research on color-enhanced learning</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h4>🔄 Enharmonic Equivalents</h4>
+                        <p>Intervals that sound the same but are spelled differently share <strong>identical colors</strong>:</p>
+                        
+                        <div class="example-grid">
+                            <div class="example-item">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 0.5rem;">
+                                    <span style="display: inline-block; width: 20px; height: 20px; background-color: #922B21; border-radius: 50%;"></span>
+                                    <strong>♯4 = ♭5</strong>
+                                </div>
+                                <small>Both represent the tritone</small>
+                            </div>
+                            <div class="example-item">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 0.5rem;">
+                                    <span style="display: inline-block; width: 20px; height: 20px; background-color: #F4D03F; border-radius: 50%;"></span>
+                                    <strong>♭4 = 3</strong>
+                                </div>
+                                <small>Diminished fourth = Major third</small>
+                            </div>
+                        </div>
+                        
+                        <div class="hover-tip">
+                            💡 <strong>Tip:</strong> Hover over any interval in the app to see its enharmonic equivalent!
+                        </div>
                     </div>
                 </div>
             </div>

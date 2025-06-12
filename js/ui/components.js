@@ -118,8 +118,8 @@ function createFretboard(scale) {
     svg.setAttribute('viewBox', `0 0 ${svgWidth} 280`);
     svg.setAttribute('width', '100%');
     svg.setAttribute('height', '280');
-    svg.style.background = '#f5f5f5';
-    svg.style.border = '2px solid #ddd';
+    svg.style.background = '#2d3748';
+    svg.style.border = '2px solid #4a5568';
     svg.style.borderRadius = '8px';
     
     // Draw fret lines
@@ -131,7 +131,7 @@ function createFretboard(scale) {
         line.setAttribute('y1', 45); // Start just above the strings
         line.setAttribute('x2', x);
         line.setAttribute('y2', 225); // End just below the strings (strings are at y=60 to y=210)
-        line.setAttribute('stroke', actualFret === 0 ? '#000' : '#999');
+        line.setAttribute('stroke', actualFret === 0 ? '#e2e8f0' : '#718096');
         line.setAttribute('stroke-width', actualFret === 0 ? '4' : '2');
         svg.appendChild(line);
         
@@ -141,7 +141,7 @@ function createFretboard(scale) {
             fretNumber.setAttribute('x', 80 + ((fret - 0.5) * fretWidth));
             fretNumber.setAttribute('y', 25);
             fretNumber.setAttribute('text-anchor', 'middle');
-            fretNumber.setAttribute('fill', '#333');
+            fretNumber.setAttribute('fill', '#e2e8f0');
             fretNumber.setAttribute('font-size', displayFrets <= 12 ? '14' : '12');
             fretNumber.setAttribute('font-weight', 'bold');
             fretNumber.textContent = actualFret;
@@ -157,7 +157,7 @@ function createFretboard(scale) {
         line.setAttribute('y1', y);
         line.setAttribute('x2', 80 + (displayFrets * fretWidth));
         line.setAttribute('y2', y);
-        line.setAttribute('stroke', '#666');
+        line.setAttribute('stroke', '#a0aec0');
         line.setAttribute('stroke-width', '2');
         svg.appendChild(line);
         
@@ -166,7 +166,7 @@ function createFretboard(scale) {
         label.setAttribute('x', 60);
         label.setAttribute('y', y + 5);
         label.setAttribute('text-anchor', 'middle');
-        label.setAttribute('fill', '#333');
+        label.setAttribute('fill', '#f7fafc');
         label.setAttribute('font-size', '14');
         label.setAttribute('font-weight', 'bold');
         label.textContent = stringNotes[string];
@@ -334,8 +334,8 @@ function renderModalFretboard(container, scale) {
     svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
     svg.setAttribute('width', '100%');
     svg.setAttribute('height', '100%');
-    svg.style.background = '#f8fafc';
-    svg.style.border = '2px solid #e2e8f0';
+    svg.style.background = '#2d3748';
+    svg.style.border = '2px solid #4a5568';
     svg.style.borderRadius = '12px';
     
     // Draw fret lines
@@ -347,7 +347,7 @@ function renderModalFretboard(container, scale) {
         line.setAttribute('y1', topMargin); // Start just above the strings
         line.setAttribute('x2', x);
         line.setAttribute('y2', topMargin + ((stringNotes.length - 1) * stringSpacing)); // End just below the strings
-        line.setAttribute('stroke', actualFret === 0 ? '#000' : '#999');
+        line.setAttribute('stroke', actualFret === 0 ? '#e2e8f0' : '#718096');
         line.setAttribute('stroke-width', actualFret === 0 ? '5' : '3');
         svg.appendChild(line);
         
@@ -357,7 +357,7 @@ function renderModalFretboard(container, scale) {
             fretNumber.setAttribute('x', leftMargin + ((fret - 0.5) * fretWidth));
             fretNumber.setAttribute('y', topMargin - 15);
             fretNumber.setAttribute('text-anchor', 'middle');
-            fretNumber.setAttribute('fill', '#374151');
+            fretNumber.setAttribute('fill', '#e2e8f0');
             fretNumber.setAttribute('font-size', '20');
             fretNumber.setAttribute('font-weight', 'bold');
             fretNumber.textContent = actualFret;
@@ -382,7 +382,7 @@ function renderModalFretboard(container, scale) {
         label.setAttribute('x', leftMargin - 25);
         label.setAttribute('y', y + 6);
         label.setAttribute('text-anchor', 'middle');
-        label.setAttribute('fill', '#374151');
+        label.setAttribute('fill', '#f7fafc');
         label.setAttribute('font-size', '20');
         label.setAttribute('font-weight', 'bold');
         label.textContent = stringNotes[string];
@@ -471,15 +471,35 @@ function renderModalFretboard(container, scale) {
                     circle.setAttribute('cy', y);
                     circle.setAttribute('r', '18'); // Larger circles for better visibility
                     circle.setAttribute('fill', color);
-                    circle.setAttribute('stroke', 'white');
-                    circle.setAttribute('stroke-width', '3');
+                    
+                    // Determine stroke color based on interval
+                    let strokeColor = 'white'; // Default
+                    if (fretboardState.showIntervals) {
+                        let intervalText = '';
+                        if (isInScale1 && scale1Index >= 0) {
+                            const scale1Root = scale1[0];
+                            const intervals1 = MusicTheory.getIntervals(scale1, scale1Root);
+                            intervalText = intervals1[scale1Index] || '1';
+                        } else if (isInScale2 && scale2Index >= 0) {
+                            const scale2Root = scale2[0];
+                            const intervals2 = MusicTheory.getIntervals(scale2, scale2Root);
+                            intervalText = intervals2[scale2Index] || '1';
+                        }
+                        if (intervalText === '1') {
+                            strokeColor = 'black';
+                        }
+                    }
+                    
+                    circle.setAttribute('stroke', strokeColor);
+                    circle.setAttribute('stroke-width', '2');
                     svg.appendChild(circle);
                     
                     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                     text.setAttribute('x', x);
                     text.setAttribute('y', y + 6);
                     text.setAttribute('text-anchor', 'middle');
-                    text.setAttribute('fill', 'white');
+                    // Use black text for root note (1), white for others
+                    text.setAttribute('fill', interval === '1' ? 'black' : 'white');
                     text.setAttribute('font-size', '14'); // Larger font for better readability
                     text.setAttribute('font-weight', 'bold');
                     // Use the same display mode as the main fretboard
@@ -2535,7 +2555,16 @@ function displayChordType(type, chords) {
                 return; // Let audio controls handle it
             }
             
-            console.log('Chord clicked:', chord);
+            console.log('Traditional chord clicked:', chord);
+            console.log('Chord properties:', Object.keys(chord));
+            console.log('Chord details:', {
+                name: chord.name,
+                notes: chord.notes,
+                quality: chord.quality,
+                degree: chord.degree,
+                roman: chord.roman,
+                function: chord.function
+            });
             highlightChordOnFretboard(chord);
         });
         
@@ -2551,31 +2580,51 @@ function highlightChordOnFretboard(chord) {
 
 // Chord Modal Functions
 function openChordModal(chord, key) {
+    console.log('openChordModal called with:', { chord, key });
+    
     const modal = document.getElementById('chord-modal');
     const modalTitle = document.getElementById('chord-modal-title');
     const chordNameDisplay = document.getElementById('chord-name-display');
     const chordNotesDisplay = document.getElementById('chord-notes-display');
     const chordQualityDisplay = document.getElementById('chord-quality-display');
     
-    if (!modal || !modalTitle || !chordNameDisplay || !chordNotesDisplay || !chordQualityDisplay) return;
-
-    // Set modal title
-    modalTitle.textContent = `${chord.symbol} Chord`;
+    if (!modal || !modalTitle || !chordNameDisplay || !chordNotesDisplay || !chordQualityDisplay) {
+        console.error('Chord modal elements not found');
+        return;
+    }
     
-    // Update chord information using the correct modal elements
-    chordNameDisplay.textContent = chord.symbol;
-    chordNotesDisplay.textContent = `Notes: ${chord.notes.join(', ')}`;
-    chordQualityDisplay.textContent = `Quality: ${chord.quality}`;
+    let chordSymbol, chordNotes, chordQuality;
     
-    // Clear and render chord fretboard
+    if (typeof chord === 'string') {
+        // Handle characteristic chords (string chord name + root note)
+        console.log('Handling characteristic chord (string):', chord, 'with key:', key);
+        chordSymbol = chord;
+        // For characteristic chords, we don't have the notes calculated, so we'll show basic info
+        chordNotes = `Based on ${key || 'C'} scale`;
+        chordQuality = 'See fretboard for notes';
+    } else if (chord && typeof chord === 'object') {
+        // Handle traditional chords (object with name, notes, quality properties)
+        console.log('Handling traditional chord (object):', chord);
+        chordSymbol = chord.symbol || chord.name || 'Unknown';
+        chordNotes = chord.notes ? chord.notes.join(' - ') : 'Notes not available';
+        chordQuality = chord.quality || 'Quality not specified';
+    } else {
+        console.error('Invalid chord data format:', chord);
+        return;
+    }
+    
+    // Update modal content
+    modalTitle.textContent = chordSymbol;
+    chordNameDisplay.textContent = chordSymbol;
+    chordNotesDisplay.textContent = chordNotes;
+    chordQualityDisplay.textContent = chordQuality;
+    
+    // Render the chord fretboard
     renderChordFretboard(chord, key);
     
     // Show modal
     modal.classList.remove('hidden');
     modal.style.display = 'block';
-    
-    // Add escape key listener
-    document.addEventListener('keydown', handleChordModalEscape);
 }
 
 function closeChordModal() {
@@ -2810,21 +2859,25 @@ function renderChordFretboard(chord, key) {
                         MusicTheory.areEnharmonicEquivalents(chordNote, rootNote) :
                         chordNote === rootNote;
                     
+                    console.log(`Note: ${chordNote}, Root: ${rootNote}, isRoot: ${isRoot}`);
+                    
                     // Determine interval and color
                     let interval = '1'; // Default to root
-                    let intervalColor = window.colorsVisible ? 
-                        MusicTheory.getIntervalColor('1') : '#d97706';
+                    let intervalColor;
                     
                     if (isRoot) {
                         interval = '1';
-                        intervalColor = window.colorsVisible ? 
-                            MusicTheory.getIntervalColor('1') : '#d97706';
+                        // Root notes are always white with black text/stroke
+                        intervalColor = '#FFFFFF';
+                        console.log(`Setting root note ${chordNote} to white (#FFFFFF)`);
                     } else {
                         // Use the same interval calculation as scales
                         const chordIntervals = MusicTheory.getIntervals(chord.notes, rootNote);
                         interval = chordIntervals[chordNoteIndex] || '1';
+                        // Non-root notes use interval colors if colors are visible
                         intervalColor = window.colorsVisible ? 
                             MusicTheory.getIntervalColor(interval) : '#d97706';
+                        console.log(`Setting non-root note ${chordNote} (interval ${interval}) to color ${intervalColor}`);
                     }
                     
                     // Position notes - optimized positioning
@@ -2837,27 +2890,35 @@ function renderChordFretboard(chord, key) {
                     circle.setAttribute('cy', y);
                     circle.setAttribute('r', circleRadius);
                     circle.setAttribute('fill', intervalColor);
-                    circle.setAttribute('stroke', 'white');
-                    circle.setAttribute('stroke-width', '3');
+                    circle.setAttribute('style', `fill: ${intervalColor} !important;`);
+                    // Use black stroke for root note (1), white for others
+                    circle.setAttribute('stroke', isRoot || interval === '1' ? 'black' : 'white');
+                    circle.setAttribute('stroke-width', '2');
                     circle.setAttribute('class', isRoot ? 'note-dot root' : 'note-dot');
                     svg.appendChild(circle);
                     
                     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                     text.setAttribute('x', x);
-                    text.setAttribute('y', y);
+                    text.setAttribute('y', y + 4);
                     text.setAttribute('text-anchor', 'middle');
-                    text.setAttribute('dominant-baseline', 'central');
-                    text.setAttribute('fill', 'white');
-                    text.setAttribute('font-size', isRotated ? '12' : '14');
-                    text.setAttribute('font-weight', 'bold');
-                    text.setAttribute('class', 'note-text');
+                    
+                    // Determine what to display based on toggle state
+                    let displayText = chordNote; // Default to note name
+                    let isRootNote = isRoot;
                     
                     if (displayMode === 'intervals') {
-                        text.textContent = interval;
-                    } else {
-                        // Use the chord note name directly (it's already properly spelled)
-                        text.textContent = chordNote;
+                        // Show interval instead of note name
+                        displayText = interval;
+                        isRootNote = interval === '1';
                     }
+                    
+                    // Use black text for root note (1), white for others
+                    text.setAttribute('fill', isRootNote ? 'black' : 'white');
+                    text.setAttribute('style', `fill: ${isRootNote ? 'black' : 'white'} !important;`);
+                    text.setAttribute('font-size', isRotated ? '12' : '14');
+                    text.setAttribute('font-weight', 'bold');
+                    
+                    text.textContent = displayText;
                     
                     svg.appendChild(text);
                 }
@@ -2915,6 +2976,8 @@ window.UIComponents = {
     renderChordFretboard,
     openChordVoicingModal,
     closeChordVoicingModal,
+    openIntervalInfoModal,
+    closeIntervalInfoModal,
     enterCompareMode,
     exitCompareMode,
     updateScaleColor,
@@ -3583,7 +3646,8 @@ function renderSingleScale(svg, scale, displayFrets, fretWidth) {
                 text.setAttribute('x', x);
                 text.setAttribute('y', y + 4);
                 text.setAttribute('text-anchor', 'middle');
-                text.setAttribute('fill', 'white');
+                // Use black text for root note (1), white for others
+                text.setAttribute('fill', interval === '1' ? 'black' : 'white');
                 text.setAttribute('font-size', '10');
                 text.setAttribute('font-weight', 'bold');
                 // Show intervals or notes based on toggle state
@@ -3746,6 +3810,8 @@ function renderComparisonFretboard(svg, scale1, scale2, displayFrets, fretWidth)
                     
                     if (intervalText) {
                         displayText = intervalText;
+                        // Update text color for root notes
+                        text.setAttribute('fill', intervalText === '1' ? 'black' : 'white');
                     }
                 }
                 
@@ -3794,5 +3860,31 @@ function closeChordVoicingModal() {
 function handleChordVoicingModalEscape(e) {
     if (e.key === 'Escape') {
         closeChordVoicingModal();
+    }
+}
+
+function openIntervalInfoModal() {
+    const modal = document.getElementById('interval-info-modal');
+    if (!modal) return;
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    modal.style.display = 'block';
+    
+    // Add escape key listener
+    document.addEventListener('keydown', handleIntervalInfoModalEscape);
+}
+
+function closeIntervalInfoModal() {
+    const modal = document.getElementById('interval-info-modal');
+    modal.classList.add('hidden');
+    
+    // Remove escape key listener
+    document.removeEventListener('keydown', handleIntervalInfoModalEscape);
+}
+
+function handleIntervalInfoModalEscape(e) {
+    if (e.key === 'Escape') {
+        closeIntervalInfoModal();
     }
 }
