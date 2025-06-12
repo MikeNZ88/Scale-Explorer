@@ -3385,12 +3385,12 @@ body {
 }
 
 #chord-modal .fret-number {
-    fill: #666 !important;
+    fill: #fff !important;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
 }
 
 #chord-modal .string-label {
-    fill: #666 !important;
+    fill: #fff !important;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
 }
 

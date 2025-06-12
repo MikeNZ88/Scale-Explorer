@@ -2745,7 +2745,7 @@ function renderChordFretboard(chord, key) {
                 // Position higher above the fretboard to avoid any overlap with dots
                 fretNumber.setAttribute('y', topMargin - 35);
                 fretNumber.setAttribute('text-anchor', 'middle');
-                fretNumber.setAttribute('fill', '#374151');
+                fretNumber.setAttribute('fill', '#FFFFFF');
                 fretNumber.setAttribute('font-size', isRotated ? '16' : '18');
                 fretNumber.setAttribute('font-weight', 'bold');
                 fretNumber.textContent = fret;
@@ -2770,7 +2770,7 @@ function renderChordFretboard(chord, key) {
             label.setAttribute('x', leftMargin - 25);
             label.setAttribute('y', y + 6);
             label.setAttribute('text-anchor', 'middle');
-            label.setAttribute('fill', '#374151');
+            label.setAttribute('fill', '#FFFFFF');
             label.setAttribute('font-size', isRotated ? '16' : '18');
             label.setAttribute('font-weight', 'bold');
             label.textContent = stringNotes[stringCount - 1 - string]; // Reverse order for display
