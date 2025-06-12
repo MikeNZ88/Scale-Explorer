@@ -1556,31 +1556,25 @@ function calculateAugmentedScaleSpelling(root, formula, spellingConvention) {
 }
 
 function getParentScaleName(category, parentRoot) {
-    switch(category) {
-        case 'major-modes':
-            return `${parentRoot} Major`;
-        case 'harmonic-minor-modes':
-            return `${parentRoot} Harmonic Minor`;
-        case 'harmonic-major-modes':
-            return `${parentRoot} Harmonic Major`;
-        case 'melodic-minor-modes':
-            return `${parentRoot} Melodic Minor`;
-        case 'diminished-modes':
-            return `Diminished Scale starting from ${parentRoot}`;
-        case 'pentatonic-modes':
-            return `${parentRoot} Major Pentatonic`;
-        case 'blues-modes':
-        case 'blues-scales':
-            return `${parentRoot} Blues Scale`;
-        case 'barry-harris':
-            return `${parentRoot} 6th Diminished Scale`;
-        case 'whole-tone':
-            return `Whole Tone Scale`;
-        case 'chromatic':
-            return `Chromatic Scale`;
-        default:
-            return `${parentRoot} Scale`;
+    console.log('Getting parent scale name for:', category, parentRoot);
+    
+    if (!category || !parentRoot) return '';
+    
+    const categoryData = MusicConstants.scaleCategories[category];
+    if (!categoryData) return '';
+    
+    // For traditional modes (major, minor, dorian, etc.)
+    if (category === 'church-modes' || category === 'natural-minor-modes') {
+        return `All modes derive from the same scale, starting on different degrees`;
     }
+    
+    // For pentatonic modes
+    if (category === 'pentatonic') {
+        return `These modes are derived from: ${parentRoot} Major Pentatonic`;
+    }
+    
+    // For other categories, use the category name
+    return `These modes are derived from: ${parentRoot} ${categoryData.name}`;
 }
 
 // Search functionality
@@ -2532,19 +2526,19 @@ function highlightChordOnFretboard(chord) {
 function openChordModal(chord, key) {
     const modal = document.getElementById('chord-modal');
     const modalTitle = document.getElementById('chord-modal-title');
-    const chordInfoSection = document.querySelector('.chord-info');
+    const chordNameDisplay = document.getElementById('chord-name-display');
+    const chordNotesDisplay = document.getElementById('chord-notes-display');
+    const chordQualityDisplay = document.getElementById('chord-quality-display');
     
-    if (!modal || !modalTitle || !chordInfoSection) return;
+    if (!modal || !modalTitle || !chordNameDisplay || !chordNotesDisplay || !chordQualityDisplay) return;
 
     // Set modal title
     modalTitle.textContent = `${chord.symbol} Chord`;
     
-    // Update chord information
-    chordInfoSection.innerHTML = `
-        <h3>${chord.symbol}</h3>
-        <p><strong>Notes:</strong> ${chord.notes.join(', ')}</p>
-        <p><em>Quality:</em> ${chord.quality}</p>
-    `;
+    // Update chord information using the correct modal elements
+    chordNameDisplay.textContent = chord.symbol;
+    chordNotesDisplay.textContent = `Notes: ${chord.notes.join(', ')}`;
+    chordQualityDisplay.textContent = `Quality: ${chord.quality}`;
     
     // Clear and render chord fretboard
     renderChordFretboard(chord, key);
@@ -2578,27 +2572,31 @@ function renderChordFretboard(chord, key) {
     // Clear existing content
     container.innerHTML = '';
 
-    // Create toggle controls (matching the main fretboard)
-    const toggleContainer = document.createElement('div');
-    toggleContainer.className = 'fretboard-toggle-container';
-    toggleContainer.innerHTML = `
-        <div class="fretboard-toggle-wrapper">
-            <button class="fretboard-toggle-btn active" data-display="notes">Notes</button>
-            <button class="fretboard-toggle-btn" data-display="intervals">Intervals</button>
+    // Create control section with toggles and rotation
+    const controlsContainer = document.createElement('div');
+    controlsContainer.className = 'chord-controls-container';
+    controlsContainer.innerHTML = `
+        <div class="chord-controls-row">
+            <div class="fretboard-toggle-wrapper">
+                <button class="fretboard-toggle-btn active" data-display="notes">Notes</button>
+                <button class="fretboard-toggle-btn" data-display="intervals">Intervals</button>
+            </div>
+            <button class="rotation-btn" title="Rotate for mobile viewing">🔄</button>
         </div>
     `;
-    container.appendChild(toggleContainer);
+    container.appendChild(controlsContainer);
 
     // Create fretboard display container
     const displayContainer = document.createElement('div');
     displayContainer.className = 'fretboard-display-container';
     container.appendChild(displayContainer);
 
-    // State for display mode
+    // State for display mode and rotation
     let displayMode = 'notes';
+    let isRotated = false;
 
     // Add toggle event listeners
-    const toggleButtons = toggleContainer.querySelectorAll('.fretboard-toggle-btn');
+    const toggleButtons = controlsContainer.querySelectorAll('.fretboard-toggle-btn');
     toggleButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             toggleButtons.forEach(b => b.classList.remove('active'));
@@ -2608,25 +2606,47 @@ function renderChordFretboard(chord, key) {
         });
     });
 
+    // Add rotation event listener
+    const rotationBtn = controlsContainer.querySelector('.rotation-btn');
+    rotationBtn.addEventListener('click', () => {
+        isRotated = !isRotated;
+        displayContainer.classList.toggle('rotated', isRotated);
+        renderFretboard();
+    });
+
     function renderFretboard() {
-        // Optimized dimensions for better space usage
+        // Dynamic dimensions based on rotation
         const fretCount = 12;
         const stringCount = 6;
-        const fretWidth = 90;  // Increased from 80
-        const stringSpacing = 45; // Increased from 40
-        const leftMargin = 80; // Reduced from 100
-        const topMargin = 50; // Reduced from previous value
-        const svgWidth = leftMargin + (fretCount * fretWidth) + 20;
-        const svgHeight = topMargin + ((stringCount - 1) * stringSpacing) + 60;
+        
+        let fretWidth, stringSpacing, leftMargin, topMargin, svgWidth, svgHeight;
+        
+        if (isRotated) {
+            // Rotated (mobile-friendly) dimensions
+            fretWidth = 60;
+            stringSpacing = 35;
+            leftMargin = 60;
+            topMargin = 80;
+            svgWidth = leftMargin + (fretCount * fretWidth) + 20;
+            svgHeight = topMargin + ((stringCount - 1) * stringSpacing) + 40;
+        } else {
+            // Normal (desktop) dimensions
+            fretWidth = 90;
+            stringSpacing = 45;
+            leftMargin = 80;
+            topMargin = 80; // Increased to prevent overlap
+            svgWidth = leftMargin + (fretCount * fretWidth) + 20;
+            svgHeight = topMargin + ((stringCount - 1) * stringSpacing) + 60;
+        }
 
-        // Create SVG with optimized structure
+        // Create SVG with dynamic structure
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('class', 'fretboard-svg');
         svg.setAttribute('width', svgWidth);
         svg.setAttribute('height', svgHeight);
         svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
 
-        // Standard guitar tuning (low to high) - SAME ORDER AS MAIN FRETBOARD
+        // Standard guitar tuning (low to high)
         const stringNotes = ['E', 'A', 'D', 'G', 'B', 'E'];
         const stringMidiNotes = [40, 45, 50, 55, 59, 64];
 
@@ -2642,14 +2662,15 @@ function renderChordFretboard(chord, key) {
             line.setAttribute('stroke-width', fret === 0 ? '4' : '2');
             svg.appendChild(line);
 
-            // Fret numbers (only for frets 1-12)
+            // Fret numbers - positioned to avoid overlap with high E string
             if (fret > 0) {
                 const fretNumber = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 fretNumber.setAttribute('x', leftMargin + ((fret - 0.5) * fretWidth));
-                fretNumber.setAttribute('y', topMargin - 15);
+                // Position higher above the fretboard to avoid any overlap with dots
+                fretNumber.setAttribute('y', topMargin - 35);
                 fretNumber.setAttribute('text-anchor', 'middle');
                 fretNumber.setAttribute('fill', '#374151');
-                fretNumber.setAttribute('font-size', '20');
+                fretNumber.setAttribute('font-size', isRotated ? '16' : '18');
                 fretNumber.setAttribute('font-weight', 'bold');
                 fretNumber.textContent = fret;
                 svg.appendChild(fretNumber);
@@ -2674,7 +2695,7 @@ function renderChordFretboard(chord, key) {
             label.setAttribute('y', y + 6);
             label.setAttribute('text-anchor', 'middle');
             label.setAttribute('fill', '#374151');
-            label.setAttribute('font-size', '20');
+            label.setAttribute('font-size', isRotated ? '16' : '18');
             label.setAttribute('font-weight', 'bold');
             label.textContent = stringNotes[stringCount - 1 - string]; // Reverse order for display
             svg.appendChild(label);
@@ -2688,26 +2709,31 @@ function renderChordFretboard(chord, key) {
             
             if (markerFret === 12) {
                 // Double dots for 12th fret
+                const dotSize = isRotated ? 8 : 10;
                 const marker1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 marker1.setAttribute('cx', x);
                 marker1.setAttribute('cy', centerY - stringSpacing * 0.8);
-                marker1.setAttribute('r', '10');
+                marker1.setAttribute('r', dotSize);
                 marker1.setAttribute('fill', '#d1d5db');
+                marker1.setAttribute('class', 'inlay-dot');
                 svg.appendChild(marker1);
                 
                 const marker2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 marker2.setAttribute('cx', x);
                 marker2.setAttribute('cy', centerY + stringSpacing * 0.8);
-                marker2.setAttribute('r', '10');
+                marker2.setAttribute('r', dotSize);
                 marker2.setAttribute('fill', '#d1d5db');
+                marker2.setAttribute('class', 'inlay-dot');
                 svg.appendChild(marker2);
             } else {
                 // Single dot for other markers
+                const dotSize = isRotated ? 8 : 10;
                 const marker = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 marker.setAttribute('cx', x);
                 marker.setAttribute('cy', centerY);
-                marker.setAttribute('r', '10');
+                marker.setAttribute('r', dotSize);
                 marker.setAttribute('fill', '#d1d5db');
+                marker.setAttribute('class', 'inlay-dot');
                 svg.appendChild(marker);
             }
         });
@@ -2778,22 +2804,26 @@ function renderChordFretboard(chord, key) {
                     const x = fret === 0 ? leftMargin - 30 : leftMargin + ((fret - 0.5) * fretWidth);
                     const y = topMargin + (string * stringSpacing);
                     
+                    const circleRadius = isRotated ? 15 : 18;
                     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                     circle.setAttribute('cx', x);
                     circle.setAttribute('cy', y);
-                    circle.setAttribute('r', '18'); // Larger circles for better visibility
+                    circle.setAttribute('r', circleRadius);
                     circle.setAttribute('fill', intervalColor);
                     circle.setAttribute('stroke', 'white');
                     circle.setAttribute('stroke-width', '3');
+                    circle.setAttribute('class', isRoot ? 'note-dot root' : 'note-dot');
                     svg.appendChild(circle);
                     
                     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                     text.setAttribute('x', x);
-                    text.setAttribute('y', y + 6);
+                    text.setAttribute('y', y);
                     text.setAttribute('text-anchor', 'middle');
+                    text.setAttribute('dominant-baseline', 'central');
                     text.setAttribute('fill', 'white');
-                    text.setAttribute('font-size', '14'); // Larger font for better readability
+                    text.setAttribute('font-size', isRotated ? '12' : '14');
                     text.setAttribute('font-weight', 'bold');
+                    text.setAttribute('class', 'note-text');
                     
                     if (displayMode === 'intervals') {
                         text.textContent = interval;
@@ -2845,28 +2875,25 @@ function isEnharmonicEquivalent(note1, note2) {
 
 // Export all functions
 window.UIComponents = {
-    createFretboard,
-    openFretboardModal,
-    renderModalFretboard,
-    closeFretboardModal,
-    openChordModal,
-    closeChordModal,
-    openChordVoicingModal,
-    closeChordVoicingModal,
-    renderChordFretboard,
-    setOptimalModalSize,
-    handleMobileOrientation,
-    makeDraggable,
-    makeResizable,
     displayScale,
     displayNotes,
     displayIntervals,
     displayFormula,
+    createFretboard,
+    openFretboardModal,
+    closeFretboardModal,
+    setOptimalModalSize,
+    openChordModal,
+    closeChordModal,
+    renderChordFretboard,
+    openChordVoicingModal,
+    closeChordVoicingModal,
+    enterCompareMode,
+    exitCompareMode,
     updateScaleColor,
     updateParentScale,
     updateModeName,
-    createRelatedModes,
-    initializeSearch
+    createRelatedModes
 };
 
 // Scale playback functionality
@@ -3426,6 +3453,12 @@ function populateComparisonModes(categoryKey) {
 
 // Helper function to format mode names for display
 function formatModeName(mode) {
+    // Use proper mode names from constants if available
+    if (MusicConstants && MusicConstants.modeNumbers && MusicConstants.modeNumbers[mode]) {
+        return MusicConstants.modeNumbers[mode].properName;
+    }
+    
+    // Fallback to basic formatting if not found in constants
     return mode
         .split('-')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))

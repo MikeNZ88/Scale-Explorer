@@ -19,22 +19,18 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('AppController module not loaded');
     }
     
-    // Initialize search functionality
-    if (window.UIComponents && window.UIComponents.initializeSearch) {
-        UIComponents.initializeSearch();
-        console.log('Search functionality initialized');
-        } else {
-        console.error('Search functionality not available');
-    }
+    // Initialize UI components
+    UIComponents.displayScale([], [], [], '', '');
     
     // Initialize audio controls
     if (window.AudioControls) {
-        window.audioControls = window.AudioControls;
-        window.audioControls.initialize();
+        new AudioControls();
         console.log('Audio controls initialized');
     } else {
-        console.error('AudioControls module not loaded');
+        console.error('Audio controls not available');
     }
+    
+    console.log('Guitar Scale Explorer initialized successfully');
 });
 
 // Legacy compatibility layer
