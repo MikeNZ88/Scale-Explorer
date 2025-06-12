@@ -355,7 +355,7 @@ function renderModalFretboard(container, scale) {
         if (fret > 0) {
             const fretNumber = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             fretNumber.setAttribute('x', leftMargin + ((fret - 0.5) * fretWidth));
-            fretNumber.setAttribute('y', topMargin - 15);
+            fretNumber.setAttribute('y', topMargin - 35);
             fretNumber.setAttribute('text-anchor', 'middle');
             fretNumber.setAttribute('fill', '#e2e8f0');
             fretNumber.setAttribute('font-size', '20');
