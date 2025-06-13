@@ -2871,13 +2871,20 @@ function renderChordFretboard(chord, key) {
                         intervalColor = '#FFFFFF';
                         console.log(`Setting root note ${chordNote} to white (#FFFFFF)`);
                     } else {
-                        // Use the same interval calculation as scales
-                        const chordIntervals = MusicTheory.getIntervals(chord.notes, rootNote);
+                        // Use the chord-specific interval calculation
+                        const chordIntervals = MusicTheory.getChordIntervals(chord.notes, rootNote);
                         interval = chordIntervals[chordNoteIndex] || '1';
+                        
+                        // Map extended intervals to simple intervals for color consistency
+                        let colorInterval = interval;
+                        if (interval === '9' || interval === 'b9') colorInterval = '2';
+                        else if (interval === '11' || interval === '#11') colorInterval = '4';
+                        else if (interval === '13' || interval === 'b13') colorInterval = '6';
+                        
                         // Non-root notes use interval colors if colors are visible
                         intervalColor = window.colorsVisible ? 
-                            MusicTheory.getIntervalColor(interval) : '#d97706';
-                        console.log(`Setting non-root note ${chordNote} (interval ${interval}) to color ${intervalColor}`);
+                            MusicTheory.getIntervalColor(colorInterval) : '#d97706';
+                        console.log(`Setting non-root note ${chordNote} (interval ${interval}, color interval ${colorInterval}) to color ${intervalColor}`);
                     }
                     
                     // Position notes - optimized positioning

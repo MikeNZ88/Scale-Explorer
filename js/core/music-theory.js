@@ -1861,9 +1861,7 @@ function getIntervalName(semitones) {
 function getIntervalBetweenNotes(note1, note2) {
     const noteToIndex = (note) => {
         const noteMap = {
-            'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4,
-            'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9,
-            'A#': 10, 'Bb': 10, 'B': 11,
+            'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11,
             'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
         };
         return noteMap[note] !== undefined ? noteMap[note] : 0;
@@ -2688,6 +2686,72 @@ function getEnharmonicTooltip(value, type = 'note') {
     return null;
 }
 
+function getChordIntervals(chordNotes, rootNote) {
+    if (!chordNotes || !Array.isArray(chordNotes) || chordNotes.length === 0) {
+        return [];
+    }
+    
+    function noteToIndex(note) {
+        const noteMap = { 'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11 };
+        return noteMap[note] !== undefined ? noteMap[note] : 0;
+    }
+    
+    const rootIndex = noteToIndex(rootNote);
+    
+    // First pass: identify what tertiary chord tones (1, 3, 5, 7) are present
+    const tertiaryTones = {
+        hasThird: false,        // 3 or ♭3 (semitones 3-4)
+        hasPerfectFifth: false, // ONLY perfect 5 (semitone 7) - NOT ♭5
+        hasSeventh: false       // 7 or ♭7 (semitones 10-11)
+    };
+    
+    // Check which tertiary tones exist in the chord
+    chordNotes.forEach(note => {
+        const noteIndex = noteToIndex(note);
+        const semitones = (noteIndex - rootIndex + 12) % 12;
+        
+        if (semitones === 3 || semitones === 4) tertiaryTones.hasThird = true;
+        if (semitones === 7) tertiaryTones.hasPerfectFifth = true; // ONLY perfect fifth!
+        if (semitones === 10 || semitones === 11) tertiaryTones.hasSeventh = true;
+    });
+    
+    // Second pass: determine intervals based on context
+    const intervals = chordNotes.map((note, index) => {
+        const noteIndex = noteToIndex(note);
+        const semitones = (noteIndex - rootIndex + 12) % 12;
+        
+        switch (semitones) {
+            case 0: return '1';    // Root
+            case 1: 
+                // ♭9 if third exists, ♭2 if no third
+                return tertiaryTones.hasThird ? 'b9' : 'b2';
+            case 2: 
+                // 9 if third exists, 2 if no third
+                return tertiaryTones.hasThird ? '9' : '2';
+            case 3: return 'b3';   // Minor third (always tertiary)
+            case 4: return '3';    // Major third (always tertiary)
+            case 5: 
+                // 11 if seventh exists, 4 if no seventh
+                return tertiaryTones.hasSeventh ? '11' : '4';
+            case 6: 
+                // #11 if perfect fifth exists, ♭5 if no perfect fifth
+                return tertiaryTones.hasPerfectFifth ? '#11' : 'b5';
+            case 7: return '5';    // Perfect fifth (always tertiary)
+            case 8: 
+                // ♭13 if seventh exists, ♭6 if no seventh
+                return tertiaryTones.hasSeventh ? 'b13' : 'b6';
+            case 9: 
+                // 13 if seventh exists, 6 if no seventh
+                return tertiaryTones.hasSeventh ? '13' : '6';
+            case 10: return 'b7';  // Minor seventh (always tertiary)
+            case 11: return '7';   // Major seventh (always tertiary)
+            default: return '1';
+        }
+    });
+    
+    return intervals;
+}
+
 // Export all functions
 window.MusicTheory = {
     hexToRgb,
@@ -2732,5 +2796,6 @@ window.MusicTheory = {
     getChromaticScaleChords,
     getEnharmonicEquivalent,
     getIntervalEnharmonicEquivalent,
-    getEnharmonicTooltip
+    getEnharmonicTooltip,
+    getChordIntervals
 };
