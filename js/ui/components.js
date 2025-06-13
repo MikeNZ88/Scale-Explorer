@@ -55,11 +55,7 @@ function createFretboard(scale) {
     controlsDiv.className = 'fretboard-controls';
     controlsDiv.innerHTML = `
         <div class="fret-range-selector">
-            <label>View: </label>
-            <select id="fret-range-select">
-                <option value="12" ${fretboardState.fretRange === 12 ? 'selected' : ''}>12 Frets</option>
-                <option value="24" ${fretboardState.fretRange === 24 ? 'selected' : ''}>24 Frets</option>
-            </select>
+            <button id="fret-range-toggle" class="toggle-btn">${fretboardState.fretRange === 12 ? '12 Frets' : '24 Frets'}</button>
         </div>
         <div class="display-toggle">
             <button id="toggle-display" class="toggle-btn">${fretboardState.showIntervals ? 'Show Notes' : 'Show Intervals'}</button>
@@ -71,8 +67,8 @@ function createFretboard(scale) {
     fretboardContainer.appendChild(controlsDiv);
     
     // Add event listeners for controls
-    document.getElementById('fret-range-select').addEventListener('change', (e) => {
-        fretboardState.fretRange = parseInt(e.target.value);
+    document.getElementById('fret-range-toggle').addEventListener('click', () => {
+        fretboardState.fretRange = fretboardState.fretRange === 12 ? 24 : 12;
         fretboardState.startFret = 0; // Always start from fret 0
         createFretboard(scale);
     });
