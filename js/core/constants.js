@@ -33,7 +33,7 @@ const scaleFormulas = {
     'super-locrian': [1, 2, 1, 2, 2, 2, 2],
     
     // Diminished modes
-    'wh-diminished': [2, 1, 2, 1, 2, 1, 2, 1],  // W-H pattern
+            'wh-diminished': [2, 1, 2, 1, 2, 1, 2, 1],  // W-H pattern
     'hw-diminished': [1, 2, 1, 2, 1, 2, 1, 2],   // H-W pattern
     
     // Pentatonic scales
@@ -44,11 +44,11 @@ const scaleFormulas = {
     'minor-pentatonic': [3, 2, 2, 3, 2],
     
     // Whole tone scales
-    'whole-tone-1': [2, 2, 2, 2, 2, 2],  // Rotation 1
-    'whole-tone-2': [2, 2, 2, 2, 2, 2],  // Rotation 2
-    'whole-tone-3': [2, 2, 2, 2, 2, 2],  // Rotation 3
-    'whole-tone-4': [2, 2, 2, 2, 2, 2],  // Rotation 4
-    'whole-tone-5': [2, 2, 2, 2, 2, 2],  // Rotation 5
+            'whole-tone-1': [2, 2, 2, 2, 2, 2],  // Rotation 1
+            'whole-tone-2': [2, 2, 2, 2, 2, 2],  // Rotation 2
+            'whole-tone-3': [2, 2, 2, 2, 2, 2],  // Rotation 3
+            'whole-tone-4': [2, 2, 2, 2, 2, 2],  // Rotation 4
+            'whole-tone-5': [2, 2, 2, 2, 2, 2],  // Rotation 5
     'whole-tone-6': [2, 2, 2, 2, 2, 2],  // Rotation 6
     
     // Blues scales
