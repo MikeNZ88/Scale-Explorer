@@ -2321,7 +2321,7 @@ function getDiminishedScaleChords(scale) {
         console.log('Invalid scale length:', scale ? scale.length : 'null');
         return { chords: [] };
     }
-
+    
     const getChromaticIndex = (note) => {
         const noteToIndex = {
             'C': 0, 'B#': 0,
@@ -2485,7 +2485,7 @@ function getDiminishedScaleChords(scale) {
     // Add diminished triads first if found
     if (diminishedTriads.length > 0) {
         result.chords.push({
-            type: 'Diminished Triads',
+                type: 'Diminished Triads',
             description: `${diminishedTriads.length} diminished triads found in the scale`,
             chords: diminishedTriads.map(c => c.chord)
         });
@@ -2494,7 +2494,7 @@ function getDiminishedScaleChords(scale) {
     // Add major triads if found (without emphasis to match other chord colors)
     if (majorTriads.length > 0) {
         result.chords.push({
-            type: 'Major Triads',
+                type: 'Major Triads',
             description: `${majorTriads.length} major triads found in the diminished scale`,
             chords: majorTriads.map(c => c.chord)
         });

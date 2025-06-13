@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guitar Scale Explorer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -73,46 +76,53 @@
             </div>
 
             <!-- Mode Information - Moved below fretboard -->
-            <div class="scale-section mode-info" style="display: none;">
-                <h3>Mode Information</h3>
-                <div class="mode-details">
-                    <div class="mode-mood">
-                        <strong>Mood:</strong> <span></span>
+            <div class="scale-section mode-info">
+                <div class="mode-info-header" onclick="toggleModeInfo()">
+                    <h3>Scale Information</h3>
+                    <span class="mode-info-toggle">▼</span>
+                </div>
+                <div class="mode-details" id="mode-details">
+                    <div class="mode-metadata">
+                        <div class="mode-mood">
+                            <strong>Mood:</strong> <span></span>
+                        </div>
+                        <div class="mode-description">
+                            <strong>Description:</strong> <span></span>
+                        </div>
+                        <div class="mode-applications">
+                            <strong>Applications:</strong>
+                            <div class="application-tags">
+                                <!-- Application tags will be populated by JavaScript -->
+                            </div>
+                        </div>
                     </div>
-                    <div class="mode-description">
-                        <strong>Description:</strong> <span></span>
-                    </div>
-                    <div class="mode-applications">
-                        <strong>Applications:</strong>
-                        <div class="application-tags">
-                            <!-- Application tags will be populated by JavaScript -->
+                    
+                    <div class="scale-theory-content">
+                        <div class="scale-section">
+                            <h3>Notes</h3>
+                            <div class="notes">
+                                <!-- Notes will be populated by JavaScript -->
+                            </div>
+                        </div>
+
+                        <div class="scale-section">
+                            <h3>Intervals</h3>
+                            <div class="intervals">
+                                <!-- Intervals will be populated by JavaScript -->
+                            </div>
+                        </div>
+
+                        <div class="scale-section">
+                            <h3>Formula</h3>
+                            <div class="formula">
+                                <!-- Formula will be populated by JavaScript -->
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="scale-content">
-                <div class="scale-section">
-                    <h3>Notes</h3>
-                    <div class="notes">
-                        <!-- Notes will be populated by JavaScript -->
-                    </div>
-                </div>
-
-                <div class="scale-section">
-                    <h3>Intervals</h3>
-                    <div class="intervals">
-                        <!-- Intervals will be populated by JavaScript -->
-                    </div>
-                </div>
-
-                <div class="scale-section">
-                    <h3>Formula</h3>
-                    <div class="formula">
-                        <!-- Formula will be populated by JavaScript -->
-                    </div>
-                </div>
-
                 <div class="scale-section related-modes">
                     <h4>Related Modes</h4>
                     <div class="mode-buttons">

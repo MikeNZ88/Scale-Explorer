@@ -314,9 +314,20 @@ function updateModeInfo(mode, category) {
     
     modeInfoDiv.style.display = 'block';
     
-    const moodElement = modeInfoDiv.querySelector('.mode-mood');
-    const descriptionElement = modeInfoDiv.querySelector('.mode-description');
-    const applicationsElement = modeInfoDiv.querySelector('.mode-applications');
+    // Initialize as expanded by default
+    const modeDetails = document.getElementById('mode-details');
+    const toggleIcon = document.querySelector('.mode-info-toggle');
+    
+    if (modeDetails && toggleIcon) {
+        modeDetails.classList.remove('collapsed');
+        modeDetails.classList.add('expanded');
+        toggleIcon.classList.remove('collapsed');
+        toggleIcon.textContent = '▼';
+    }
+    
+    const moodElement = modeInfoDiv.querySelector('.mode-mood span');
+    const descriptionElement = modeInfoDiv.querySelector('.mode-description span');
+    const applicationsElement = modeInfoDiv.querySelector('.application-tags');
     
     if (moodElement) {
         moodElement.textContent = modeData.mood;
@@ -496,6 +507,33 @@ function setState(newState) {
         updateScale();
     }
 }
+
+// Global function to toggle mode information visibility
+function toggleModeInfo() {
+    const modeDetails = document.getElementById('mode-details');
+    const toggleIcon = document.querySelector('.mode-info-toggle');
+    
+    if (!modeDetails || !toggleIcon) return;
+    
+    const isCollapsed = modeDetails.classList.contains('collapsed');
+    
+    if (isCollapsed) {
+        // Expand
+        modeDetails.classList.remove('collapsed');
+        modeDetails.classList.add('expanded');
+        toggleIcon.classList.remove('collapsed');
+        toggleIcon.textContent = '▼';
+    } else {
+        // Collapse
+        modeDetails.classList.remove('expanded');
+        modeDetails.classList.add('collapsed');
+        toggleIcon.classList.add('collapsed');
+        toggleIcon.textContent = '▶';
+    }
+}
+
+// Make the function globally available
+window.toggleModeInfo = toggleModeInfo;
 
 // Export functions
 window.AppController = {
