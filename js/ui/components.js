@@ -2091,15 +2091,9 @@ function displayCharacteristicChords(scale, scaleType, characteristicChords) {
 function displayChordsFromScale(container, characteristicChords) {
     console.log('displayChordsFromScale called with:', characteristicChords);
     
-    // Create main chords section
+    // Create main chords section without duplicate header
     const chordsFromScaleSection = document.createElement('div');
     chordsFromScaleSection.className = 'chords-from-scale-section';
-    chordsFromScaleSection.innerHTML = `
-        <div class="section-header">
-            <h3>Chords Formed FROM the Scale</h3>
-            <p class="section-description">These chords are constructed using only notes from the scale</p>
-        </div>
-    `;
     
     const chordsContainer = document.createElement('div');
     chordsContainer.className = 'chord-types-container';
@@ -2116,8 +2110,8 @@ function displayChordsFromScale(container, characteristicChords) {
             const isEmphasized = chordGroup.emphasis ? ' emphasized' : '';
             
             const chordsHtml = chordGroup.chords.map(chord => {
-                // Check if this is a clickable chord (contains chord symbols like +, 7, etc.) vs description text
-                const isClickableChord = /[+°#♭]|7|maj|m|sus|dim|aug/.test(chord) && !chord.includes(' ');
+                // Check if this is a chord name vs description text
+                const isClickableChord = !chord.includes(' ') && !chord.includes('Contains') && !chord.includes('Creates') && !chord.includes('Multiple') && !chord.includes('Excellent');
                 
                 if (isClickableChord) {
                     return `<span class="characteristic-chord clickable-chord" title="${chordGroup.description}" data-chord="${chord}">${chord}</span>`;

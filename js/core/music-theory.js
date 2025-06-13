@@ -129,6 +129,11 @@ function getProperNoteSpelling(noteIndex, key, scaleType = 'major') {
 
 // Scale calculation functions
 function calculateScale(root, formula, scaleType = 'major') {
+    // Debug logging for diminished scales
+    if (scaleType && scaleType.includes('diminished')) {
+        console.log('calculateScale called with:', { root, formula, scaleType });
+    }
+    
     if (!formula || !Array.isArray(formula)) {
         console.error('Invalid formula provided to calculateScale:', formula);
         return [];
@@ -417,6 +422,8 @@ function calculateAugmentedScale(root, formula, rootChromaticIndex, noteToIndex)
 }
 
 function calculateDiminishedScale(root, formula, scaleType, rootNoteIndex, rootChromaticIndex, noteNames, noteToIndex) {
+    console.log('calculateDiminishedScale called with:', { root, formula, scaleType, rootNoteIndex, rootChromaticIndex });
+    
     const scale = [root];
     
     // Determine if this is W-H or H-W diminished
@@ -458,13 +465,26 @@ function calculateDiminishedScale(root, formula, scaleType, rootNoteIndex, rootC
         } else if (chromaticDiff === 11) {
             noteName = targetLetter + 'b'; // Flat
         } else {
-            // For other intervals, use the closest spelling
-            noteName = targetLetter;
+            // For problematic intervals, use enharmonic equivalents
+            // Map chromatic index to preferred note name
+            const chromaticToNote = {
+                0: 'C', 1: 'C#', 2: 'D', 3: 'Eb', 4: 'E', 5: 'F',
+                6: 'F#', 7: 'G', 8: 'Ab', 9: 'A', 10: 'Bb', 11: 'B'
+            };
+            noteName = chromaticToNote[currentChromaticIndex] || targetLetter;
         }
         
+        // Fix problematic enharmonic spellings
+        if (noteName === 'Cb') noteName = 'B';
+        if (noteName === 'Fb') noteName = 'E';
+        if (noteName === 'E#') noteName = 'F';
+        if (noteName === 'B#') noteName = 'C';
+        
+        console.log(`Step ${i}: chromatic ${currentChromaticIndex}, letter ${targetLetter}, diff ${chromaticDiff}, result ${noteName}`);
         scale.push(noteName);
     }
     
+    console.log('Generated diminished scale:', scale);
     return scale;
 }
 
@@ -512,8 +532,8 @@ function getIntervals(notes, root, scaleType = 'major', mode = null) {
     
     function noteToIndex(note) {
         const noteMap = {
-            'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5,
-            'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11
+            'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4,
+            'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11
         };
         return noteMap[note] !== undefined ? noteMap[note] : 0;
     }
@@ -521,8 +541,8 @@ function getIntervals(notes, root, scaleType = 'major', mode = null) {
     const rootIndex = noteToIndex(root);
     const intervals = [];
     
-    for (let i = 0; i < notes.length; i++) {
-        const noteIndex = noteToIndex(notes[i]);
+            for (let i = 0; i < notes.length; i++) {
+                const noteIndex = noteToIndex(notes[i]);
         let semitones = (noteIndex - rootIndex + 12) % 12;
         
         // Convert semitones to interval names
@@ -542,22 +562,22 @@ function getIntervals(notes, root, scaleType = 'major', mode = null) {
             return ['1', 'b2', 'b3', '3', '#4', '5', '6', 'b7'];
         } else {
             // Generic 8-note scale
-            return ['1', '2', 'b3', '4', 'b5', 'b6', '6', '7'];
-        }
+        return ['1', '2', 'b3', '4', 'b5', 'b6', '6', '7'];
+    }
     }
     
     // Handle other special scale types
     if (scaleType === 'harmonic-minor' || isHarmonicMinorPattern(notes, root)) {
-        return ['1', '2', 'b3', '4', '5', 'b6', '7'];
-    }
-    
+            return ['1', '2', 'b3', '4', '5', 'b6', '7'];
+        }
+        
     if (scaleType === 'melodic-minor' || isMelodicMinorPattern(notes, root)) {
-        return ['1', '2', 'b3', '4', '5', '6', '7'];
-    }
-    
+            return ['1', '2', 'b3', '4', '5', '6', '7'];
+        }
+        
     if (scaleType === 'major' || isMajorPattern(notes, root)) {
-        return ['1', '2', '3', '4', '5', '6', '7'];
-    }
+            return ['1', '2', '3', '4', '5', '6', '7'];
+        }
     
     if (scaleType === 'blues' || isBluesPattern(notes, root)) {
         return ['1', 'b3', '4', 'b5', '5', 'b7'];
@@ -2219,61 +2239,43 @@ function getCharacteristicChords(scale, scaleType) {
     // For scales that don't follow traditional degree-by-degree analysis
     // Return the characteristic chord types they naturally produce
     
-    console.log('=== getCharacteristicChords DEBUG START ===');
-    console.log('getCharacteristicChords called with:', { scale, scaleType, scaleLength: scale?.length });
-    
     // Enhanced detection patterns with more comprehensive matching
     
-    // NOTE: Diminished scales now use traditional degree-by-degree analysis
-    // Removed diminished scale handling to allow for proper scale degree chord construction
+    // Diminished scales (8-note scales) - CHECK FIRST
+    if (scaleType.includes('diminished') || scaleType.includes('dim') || 
+        (scale && scale.length === 8)) {
+        return getDiminishedScaleChords(scale);
+    }
     
     // Blues scales (6-note scales) - CHECK BEFORE PENTATONIC
-    console.log('Checking blues conditions:');
-    console.log('scaleType === "blues":', scaleType === 'blues');
-    console.log('scaleType.includes("blues"):', scaleType.includes('blues'));
-    console.log('scale && scale.length === 6:', scale && scale.length === 6);
-    
     if (scaleType === 'blues' || scaleType === 'blues-major' || scaleType === 'blues-minor' || 
         scaleType.includes('blues') || 
         (scale && scale.length === 6 && isBluesPattern(scale, scale[0]))) {
-        console.log('Detected blues scale, calling getBluesScaleChords');
         return getBluesScaleChords(scale, scaleType);
     }
     
     // Whole tone scales (6-note scales with whole tone pattern)
     if (scaleType === 'whole-tone' || scaleType === 'whole_tone' || scaleType.includes('whole') || 
         (scale && scale.length === 6 && isWholeToneScale(scale))) {
-        console.log('Detected whole tone scale, calling getWholeToneScaleChords');
         return getWholeToneScaleChords(scale);
     }
     
     // Pentatonic scales (5-note scales) - CHECK AFTER BLUES
-    console.log('Checking pentatonic conditions:');
-    console.log('scaleType === "major-pentatonic":', scaleType === 'major-pentatonic');
-    console.log('scaleType === "minor-pentatonic":', scaleType === 'minor-pentatonic');
-    console.log('scaleType === "pentatonic":', scaleType === 'pentatonic');
-    console.log('scaleType.includes("pentatonic"):', scaleType.includes('pentatonic'));
-    console.log('scale && scale.length === 5:', scale && scale.length === 5);
-    
     if (scaleType === 'major-pentatonic' || scaleType === 'minor-pentatonic' || scaleType === 'pentatonic' ||
         scaleType.includes('pentatonic') || (scale && scale.length === 5)) {
-        console.log('Detected pentatonic scale, calling getPentatonicScaleChords');
         const result = getPentatonicScaleChords(scale, scaleType);
-        console.log('getPentatonicScaleChords returned:', result);
         return result;
     }
     
     // Augmented scales (6-note symmetrical scales)
     if (scaleType === 'augmented' || scaleType.includes('augmented') || 
         (scale && scale.length === 6 && isAugmentedScale(scale))) {
-        console.log('Detected augmented scale, calling getAugmentedScaleChords');
         return getAugmentedScaleChords(scale);
     }
     
     // Chromatic scale (12-note scale)
     if (scaleType === 'chromatic' || scaleType.includes('chromatic') || 
         (scale && scale.length === 12)) {
-        console.log('Detected chromatic scale, calling getChromaticScaleChords');
         return getChromaticScaleChords(scale);
     }
     
@@ -2316,73 +2318,219 @@ function getDiminishedScaleChords(scale) {
     console.log('getDiminishedScaleChords called with scale:', scale);
     
     if (!scale || scale.length !== 8) {
+        console.log('Invalid scale length:', scale ? scale.length : 'null');
+        return { chords: [] };
+    }
+
+    const getChromaticIndex = (note) => {
+        const noteToIndex = {
+            'C': 0, 'B#': 0,
+            'C#': 1, 'Db': 1,
+            'D': 2,
+            'D#': 3, 'Eb': 3,
+            'E': 4, 'Fb': 4,
+            'F': 5, 'E#': 5,
+            'F#': 6, 'Gb': 6,
+            'G': 7,
+            'G#': 8, 'Ab': 8,
+            'A': 9,
+            'A#': 10, 'Bb': 10,
+            'B': 11, 'Cb': 11
+        };
+        return noteToIndex[note] !== undefined ? noteToIndex[note] : -1;
+    };
+
+    // Determine if we should use sharps or flats based on the root note
+    const root = scale[0];
+    const flatKeys = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'];
+    const useFlats = flatKeys.includes(root) || root.includes('b');
+
+    // Convert scale to chromatic indices for analysis
+    const scaleIndices = scale.map(note => getChromaticIndex(note));
+    console.log('Scale indices:', scaleIndices);
+    console.log('Scale notes mapped:', scale.map((note, i) => `${note} -> ${scaleIndices[i]}`));
+    
+    // Check for any invalid notes
+    const invalidNotes = scaleIndices.filter(index => index === -1);
+    if (invalidNotes.length > 0) {
+        console.log('Found invalid notes! Indices:', invalidNotes);
         return { chords: [] };
     }
     
-    // Diminished scale theory: 8 notes create 4 diminished 7th chords and 4 dominant 7th chords
-    // Diminished 7th chords built on scale degrees 1, 3, 5, 7 (odd degrees)
-    // Dominant 7th chords built on scale degrees 2, 4, 6, 8 (even degrees)
+    // Find all possible triads and seventh chords by checking every combination
+    const majorTriads = [];
+    const dominantSevenths = [];
+    const diminishedTriads = [];
+    const diminishedSevenths = [];
     
-    const diminished7ths = [
-        `${scale[0]}°7`,  // 1st degree
-        `${scale[2]}°7`,  // 3rd degree  
-        `${scale[4]}°7`,  // 5th degree
-        `${scale[6]}°7`   // 7th degree
-    ];
-    
-    const dominant7ths = [
-        `${scale[1]}7`,   // 2nd degree
-        `${scale[3]}7`,   // 4th degree
-        `${scale[5]}7`,   // 6th degree
-        `${scale[7]}7`    // 8th degree
-    ];
-    
-    // Also show the available triads for completeness
-    const diminishedTriads = [
-        `${scale[0]}°`,
-        `${scale[2]}°`,
-        `${scale[4]}°`,
-        `${scale[6]}°`
-    ];
-    
-    const majorTriads = [
-        `${scale[1]}`,
-        `${scale[3]}`,
-        `${scale[5]}`,
-        `${scale[7]}`
-    ];
-    
-    return {
-        chords: [
-            {
-                type: 'Diminished 7th Chords (Primary)',
-                description: 'Four diminished 7th chords built on odd scale degrees (1, 3, 5, 7)',
-                chords: diminished7ths.sort(),
-                emphasis: true
-            },
-            {
-                type: 'Dominant 7th Chords (Primary)',
-                description: 'Four dominant 7th chords built on even scale degrees (2, 4, 6, 8)',
-                chords: dominant7ths.sort(),
-                emphasis: true
-            },
-            {
-                type: 'Diminished Triads',
-                description: 'Diminished triads from odd scale degrees',
-                chords: diminishedTriads.sort()
-            },
-            {
-                type: 'Major Triads',
-                description: 'Major triads from even scale degrees',
-                chords: majorTriads.sort()
-            },
-            {
-                type: 'Scale Applications',
-                description: 'Use over altered dominants, diminished passing chords, chromatic harmony',
-                chords: ['Excellent for jazz improvisation', 'Creates symmetrical harmonic patterns']
+    // Check all possible chord combinations from the scale
+    for (let rootIdx = 0; rootIdx < scale.length; rootIdx++) {
+        const chordRoot = scale[rootIdx];
+        const rootChromatic = scaleIndices[rootIdx];
+        
+        // Find all possible thirds and fifths for this root
+        for (let thirdIdx = 0; thirdIdx < scale.length; thirdIdx++) {
+            if (thirdIdx === rootIdx) continue;
+            
+            const third = scale[thirdIdx];
+            const thirdChromatic = scaleIndices[thirdIdx];
+            const thirdInterval = (thirdChromatic - rootChromatic + 12) % 12;
+            
+            for (let fifthIdx = 0; fifthIdx < scale.length; fifthIdx++) {
+                if (fifthIdx === rootIdx || fifthIdx === thirdIdx) continue;
+                
+                const fifth = scale[fifthIdx];
+                const fifthChromatic = scaleIndices[fifthIdx];
+                const fifthInterval = (fifthChromatic - rootChromatic + 12) % 12;
+                
+                // Check for major triad (4, 7)
+                if (thirdInterval === 4 && fifthInterval === 7) {
+                    if (!majorTriads.some(chord => chord.root === chordRoot)) {
+                        majorTriads.push({
+                            root: chordRoot,
+                            chord: chordRoot,
+                            notes: [chordRoot, third, fifth],
+                            scaleIndex: rootIdx
+                        });
+                    }
+                }
+                
+                // Check for diminished triad (3, 6)
+                if (thirdInterval === 3 && fifthInterval === 6) {
+                    if (!diminishedTriads.some(chord => chord.root === chordRoot)) {
+                        diminishedTriads.push({
+                            root: chordRoot,
+                            chord: chordRoot + '°',
+                            notes: [chordRoot, third, fifth],
+                            scaleIndex: rootIdx
+                        });
+                    }
+                }
+                
+                // Check for dominant 7th and diminished 7th chords
+                for (let seventhIdx = 0; seventhIdx < scale.length; seventhIdx++) {
+                    if (seventhIdx === rootIdx || seventhIdx === thirdIdx || seventhIdx === fifthIdx) continue;
+                    
+                    const seventh = scale[seventhIdx];
+                    const seventhChromatic = scaleIndices[seventhIdx];
+                    const seventhInterval = (seventhChromatic - rootChromatic + 12) % 12;
+                    
+                    // Check for dominant 7th (4, 7, 10)
+                    if (thirdInterval === 4 && fifthInterval === 7 && seventhInterval === 10) {
+                        if (!dominantSevenths.some(chord => chord.root === chordRoot)) {
+                            dominantSevenths.push({
+                                root: chordRoot,
+                                chord: chordRoot + '7',
+                                notes: [chordRoot, third, fifth, seventh],
+                                scaleIndex: rootIdx
+                            });
+                        }
+                    }
+                    
+                    // Check for diminished 7th (3, 6, 9)
+                    if (thirdInterval === 3 && fifthInterval === 6 && seventhInterval === 9) {
+                        if (!diminishedSevenths.some(chord => chord.root === chordRoot)) {
+                            diminishedSevenths.push({
+                                root: chordRoot,
+                                chord: chordRoot + '°7',
+                                notes: [chordRoot, third, fifth, seventh],
+                                scaleIndex: rootIdx
+                            });
+                        }
+                    }
+                }
             }
-        ]
+        }
+    }
+    
+    console.log('Found chords:', {
+        majorTriads: majorTriads.length,
+        dominantSevenths: dominantSevenths.length,
+        diminishedTriads: diminishedTriads.length,
+        diminishedSevenths: diminishedSevenths.length
+    });
+    
+    // Sort chords by scale degree (scaleIndex) for proper ordering
+    const sortByScaleIndex = (a, b) => a.scaleIndex - b.scaleIndex;
+    
+    majorTriads.sort(sortByScaleIndex);
+    dominantSevenths.sort(sortByScaleIndex);
+    diminishedTriads.sort(sortByScaleIndex);
+    diminishedSevenths.sort(sortByScaleIndex);
+    
+    // Fix enharmonic spelling for chord names based on key signature
+    const fixEnharmonicSpelling = (chordName) => {
+        if (useFlats) {
+            return chordName
+                .replace(/C#/g, 'Db')
+                .replace(/D#/g, 'Eb')
+                .replace(/F#/g, 'Gb')
+                .replace(/G#/g, 'Ab')
+                .replace(/A#/g, 'Bb');
+        }
+        return chordName;
     };
+    
+    // Apply enharmonic fixes to all chord arrays
+    majorTriads.forEach(chord => chord.chord = fixEnharmonicSpelling(chord.chord));
+    diminishedTriads.forEach(chord => chord.chord = fixEnharmonicSpelling(chord.chord));
+    dominantSevenths.forEach(chord => chord.chord = fixEnharmonicSpelling(chord.chord));
+    diminishedSevenths.forEach(chord => chord.chord = fixEnharmonicSpelling(chord.chord));
+    
+    // Build the result structure
+    const result = {
+        chords: []
+    };
+    
+    // Add diminished triads first if found
+    if (diminishedTriads.length > 0) {
+        result.chords.push({
+            type: 'Diminished Triads',
+            description: `${diminishedTriads.length} diminished triads found in the scale`,
+            chords: diminishedTriads.map(c => c.chord)
+        });
+    }
+    
+    // Add major triads if found (without emphasis to match other chord colors)
+    if (majorTriads.length > 0) {
+        result.chords.push({
+            type: 'Major Triads',
+            description: `${majorTriads.length} major triads found in the diminished scale`,
+            chords: majorTriads.map(c => c.chord)
+        });
+    }
+    
+    // Add dominant sevenths if found
+    if (dominantSevenths.length > 0) {
+        result.chords.push({
+            type: 'Dominant 7th Chords',
+            description: `${dominantSevenths.length} dominant 7th chords found in the diminished scale`,
+            chords: dominantSevenths.map(c => c.chord)
+        });
+    }
+    
+    // Add diminished sevenths if found
+    if (diminishedSevenths.length > 0) {
+        result.chords.push({
+            type: 'Diminished 7th Chords',
+            description: `${diminishedSevenths.length} diminished 7th chords found in the scale`,
+            chords: diminishedSevenths.map(c => c.chord)
+        });
+    }
+    
+    // Add theoretical information
+    result.chords.push({
+        type: 'Harmonic Analysis',
+        description: 'Diminished scales create symmetrical harmonic patterns with multiple chord types',
+        chords: [
+            'Contains both W-H and H-W interval patterns',
+            'Creates 4 major triads and 4 dominant 7th chords',
+            'Multiple diminished chord possibilities',
+            'Excellent for chromatic harmony and jazz improvisation'
+        ]
+    });
+    
+    return result;
 }
 
 // Helper function to build chords using only notes from the scale
