@@ -122,22 +122,42 @@ function updateScale() {
         // Get scale type
         const scaleType = getScaleType(category);
         
+        // For diminished scales, use the specific mode as scale type
+        const actualScaleType = (category === 'diminished-modes') ? mode : scaleType;
+        
+        // Add debugging for diminished scales
+        if (category === 'diminished-modes') {
+            console.log('=== DIMINISHED SCALE DEBUG ===');
+            console.log('Category:', category);
+            console.log('Mode:', mode);
+            console.log('Key:', key);
+            console.log('Mode Formula:', modeFormula);
+            console.log('Actual Scale Type:', actualScaleType);
+        }
+        
         // Calculate the scale directly using the mode's formula
-        const modeNotes = MusicTheory.calculateScale(key, modeFormula, scaleType);
+        const modeNotes = MusicTheory.calculateScale(key, modeFormula, actualScaleType);
+        
+        // Add more debugging for diminished scales
+        if (category === 'diminished-modes') {
+            console.log('Calculated Notes:', modeNotes);
+        }
         
         // Get intervals
-        const intervals = MusicTheory.getIntervals(modeNotes, modeNotes[0], scaleType, mode);
+        const intervals = MusicTheory.getIntervals(modeNotes, modeNotes[0], actualScaleType, mode);
         
         // Update state
-        currentState.scaleType = scaleType;
+        currentState.scaleType = actualScaleType;
         
         // Store scale data globally for color toggle re-rendering
         window.currentScale = modeNotes;
         window.currentIntervals = intervals;
         window.currentFormula = modeFormula;
+        window.currentScaleType = actualScaleType;
+        window.currentMode = mode;
         
         // Display the scale
-        UIComponents.displayScale(modeNotes, intervals, modeFormula, scaleType, key, category);
+        UIComponents.displayScale(modeNotes, intervals, modeFormula, actualScaleType, key, category);
         
         // Update mode information
         updateModeInfo(mode, category);

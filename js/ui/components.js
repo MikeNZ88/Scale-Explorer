@@ -371,7 +371,7 @@ function renderModalFretboard(container, scale) {
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         line.setAttribute('x1', leftMargin);
         line.setAttribute('y1', y);
-        line.setAttribute('x2', leftMargin + (displayFrets * fretWidth));
+        line.setAttribute('x2', leftMargin + (fretCount * fretWidth));
         line.setAttribute('y2', y);
         line.setAttribute('stroke', '#6b7280');
         line.setAttribute('stroke-width', '3');
@@ -1362,7 +1362,7 @@ function calculateScaleWithConsistentSpelling(root, formula, scaleType, spelling
     }
     
     // Special handling for diminished scales
-    if (scaleType === 'diminished' || formula.length === 8) {
+    if (scaleType === 'diminished' || scaleType === 'wh-diminished' || scaleType === 'hw-diminished' || formula.length === 8) {
         return calculateDiminishedScaleSpelling(root, formula, spellingConvention);
     }
     
@@ -1478,81 +1478,87 @@ function calculateScaleWithConsistentSpelling(root, formula, scaleType, spelling
 
 // Special function for diminished scale spelling
 function calculateDiminishedScaleSpelling(root, formula, spellingConvention) {
+    // Determine if this is W-H or H-W diminished based on the formula
+    const isWHDiminished = formula[0] === 2; // Starts with whole step
+    const isHWDiminished = formula[0] === 1; // Starts with half step
+    
+    if (!isWHDiminished && !isHWDiminished) {
+        console.warn('Unknown diminished scale formula:', formula);
+        return [];
+    }
+    
+    // The principle: one note per letter name when possible
+    // C WH: C - D - Eb - F - Gb - Ab - A - B (formula: 1 - 2 - b3 - 4 - b5 - b6 - 6 - 7)
+    // C HW: C - Db - Eb - E - F# - G - A - Bb (formula: 1 - b2 - b3 - 3 - #4 - 5 - 6 - b7)
+    
     const noteNames = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
     const noteToIndex = {
         'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11,
         'C#': 1, 'Db': 1, 'D#': 3, 'Eb': 3, 'F#': 6, 'Gb': 6,
-        'G#': 8, 'Ab': 8, 'A#': 10, 'Bb': 10,
-        // Add enharmonic equivalents and double accidentals
-        'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4,
-        'C##': 2, 'D##': 4, 'F##': 7, 'G##': 9, 'A##': 11,
-        'Dbb': 0, 'Ebb': 2, 'Gbb': 5, 'Abb': 7, 'Bbb': 9
+        'G#': 8, 'Ab': 8, 'A#': 10, 'Bb': 10
     };
     
-    // Find the root note's position in the note names array
+    // Get root note information
     const rootNoteName = root.charAt(0);
     const rootNoteIndex = noteNames.indexOf(rootNoteName);
-    if (rootNoteIndex === -1) {
-        console.warn('Invalid root note:', root);
-        return [];
-    }
-    
-    // Get the chromatic index of the root
     const rootChromaticIndex = noteToIndex[root];
-    if (rootChromaticIndex === undefined) {
+    
+    if (rootNoteIndex === -1 || rootChromaticIndex === undefined) {
         console.warn('Invalid root note:', root);
         return [];
     }
     
-    const scale = [root];
-    let currentChromaticIndex = rootChromaticIndex;
-    let usedLetters = [rootNoteName];
+    // Define scale degree patterns (chromatic intervals from root)
+    const whPattern = [0, 2, 3, 5, 6, 8, 9, 11]; // W-H intervals
+    const hwPattern = [0, 1, 3, 4, 6, 7, 9, 10]; // H-W intervals
     
-    for (let i = 0; i < formula.length - 1; i++) {
-        currentChromaticIndex = (currentChromaticIndex + formula[i]) % 12;
+    // Define which letter names to use for each scale degree
+    const whLetterDegrees = [0, 1, 2, 3, 4, 5, 5, 6]; // Root=0, 2nd=1, b3=2, 4th=3, b5=4, b6=5, 6=5, 7th=6
+    const hwLetterDegrees = [0, 1, 2, 2, 3, 4, 5, 6]; // Root=0, b2=1, b3=2, 3=2, #4=3, 5=4, 6=5, b7=6
+    
+    const intervals = isWHDiminished ? whPattern : hwPattern;
+    const letterDegrees = isWHDiminished ? whLetterDegrees : hwLetterDegrees;
+    
+    const scale = [];
+    
+    for (let i = 0; i < 8; i++) {
+        if (i === 0) {
+            scale.push(root);
+            continue;
+        }
         
-        // For diminished scales, prioritize not repeating letter names
-        // and use scale degrees when possible
-        const scaleDegreeIndex = (rootNoteIndex + i + 1) % 7;
-        const baseNoteName = noteNames[scaleDegreeIndex];
-        const baseNoteChromatic = noteToIndex[baseNoteName];
+        // Calculate target chromatic position
+        const targetChromaticIndex = (rootChromaticIndex + intervals[i]) % 12;
         
-        const chromaticDifference = (currentChromaticIndex - baseNoteChromatic + 12) % 12;
+        // Calculate target letter name
+        const letterDegree = letterDegrees[i];
+        const targetLetterIndex = (rootNoteIndex + letterDegree) % 7;
+        const targetLetter = noteNames[targetLetterIndex];
+        
+        // Get natural chromatic position of target letter
+        const naturalChromaticIndex = noteToIndex[targetLetter];
+        
+        // Calculate accidental needed
+        const chromaticDifference = (targetChromaticIndex - naturalChromaticIndex + 12) % 12;
         
         let noteName;
-        
-        // Try to use the scale degree first
-        if (chromaticDifference === 0 && !usedLetters.includes(baseNoteName)) {
-            noteName = baseNoteName;
-        } else if (chromaticDifference === 1 && !usedLetters.includes(baseNoteName)) {
-            noteName = baseNoteName + '#';
-        } else if (chromaticDifference === 11 && !usedLetters.includes(baseNoteName)) {
-            noteName = baseNoteName + 'b';
-        } else if (chromaticDifference === 2 && !usedLetters.includes(baseNoteName)) {
-            noteName = baseNoteName + '##';
-        } else if (chromaticDifference === 10 && !usedLetters.includes(baseNoteName)) {
-            noteName = baseNoteName + 'bb';
+        if (chromaticDifference === 0) {
+            noteName = targetLetter; // Natural
+        } else if (chromaticDifference === 1) {
+            noteName = targetLetter + '#'; // Sharp
+        } else if (chromaticDifference === 11) {
+            noteName = targetLetter + 'b'; // Flat
+        } else if (chromaticDifference === 2) {
+            noteName = targetLetter + '##'; // Double sharp (rarely used)
+        } else if (chromaticDifference === 10) {
+            noteName = targetLetter + 'bb'; // Double flat (rarely used)
         } else {
-            // If the scale degree is already used, find the best enharmonic equivalent
-            noteName = getConsistentNoteSpelling(currentChromaticIndex, spellingConvention);
-            
-            // Check for conflicts and resolve with enharmonics
-            const currentLetter = noteName.charAt(0);
-            if (usedLetters.includes(currentLetter)) {
-                // Try the enharmonic equivalent
-                const enharmonicConvention = spellingConvention === 'flat' ? 'sharp' : 'flat';
-                const enharmonicName = getConsistentNoteSpelling(currentChromaticIndex, enharmonicConvention);
-                const enharmonicLetter = enharmonicName.charAt(0);
-                
-                if (!usedLetters.includes(enharmonicLetter)) {
-                    noteName = enharmonicName;
-                }
-                // If both conflict, use the one that fits the spelling convention
-            }
+            // This shouldn't happen with proper diminished scales
+            console.warn('Unexpected chromatic difference:', chromaticDifference, 'for', targetLetter);
+            noteName = targetLetter;
         }
         
         scale.push(noteName);
-        usedLetters.push(noteName.charAt(0));
     }
     
     return scale;
@@ -2376,6 +2382,24 @@ function displayTraditionalChords(scale, scaleType, category) {
         return;
     }
 
+    // Add informational note for harmonic minor and melodic minor scales
+    let scaleNote = '';
+    if (scaleType === 'harmonic-minor' || scaleType === 'melodic-minor') {
+        const scaleTypeName = scaleType === 'harmonic-minor' ? 'harmonic minor' : 'melodic minor';
+        scaleNote = `
+            <div class="scale-chord-note">
+                <p><strong>Note:</strong> This ${scaleTypeName} scale display shows triads and 7th chords. Like major modes, other chord types (6th chords, sus2, sus4, 7sus4, 9th, 11th, and 13th chords) can also be constructed from this scale.</p>
+            </div>
+        `;
+    } else if (scaleType === 'diminished' || scaleType === 'half-whole-diminished' || scaleType === 'whole-half-diminished' || 
+               scaleType.includes('diminished') || (scale && scale.length === 8)) {
+        scaleNote = `
+            <div class="scale-chord-note">
+                <p><strong>Note:</strong> This diminished scale display shows triads and 7th chords from each scale degree. Diminished scales create complex harmonic structures with many available chord types beyond what's shown here.</p>
+            </div>
+        `;
+    }
+
     // Calculate triads
     const triads = MusicTheory.calculateTriads(scale, scaleType, category);
     console.log('Generated triads:', triads);
@@ -2388,21 +2412,33 @@ function displayTraditionalChords(scale, scaleType, category) {
     const showExtendedChords = scaleType === 'major' || (category && category.toLowerCase().includes('major'));
     
     // Calculate extended chords (only for major modes)
+    let sixthChords = [];
+    let sus2Chords = [];
+    let sus4Chords = [];
+    let sus4SeventhChords = [];
     let ninthChords = [];
     let eleventhChords = [];
     let thirteenthChords = [];
 
     if (showExtendedChords) {
+        sixthChords = MusicTheory.calculateSixthChords(scale, scaleType, category);
+        sus2Chords = MusicTheory.calculateSus2Chords(scale, scaleType, category);
+        sus4Chords = MusicTheory.calculateSus4Chords(scale, scaleType, category);
+        sus4SeventhChords = MusicTheory.calculateSus4SeventhChords(scale, scaleType, category);
         ninthChords = MusicTheory.calculateNinthChords(scale, scaleType, category);
         eleventhChords = MusicTheory.calculateEleventhChords(scale, scaleType, category);
         thirteenthChords = MusicTheory.calculateThirteenthChords(scale, scaleType, category);
+        console.log('Generated 6th chords:', sixthChords);
+        console.log('Generated sus2 chords:', sus2Chords);
+        console.log('Generated sus4 chords:', sus4Chords);
+        console.log('Generated sus4 seventh chords:', sus4SeventhChords);
         console.log('Generated 9th chords:', ninthChords);
         console.log('Generated 11th chords:', eleventhChords);
         console.log('Generated 13th chords:', thirteenthChords);
     }
 
     // Show/hide extended chord buttons based on scale type
-    const extendedChordButtons = document.querySelectorAll('.chord-type-btn[data-type="ninths"], .chord-type-btn[data-type="elevenths"], .chord-type-btn[data-type="thirteenths"]');
+    const extendedChordButtons = document.querySelectorAll('.chord-type-btn[data-type="sixths"], .chord-type-btn[data-type="sus2"], .chord-type-btn[data-type="sus4"], .chord-type-btn[data-type="sus4-sevenths"], .chord-type-btn[data-type="ninths"], .chord-type-btn[data-type="elevenths"], .chord-type-btn[data-type="thirteenths"]');
     extendedChordButtons.forEach(button => {
         if (showExtendedChords) {
             button.style.display = 'inline-block';
@@ -2419,13 +2455,26 @@ function displayTraditionalChords(scale, scaleType, category) {
         }
     });
 
-    // Display triads by default
-    displayChordType('triads', triads);
+    // Add the scale note if it exists, then display triads by default
+    const chordsList = document.getElementById('chords-list');
+    if (chordsList && scaleNote) {
+        chordsList.innerHTML = scaleNote;
+        const triadsContainer = document.createElement('div');
+        triadsContainer.id = 'triads-container';
+        chordsList.appendChild(triadsContainer);
+        displayChordType('triads', triads, triadsContainer);
+    } else {
+        displayChordType('triads', triads);
+    }
 
     // Update audio controls with triads initially
     if (window.audioControls) {
         window.audioControls.updateChords({
             triads: triads,
+            sixths: sixthChords,
+            sus2: sus2Chords,
+            sus4: sus4Chords,
+            sus4sevenths: sus4SeventhChords,
             sevenths: seventhChords,
             ninths: ninthChords,
             elevenths: eleventhChords,
@@ -2441,16 +2490,87 @@ function displayTraditionalChords(scale, scaleType, category) {
             chordButtons.forEach(btn => btn.classList.remove('active'));
             e.target.classList.add('active');
             
+            // Clear the scale note when switching chord types
+            const targetContainer = scaleNote ? document.getElementById('triads-container') || chordsList : chordsList;
+            
             // Display the selected chord type
             const chordType = e.target.dataset.type;
             if (chordType === 'triads') {
-                displayChordType('triads', triads);
+                if (scaleNote) {
+                    chordsList.innerHTML = scaleNote;
+                    const triadsContainer = document.createElement('div');
+                    triadsContainer.id = 'triads-container';
+                    chordsList.appendChild(triadsContainer);
+                    displayChordType('triads', triads, triadsContainer);
+                } else {
+                    displayChordType('triads', triads);
+                }
                 // Update audio controls with triads
                 if (window.audioControls) {
                     window.audioControls.updateChords(triads);
                 }
+            } else if (chordType === 'sixths') {
+                if (sixthChords.length > 0) {
+                    displayChordType('sixths', sixthChords);
+                    // Update audio controls with 6th chords
+                    if (window.audioControls) {
+                        window.audioControls.updateChords(sixthChords);
+                    }
+                } else {
+                    displayChordType('sixths', []);
+                    const chordsList = document.getElementById('chords-list');
+                    if (chordsList) {
+                        chordsList.innerHTML = '<p class="no-chords-message">6th chords are only available for major modes.</p>';
+                    }
+                }
+            } else if (chordType === 'sus2') {
+                if (sus2Chords.length > 0) {
+                    displayChordType('sus2', sus2Chords);
+                    // Update audio controls with sus2 chords
+                    if (window.audioControls) {
+                        window.audioControls.updateChords(sus2Chords);
+                    }
+                } else {
+                    displayChordType('sus2', []);
+                    const chordsList = document.getElementById('chords-list');
+                    if (chordsList) {
+                        chordsList.innerHTML = '<p class="no-chords-message">Sus2 chords are only available for major modes.</p>';
+                    }
+                }
+            } else if (chordType === 'sus4') {
+                if (sus4Chords.length > 0) {
+                    displayChordType('sus4', sus4Chords);
+                    // Update audio controls with sus4 chords
+                    if (window.audioControls) {
+                        window.audioControls.updateChords(sus4Chords);
+                    }
+                } else {
+                    displayChordType('sus4', []);
+                    const chordsList = document.getElementById('chords-list');
+                    if (chordsList) {
+                        chordsList.innerHTML = '<p class="no-chords-message">Sus4 chords are only available for major modes.</p>';
+                    }
+                }
+            } else if (chordType === 'sus4-sevenths') {
+                if (sus4SeventhChords.length > 0) {
+                    displayChordType('sus4-sevenths', sus4SeventhChords);
+                    // Update audio controls with sus4 seventh chords
+                    if (window.audioControls) {
+                        window.audioControls.updateChords(sus4SeventhChords);
+                    }
+                } else {
+                    displayChordType('sus4-sevenths', []);
+                    const chordsList = document.getElementById('chords-list');
+                    if (chordsList) {
+                        chordsList.innerHTML = '<p class="no-chords-message">7sus4 chords are only available for major modes.</p>';
+                    }
+                }
             } else if (chordType === 'sevenths') {
-                displayChordType('sevenths', seventhChords);
+                if (scaleNote) {
+                    displayChordType('sevenths', seventhChords);
+                } else {
+                    displayChordType('sevenths', seventhChords);
+                }
                 // Update audio controls with 7th chords
                 if (window.audioControls) {
                     window.audioControls.updateChords(seventhChords);
@@ -2978,6 +3098,7 @@ window.UIComponents = {
     openFretboardModal,
     closeFretboardModal,
     setOptimalModalSize,
+    renderModalFretboard,
     openChordModal,
     closeChordModal,
     renderChordFretboard,
@@ -3633,7 +3754,7 @@ function renderSingleScale(svg, scale, displayFrets, fretWidth) {
                 // Get the scale index and interval for this note
                 const scaleIndex = scale.indexOf(displayNote);
                 const scaleRoot = scale[0];
-                const intervals = MusicTheory.getIntervals(scale, scaleRoot);
+                const intervals = MusicTheory.getIntervals(scale, scaleRoot, window.currentScaleType || 'major', window.currentMode || null);
                 const interval = intervals[scaleIndex] || '1';
                 
                 // Check color visibility state - use orange if colors are disabled

@@ -1,0 +1,20 @@
+/* Scale chord note styling */
+.scale-chord-note {
+    background-color: #2c3e50;
+    border: 1px solid #34495e;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.scale-chord-note p {
+    margin: 0;
+    color: #ecf0f1;
+}
+
+.scale-chord-note strong {
+    color: #3498db;
+    font-weight: 600;
+} 

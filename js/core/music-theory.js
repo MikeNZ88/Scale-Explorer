@@ -130,11 +130,10 @@ function getProperNoteSpelling(noteIndex, key, scaleType = 'major') {
 // Scale calculation functions
 function calculateScale(root, formula, scaleType = 'major') {
     if (!formula || !Array.isArray(formula)) {
-        console.warn('Invalid formula provided to calculateScale:', formula);
+        console.error('Invalid formula provided to calculateScale:', formula);
         return [];
     }
     
-    // Use the new scale degree-based calculation
     return calculateScaleWithDegrees(root, formula, scaleType);
 }
 
@@ -195,6 +194,10 @@ function calculateScaleWithDegrees(root, formula, scaleType = 'major') {
     
     if (scaleType === 'augmented') {
         return calculateAugmentedScale(root, formula, rootChromaticIndex, noteToIndex);
+    }
+    
+    if (scaleType === 'wh-diminished' || scaleType === 'hw-diminished') {
+        return calculateDiminishedScale(root, formula, scaleType, rootNoteIndex, rootChromaticIndex, noteNames, noteToIndex);
     }
     
     // Calculate scale notes based on scale degrees for regular scales
@@ -413,6 +416,58 @@ function calculateAugmentedScale(root, formula, rootChromaticIndex, noteToIndex)
     return scale;
 }
 
+function calculateDiminishedScale(root, formula, scaleType, rootNoteIndex, rootChromaticIndex, noteNames, noteToIndex) {
+    const scale = [root];
+    
+    // Determine if this is W-H or H-W diminished
+    const isWH = scaleType === 'wh-diminished';
+    
+    // Letter offsets for diminished scales (ensuring one note per letter name)
+    const whLetterOffsets = [1, 2, 3, 4, 5, 5, 6, 0]; // W-H: step 5 stays on A, step 7 wraps to C
+    const hwLetterOffsets = [1, 2, 2, 3, 4, 5, 6, 0]; // H-W: step 2 stays on E, step 7 wraps to C
+    
+    const letterOffsets = isWH ? whLetterOffsets : hwLetterOffsets;
+    
+    let currentChromaticIndex = rootChromaticIndex;
+    
+    for (let i = 0; i < formula.length - 1; i++) {
+        currentChromaticIndex = (currentChromaticIndex + formula[i]) % 12;
+        
+        // Calculate target letter index
+        const targetLetterIndex = (rootNoteIndex + letterOffsets[i]) % 7;
+        const targetLetter = noteNames[targetLetterIndex];
+        
+        // Handle bounds checking
+        if (targetLetterIndex < 0 || targetLetterIndex >= noteNames.length || !targetLetter) {
+            console.error('Undefined targetLetter at index', targetLetterIndex);
+            continue;
+        }
+        
+        // Get the natural chromatic index for this letter
+        const naturalIndex = noteToIndex(targetLetter);
+        
+        // Calculate chromatic difference
+        const chromaticDiff = (currentChromaticIndex - naturalIndex + 12) % 12;
+        
+        // Determine the note name with appropriate accidental
+        let noteName;
+        if (chromaticDiff === 0) {
+            noteName = targetLetter; // Natural
+        } else if (chromaticDiff === 1) {
+            noteName = targetLetter + '#'; // Sharp
+        } else if (chromaticDiff === 11) {
+            noteName = targetLetter + 'b'; // Flat
+        } else {
+            // For other intervals, use the closest spelling
+            noteName = targetLetter;
+        }
+        
+        scale.push(noteName);
+    }
+    
+    return scale;
+}
+
 // Helper function for chromatic fallback (improved version of getProperNoteSpelling)
 function getChromatic(chromaticIndex, key, scaleType = 'major') {
     const normalizedIndex = ((chromaticIndex % 12) + 12) % 12;
@@ -453,14 +508,12 @@ function getModeNotes(parentScale, modeIndex, parentFormula, scaleType = 'major'
 }
 
 function getIntervals(notes, root, scaleType = 'major', mode = null) {
-    if (!notes || !Array.isArray(notes) || notes.length === 0) {
-        return [];
-    }
+    if (!notes || notes.length === 0) return [];
     
     function noteToIndex(note) {
         const noteMap = {
-            'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11,
-            'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
+            'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5,
+            'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11
         };
         return noteMap[note] !== undefined ? noteMap[note] : 0;
     }
@@ -468,134 +521,58 @@ function getIntervals(notes, root, scaleType = 'major', mode = null) {
     const rootIndex = noteToIndex(root);
     const intervals = [];
     
-    // Special handling for different scale types
-    if (notes.length === 6) {
-        // Check for augmented scale type first
-        if (scaleType === 'augmented' || isAugmentedScale(notes) || isAugmentedScale2(notes)) {
-            return ['1', 'b2', '4', 'b5', '6', 'b7'];
-        }
-        
-        // Check for blues scale patterns
-        if (isBluesPattern(notes, root)) {
-            const intervalPattern = [];
-            for (let i = 0; i < notes.length; i++) {
-                const noteIndex = noteToIndex(notes[i]);
-                const interval = (noteIndex - rootIndex + 12) % 12;
-                intervalPattern.push(interval);
-            }
-            
-            // Determine if it's blues major or blues minor based on the pattern
-            if (isBluesMajorPattern(intervalPattern)) {
-                return ['1', '2', 'b3', '3', '5', '6'];
-            } else if (isBluesMinorPattern(intervalPattern)) {
-                return ['1', 'b3', '4', 'b5', '5', 'b7'];
-            }
-        }
-        
-        // Whole tone scales - return characteristic intervals
-        return ['1', '2', '3', '#4', '#5', '#6'];
-    }
-    
-    if (notes.length === 8) {
-        // Diminished scales - return proper intervals to prevent duplicates
-        return ['1', '2', 'b3', '4', 'b5', 'b6', '6', '7'];
-    }
-    
-    if (notes.length === 9) {
-        // Hybrid blues scale - nine-note scale combining blues minor and blues major
-        // Contains: 1-2-♭3-3-4-♭5-5-6-♭7
-        return ['1', '2', 'b3', '3', '4', 'b5', '5', '6', 'b7'];
-    }
-    
-    if (notes.length === 7) {
-        // Handle specific modes with correct interval spellings
-        if (mode) {
-            // Harmonic Minor System modes
-            switch (mode) {
-                case 'harmonic-minor':
-                    return ['1', '2', 'b3', '4', '5', 'b6', '7'];
-                case 'locrian-natural-6':
-                    return ['1', 'b2', 'b3', '4', 'b5', '6', 'b7'];
-                case 'ionian-sharp-5':
-                    return ['1', '2', '3', '4', '#5', '6', '7'];
-                case 'dorian-sharp-4':
-                    return ['1', '2', 'b3', '#4', '5', '6', 'b7'];
-                case 'phrygian-dominant':
-                    return ['1', 'b2', '3', '4', '5', 'b6', 'b7'];
-                case 'lydian-sharp-2':
-                    return ['1', '#2', '3', '#4', '5', '6', '7'];
-                case 'altered-dominant':
-                    return ['1', 'b2', 'b3', 'b4', 'b5', 'b6', 'bb7'];
-                    
-                // Melodic Minor System modes
-                case 'melodic-minor':
-                    return ['1', '2', 'b3', '4', '5', '6', '7'];
-                case 'dorian-b2':
-                    return ['1', 'b2', 'b3', '4', '5', '6', 'b7'];
-                case 'lydian-augmented':
-                    return ['1', '2', '3', '#4', '#5', '6', '7'];
-                case 'lydian-dominant':
-                    return ['1', '2', '3', '#4', '5', '6', 'b7'];
-                case 'mixolydian-b6':
-                    return ['1', '2', '3', '4', '5', 'b6', 'b7'];
-                case 'locrian-natural-2':
-                    return ['1', '2', 'b3', '4', 'b5', 'b6', 'b7'];
-                case 'super-locrian':
-                    return ['1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7'];
-                    
-                // Major modes (Church modes)
-                case 'major':
-                    return ['1', '2', '3', '4', '5', '6', '7'];
-                case 'dorian':
-                    return ['1', '2', 'b3', '4', '5', '6', 'b7'];
-                case 'phrygian':
-                    return ['1', 'b2', 'b3', '4', '5', 'b6', 'b7'];
-                case 'lydian':
-                    return ['1', '2', '3', '#4', '5', '6', '7'];
-                case 'mixolydian':
-                    return ['1', '2', '3', '4', '5', '6', 'b7'];
-                case 'aeolian':
-                    return ['1', '2', 'b3', '4', '5', 'b6', 'b7'];
-                case 'locrian':
-                    return ['1', 'b2', 'b3', '4', 'b5', 'b6', 'b7'];
-            }
-        }
-        
-        // Check for Locrian pattern first (it has the distinctive ♭5)
-        const intervalPattern = [];
-        for (let i = 0; i < notes.length; i++) {
-            const noteIndex = noteToIndex(notes[i]);
-            const interval = (noteIndex - rootIndex + 12) % 12;
-            intervalPattern.push(interval);
-        }
-        
-        // Locrian pattern: [0, 1, 3, 5, 6, 8, 10] = [1, b2, b3, 4, b5, b6, b7]
-        const locrianIntervals = [0, 1, 3, 5, 6, 8, 10];
-        if (JSON.stringify(intervalPattern.sort((a, b) => a - b)) === JSON.stringify(locrianIntervals)) {
-            return ['1', 'b2', 'b3', '4', 'b5', 'b6', 'b7'];
-        }
-        
-        // Check for harmonic minor pattern
-        if (isHarmonicMinorPattern(notes, root)) {
-            return ['1', '2', 'b3', '4', '5', 'b6', '7'];
-        }
-        
-        if (isMelodicMinorPattern(notes, root)) {
-            return ['1', '2', 'b3', '4', '5', '6', '7'];
-        }
-        
-        if (isMajorPattern(notes, root)) {
-            return ['1', '2', '3', '4', '5', '6', '7'];
-        }
-    }
-    
-    // Default interval calculation
-    const intervalNames = ['1', 'b2', '2', 'b3', '3', '4', '#4', '5', 'b6', '6', 'b7', '7'];
-    
     for (let i = 0; i < notes.length; i++) {
         const noteIndex = noteToIndex(notes[i]);
-        const interval = (noteIndex - rootIndex + 12) % 12;
-        intervals.push(intervalNames[interval]);
+        let semitones = (noteIndex - rootIndex + 12) % 12;
+        
+        // Convert semitones to interval names
+        const intervalMap = {
+            0: '1', 1: 'b2', 2: '2', 3: 'b3', 4: '3', 5: '4',
+            6: 'b5', 7: '5', 8: 'b6', 9: '6', 10: 'b7', 11: '7'
+        };
+        
+        intervals.push(intervalMap[semitones] || '1');
+    }
+    
+    // Handle special cases for 8-note scales
+    if (notes.length === 8) {
+        if (scaleType === 'wh-diminished' || mode === 'wh-diminished') {
+            return ['1', '2', 'b3', '4', 'b5', 'b6', '6', '7'];
+        } else if (scaleType === 'hw-diminished' || mode === 'hw-diminished') {
+            return ['1', 'b2', 'b3', '3', '#4', '5', '6', 'b7'];
+        } else {
+            // Generic 8-note scale
+            return ['1', '2', 'b3', '4', 'b5', 'b6', '6', '7'];
+        }
+    }
+    
+    // Handle other special scale types
+    if (scaleType === 'harmonic-minor' || isHarmonicMinorPattern(notes, root)) {
+        return ['1', '2', 'b3', '4', '5', 'b6', '7'];
+    }
+    
+    if (scaleType === 'melodic-minor' || isMelodicMinorPattern(notes, root)) {
+        return ['1', '2', 'b3', '4', '5', '6', '7'];
+    }
+    
+    if (scaleType === 'major' || isMajorPattern(notes, root)) {
+        return ['1', '2', '3', '4', '5', '6', '7'];
+    }
+    
+    if (scaleType === 'blues' || isBluesPattern(notes, root)) {
+        return ['1', 'b3', '4', 'b5', '5', 'b7'];
+    }
+    
+    if (scaleType === 'pentatonic') {
+        if (notes.length === 5) {
+            // Determine if major or minor pentatonic based on intervals
+            const hasMinorThird = intervals.includes('b3');
+            if (hasMinorThird) {
+                return ['1', 'b3', '4', '5', 'b7']; // Minor pentatonic
+            } else {
+                return ['1', '2', '3', '5', '6']; // Major pentatonic
+            }
+        }
     }
     
     return intervals;
@@ -777,6 +754,11 @@ function calculateTriads(scale, scaleType = 'major', category = null) {
         return [];
     }
 
+    // Special handling for diminished scales - find ALL possible triads
+    if (scale.length === 8 && (scaleType.includes('diminished') || scaleType.includes('dim'))) {
+        return calculateDiminishedScaleTriads(scale, scaleType);
+    }
+
     const triads = [];
     
     for (let i = 0; i < scale.length; i++) {
@@ -832,7 +814,115 @@ function calculateTriads(scale, scaleType = 'major', category = null) {
     return triads;
 }
 
+function calculateDiminishedScaleTriads(scale, scaleType) {
+    const triads = [];
+    
+    // For diminished scales, we need to find ALL possible triads, not just sequential ones
+    // This includes the major triads that occur on non-sequential scale degrees
+    
+    for (let i = 0; i < scale.length; i++) {
+        const root = scale[i];
+        const possibleTriads = [];
+        
+        // Check all possible combinations of notes from the scale for this root
+        for (let j = 0; j < scale.length; j++) {
+            if (j === i) continue; // Skip the root
+            
+            for (let k = j + 1; k < scale.length; k++) {
+                if (k === i) continue; // Skip the root
+                
+                const third = scale[j];
+                const fifth = scale[k];
+                
+                // Calculate intervals
+                let thirdInterval = getIntervalBetweenNotes(root, third);
+                let fifthInterval = getIntervalBetweenNotes(root, fifth);
+                
+                // Normalize intervals
+                while (thirdInterval > 6) thirdInterval -= 12;
+                while (thirdInterval < 0) thirdInterval += 12;
+                while (fifthInterval > 11) fifthInterval -= 12;
+                while (fifthInterval < 4) fifthInterval += 12;
+                
+                // Check if this forms a valid triad (major, minor, diminished, augmented)
+                if (isValidTriad(thirdInterval, fifthInterval)) {
+                    const chordAnalysis = analyzeDiminishedChord(thirdInterval, fifthInterval);
+                    
+                    possibleTriads.push({
+                        root: root,
+                        third: third,
+                        fifth: fifth,
+                        thirdInterval: thirdInterval,
+                        fifthInterval: fifthInterval,
+                        quality: chordAnalysis.quality,
+                        symbol: chordAnalysis.symbol,
+                        score: getTriadScore(thirdInterval, fifthInterval) // Prioritize standard triads
+                    });
+                }
+            }
+        }
+        
+        // Select the best triad for this root (prefer standard intervals)
+        if (possibleTriads.length > 0) {
+            const bestTriad = possibleTriads.sort((a, b) => b.score - a.score)[0];
+            
+            triads.push({
+                degree: i + 1,
+                roman: getRomanNumeral(i + 1, bestTriad.quality),
+                root: bestTriad.root,
+                notes: [bestTriad.root, bestTriad.third, bestTriad.fifth],
+                quality: bestTriad.quality,
+                symbol: bestTriad.symbol,
+                name: `${bestTriad.root}${bestTriad.symbol}`,
+                intervals: [bestTriad.thirdInterval, bestTriad.fifthInterval],
+                function: '', // Diminished scales don't follow functional harmony
+                isNonStandard: false,
+                description: `${bestTriad.quality} triad from diminished scale`
+            });
+        }
+    }
+    
+    return triads;
+}
+
+function isValidTriad(thirdInterval, fifthInterval) {
+    // Define what constitutes a valid triad
+    const validTriads = [
+        [4, 7], // Major
+        [3, 7], // minor
+        [3, 6], // diminished
+        [4, 8], // Augmented
+        [2, 7], // sus2
+        [5, 7]  // sus4
+    ];
+    
+    return validTriads.some(([third, fifth]) => 
+        thirdInterval === third && fifthInterval === fifth
+    );
+}
+
+function getTriadScore(thirdInterval, fifthInterval) {
+    // Score triads to prioritize standard ones
+    if (thirdInterval === 4 && fifthInterval === 7) return 100; // Major
+    if (thirdInterval === 3 && fifthInterval === 7) return 90;  // minor
+    if (thirdInterval === 3 && fifthInterval === 6) return 80;  // diminished
+    if (thirdInterval === 4 && fifthInterval === 8) return 70;  // Augmented
+    if (thirdInterval === 2 && fifthInterval === 7) return 60;  // sus2
+    if (thirdInterval === 5 && fifthInterval === 7) return 50;  // sus4
+    return 0; // Invalid/exotic
+}
+
 function analyzeTriadComprehensive(thirdInterval, fifthInterval, scale, rootIndex, scaleType) {
+    // Special handling for diminished scales - do this FIRST to prevent inversion misdetection
+    if (scale.length === 8) {
+        return analyzeDiminishedChord(thirdInterval, fifthInterval);
+    }
+    
+    // Special handling for pentatonic scales
+    if (scale.length === 5) {
+        return analyzePentatonicChord(thirdInterval, fifthInterval, scaleType);
+    }
+    
     // Check for standard triads first
     if (thirdInterval === 4 && fifthInterval === 7) {
         return { quality: 'Major', symbol: '', isNonStandard: false, description: 'Major triad' };
@@ -1021,39 +1111,55 @@ function analyzePentatonicChord(thirdInterval, fifthInterval, scaleType) {
 }
 
 function analyzeDiminishedChord(thirdInterval, fifthInterval) {
-    // Diminished scales create many diminished, half-diminished, and chromatic clusters
+    // For diminished scales, analyze the actual chord structures that occur
     
+    // Standard major triad (4, 7)
+    if (thirdInterval === 4 && fifthInterval === 7) {
+        return { quality: 'Major', symbol: '', isNonStandard: false, description: 'Major triad' };
+    }
+    
+    // Standard minor triad (3, 7)
+    if (thirdInterval === 3 && fifthInterval === 7) {
+        return { quality: 'minor', symbol: 'm', isNonStandard: false, description: 'Minor triad' };
+    }
+    
+    // Standard diminished triad (3, 6) - this is correct for Eb°, F°, etc.
     if (thirdInterval === 3 && fifthInterval === 6) {
-        return { quality: 'diminished', symbol: '°', isNonStandard: false, description: 'Diminished triad (from dim. scale)' };
-    }
-    if (thirdInterval === 1 && fifthInterval === 4) {
-        return { quality: 'chromatic cluster', symbol: 'b2/3', isNonStandard: true, description: 'Chromatic cluster b2/3' };
-    }
-    if (thirdInterval === 2 && fifthInterval === 5) {
-        return { quality: 'chromatic cluster', symbol: '2/4', isNonStandard: true, description: 'Chromatic cluster 2/4' };
-    }
-    if (thirdInterval === 6 && fifthInterval === 9) {
-        return { quality: 'tritone cluster', symbol: '♭5/6', isNonStandard: true, description: 'Tritone with sixth' };
-    }
-    if (thirdInterval === 1 && fifthInterval === 6) {
-        return { quality: 'diminished cluster', symbol: 'b2/♭5', isNonStandard: true, description: 'Diminished cluster' };
-    }
-    if (thirdInterval === 4 && fifthInterval === 6) {
-        return { quality: 'Major♭5', symbol: '♭5', isNonStandard: true, description: 'Major flat fifth (diminished)' };
-    }
-    if (thirdInterval === 3 && fifthInterval === 8) {
-        return { quality: 'minor+5', symbol: 'm+5', isNonStandard: true, description: 'Minor augmented fifth (diminished)' };
+        return { quality: 'diminished', symbol: '°', isNonStandard: false, description: 'Diminished triad' };
     }
     
-    // Default diminished naming
-    const thirdName = getIntervalName(thirdInterval);
-    const fifthName = getIntervalName(fifthInterval);
-    return {
-        quality: `diminished ${thirdName}/${fifthName}`,
-        symbol: `dim(${thirdInterval}/${fifthInterval})`,
-        isNonStandard: true,
-        description: `Diminished harmony: ${thirdName} and ${fifthName}`
-    };
+    // Standard augmented triad (4, 8)
+    if (thirdInterval === 4 && fifthInterval === 8) {
+        return { quality: 'Augmented', symbol: '+', isNonStandard: false, description: 'Augmented triad' };
+    }
+    
+    // Diminished scales create some non-standard interval patterns due to the chromatic nature
+    // Handle the specific intervals that occur in W-H and H-W diminished scales
+    
+    // Major triad with altered fifth (4, 6) - Major with flat 5
+    if (thirdInterval === 4 && fifthInterval === 6) {
+        return { quality: 'diminished', symbol: '°', isNonStandard: false, description: 'Diminished triad' };
+    }
+    
+    // Minor triad with sharp 5 (3, 8) - treat as minor
+    if (thirdInterval === 3 && fifthInterval === 8) {
+        return { quality: 'minor', symbol: 'm', isNonStandard: false, description: 'Minor triad' };
+    }
+    
+    // Handle other common diminished scale intervals
+    // (2, 6) = sus2 with flat 5
+    if (thirdInterval === 2 && fifthInterval === 6) {
+        return { quality: 'diminished', symbol: '°', isNonStandard: false, description: 'Diminished triad' };
+    }
+    
+    // (5, 9) = sus4 with 6th 
+    if (thirdInterval === 5 && fifthInterval === 9) {
+        return { quality: 'diminished', symbol: '°', isNonStandard: false, description: 'Diminished triad' };
+    }
+    
+    // For any other exotic intervals in diminished scales, default to diminished
+    // This prevents complex chord names and keeps the analysis simple
+    return { quality: 'diminished', symbol: '°', isNonStandard: false, description: 'Diminished triad' };
 }
 
 function calculateSeventhChords(scale, scaleType = 'major', category = null) {
@@ -1064,6 +1170,11 @@ function calculateSeventhChords(scale, scaleType = 'major', category = null) {
     // Check if this scale type should display chords
     if (!shouldDisplayChords(scaleType, scale.length, category)) {
         return [];
+    }
+
+    // Special handling for diminished scales - find ALL possible seventh chords
+    if (scale.length === 8 && (scaleType.includes('diminished') || scaleType.includes('dim'))) {
+        return calculateDiminishedScaleSeventhChords(scale, scaleType);
     }
 
     const seventhChords = [];
@@ -1128,6 +1239,114 @@ function calculateSeventhChords(scale, scaleType = 'major', category = null) {
     }
     
     return seventhChords;
+}
+
+function calculateDiminishedScaleSeventhChords(scale, scaleType) {
+    const seventhChords = [];
+    
+    // For diminished scales, we need to find ALL possible seventh chords, not just sequential ones
+    for (let i = 0; i < scale.length; i++) {
+        const root = scale[i];
+        const possibleSeventhChords = [];
+        
+        // Check all possible combinations of notes from the scale for this root
+        for (let j = 0; j < scale.length; j++) {
+            if (j === i) continue; // Skip the root
+            
+            for (let k = j + 1; k < scale.length; k++) {
+                if (k === i) continue; // Skip the root
+                
+                for (let l = k + 1; l < scale.length; l++) {
+                    if (l === i) continue; // Skip the root
+                    
+                    const third = scale[j];
+                    const fifth = scale[k];
+                    const seventh = scale[l];
+                    
+                    // Calculate intervals
+                    let thirdInterval = getIntervalBetweenNotes(root, third);
+                    let fifthInterval = getIntervalBetweenNotes(root, fifth);
+                    let seventhInterval = getIntervalBetweenNotes(root, seventh);
+                    
+                    // Normalize intervals
+                    while (thirdInterval > 6) thirdInterval -= 12;
+                    while (thirdInterval < 0) thirdInterval += 12;
+                    while (fifthInterval > 11) fifthInterval -= 12;
+                    while (fifthInterval < 4) fifthInterval += 12;
+                    while (seventhInterval > 11) seventhInterval -= 12;
+                    while (seventhInterval < 9) seventhInterval += 12;
+                    
+                    // Check if this forms a valid seventh chord
+                    if (isValidSeventhChord(thirdInterval, fifthInterval, seventhInterval)) {
+                        const chordAnalysis = analyzeDiminishedSeventhChord(thirdInterval, fifthInterval, seventhInterval);
+                        
+                        possibleSeventhChords.push({
+                            root: root,
+                            third: third,
+                            fifth: fifth,
+                            seventh: seventh,
+                            thirdInterval: thirdInterval,
+                            fifthInterval: fifthInterval,
+                            seventhInterval: seventhInterval,
+                            quality: chordAnalysis.quality,
+                            symbol: chordAnalysis.symbol,
+                            score: getSeventhChordScore(thirdInterval, fifthInterval, seventhInterval)
+                        });
+                    }
+                }
+            }
+        }
+        
+        // Select the best seventh chord for this root (prefer standard intervals)
+        if (possibleSeventhChords.length > 0) {
+            const bestChord = possibleSeventhChords.sort((a, b) => b.score - a.score)[0];
+            
+            seventhChords.push({
+                degree: i + 1,
+                roman: getRomanNumeral(i + 1, bestChord.quality),
+                root: bestChord.root,
+                notes: [bestChord.root, bestChord.third, bestChord.fifth, bestChord.seventh],
+                quality: bestChord.quality,
+                symbol: bestChord.symbol,
+                name: `${bestChord.root}${bestChord.symbol}`,
+                intervals: [bestChord.thirdInterval, bestChord.fifthInterval, bestChord.seventhInterval],
+                function: '', // Diminished scales don't follow functional harmony
+                isNonStandard: false,
+                description: `${bestChord.quality} seventh chord from diminished scale`
+            });
+        }
+    }
+    
+    return seventhChords;
+}
+
+function isValidSeventhChord(thirdInterval, fifthInterval, seventhInterval) {
+    // Define what constitutes a valid seventh chord
+    const validSeventhChords = [
+        [4, 7, 11], // Major 7th
+        [4, 7, 10], // Dominant 7th  
+        [3, 7, 10], // Minor 7th
+        [3, 6, 9],  // Diminished 7th
+        [3, 6, 10], // Half-diminished 7th
+        [4, 8, 11], // Augmented major 7th
+        [4, 8, 10]  // Augmented 7th
+    ];
+    
+    return validSeventhChords.some(([third, fifth, seventh]) => 
+        thirdInterval === third && fifthInterval === fifth && seventhInterval === seventh
+    );
+}
+
+function getSeventhChordScore(thirdInterval, fifthInterval, seventhInterval) {
+    // Score seventh chords to prioritize standard ones
+    if (thirdInterval === 4 && fifthInterval === 7 && seventhInterval === 11) return 100; // Major 7th
+    if (thirdInterval === 4 && fifthInterval === 7 && seventhInterval === 10) return 95;  // Dominant 7th
+    if (thirdInterval === 3 && fifthInterval === 7 && seventhInterval === 10) return 90;  // Minor 7th
+    if (thirdInterval === 3 && fifthInterval === 6 && seventhInterval === 9) return 85;   // Diminished 7th
+    if (thirdInterval === 3 && fifthInterval === 6 && seventhInterval === 10) return 80;  // Half-diminished 7th
+    if (thirdInterval === 4 && fifthInterval === 8 && seventhInterval === 11) return 75;  // Augmented major 7th
+    if (thirdInterval === 4 && fifthInterval === 8 && seventhInterval === 10) return 70;  // Augmented 7th
+    return 0; // Invalid/exotic
 }
 
 function calculateNinthChords(scale, scaleType = 'major', category = null) {
@@ -1812,31 +2031,36 @@ function analyzePentatonicSeventhChord(thirdInterval, fifthInterval, seventhInte
 }
 
 function analyzeDiminishedSeventhChord(thirdInterval, fifthInterval, seventhInterval) {
-    // Diminished scales create complex seventh chord structures
+    // For diminished scales, only analyze basic seventh chords
     
-    if (thirdInterval === 3 && fifthInterval === 6 && seventhInterval === 9) {
-        return { quality: 'diminished 7th', symbol: '°7', isNonStandard: false, description: 'Diminished seventh (from dim. scale)' };
+    // Standard major seventh
+    if (thirdInterval === 4 && fifthInterval === 7 && seventhInterval === 11) {
+        return { quality: 'Major 7th', symbol: 'maj7', isNonStandard: false, description: 'Major seventh chord' };
     }
+    
+    // Standard minor seventh
+    if (thirdInterval === 3 && fifthInterval === 7 && seventhInterval === 10) {
+        return { quality: 'minor 7th', symbol: 'm7', isNonStandard: false, description: 'Minor seventh chord' };
+    }
+    
+    // Standard dominant seventh
+    if (thirdInterval === 4 && fifthInterval === 7 && seventhInterval === 10) {
+        return { quality: 'Dominant 7th', symbol: '7', isNonStandard: false, description: 'Dominant seventh chord' };
+    }
+    
+    // Half-diminished seventh
     if (thirdInterval === 3 && fifthInterval === 6 && seventhInterval === 10) {
-        return { quality: 'half-diminished 7th', symbol: 'm7♭5', isNonStandard: false, description: 'Half-diminished seventh (from dim. scale)' };
-    }
-    if (thirdInterval === 1 && fifthInterval === 4 && seventhInterval === 7) {
-        return { quality: 'chromatic 7th', symbol: 'b2/3/5', isNonStandard: true, description: 'Chromatic cluster with fifth' };
-    }
-    if (thirdInterval === 2 && fifthInterval === 5 && seventhInterval === 8) {
-        return { quality: 'chromatic stack', symbol: '2/4/6', isNonStandard: true, description: 'Chromatic interval stack' };
-    }
-    if (thirdInterval === 6 && fifthInterval === 9 && seventhInterval === 0) {
-        return { quality: 'tritone cluster', symbol: '♭5/6/8', isNonStandard: true, description: 'Tritone cluster with octave' };
+        return { quality: 'half-diminished 7th', symbol: 'm7♭5', isNonStandard: false, description: 'Half-diminished seventh' };
     }
     
-    // Default diminished seventh naming
-    return {
-        quality: `diminished 7th complex`,
-        symbol: `dim7(${thirdInterval}/${fifthInterval}/${seventhInterval})`,
-        isNonStandard: true,
-        description: `Complex diminished seventh harmony`
-    };
+    // Diminished seventh
+    if (thirdInterval === 3 && fifthInterval === 6 && seventhInterval === 9) {
+        return { quality: 'diminished 7th', symbol: '°7', isNonStandard: false, description: 'Diminished seventh chord' };
+    }
+    
+    // For any other intervals in diminished scales, default to dominant 7th
+    // This prevents complex exotic chord names
+    return { quality: 'Dominant 7th', symbol: '7', isNonStandard: false, description: 'Dominant seventh chord' };
 }
 
 function getIntervalName(semitones) {
@@ -1876,7 +2100,14 @@ function getRomanNumeral(degree, quality) {
     const numerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
     const numeral = numerals[degree - 1] || 'I';
     
-    if (quality.includes('minor') || quality.includes('diminished')) {
+    // Handle sus chord types
+    if (quality === 'sus2') {
+        return numeral + 'sus2';
+    } else if (quality === 'sus4') {
+        return numeral + 'sus4';
+    } else if (quality === 'sus4seventh') {
+        return numeral + '7sus4';
+    } else if (quality.includes('minor') || quality.includes('diminished')) {
         return numeral.toLowerCase();
     } else if (quality.includes('diminished')) {
         return numeral.toLowerCase() + '°';
@@ -1993,12 +2224,8 @@ function getCharacteristicChords(scale, scaleType) {
     
     // Enhanced detection patterns with more comprehensive matching
     
-    // Diminished scales (8-note scales)
-    if (scaleType === 'diminished' || scaleType === 'half-whole-diminished' || scaleType === 'whole-half-diminished' || 
-        scaleType.includes('diminished') || (scale && scale.length === 8)) {
-        console.log('Detected diminished scale, calling getDiminishedScaleChords');
-        return getDiminishedScaleChords(scale);
-    }
+    // NOTE: Diminished scales now use traditional degree-by-degree analysis
+    // Removed diminished scale handling to allow for proper scale degree chord construction
     
     // Blues scales (6-note scales) - CHECK BEFORE PENTATONIC
     console.log('Checking blues conditions:');
@@ -2752,6 +2979,267 @@ function getChordIntervals(chordNotes, rootNote) {
     return intervals;
 }
 
+function calculateSixthChords(scale, scaleType = 'major', category = null) {
+    if (!scale || scale.length < 6) {
+        return [];
+    }
+    
+    // Only calculate 6th chords for major modes
+    if (scaleType !== 'major' || !category || category !== 'major-modes') {
+        return [];
+    }
+    
+    const sixthChords = [];
+    
+    // Only build 6th chords on degrees that naturally have a major 6th interval
+    // In major scale: I6, ii6, IV6, V6 (degrees 1, 2, 4, 5)
+    const sixthChordDegrees = [0, 1, 3, 4]; // I, ii, IV, V (0-indexed)
+    
+    sixthChordDegrees.forEach(i => {
+        const root = scale[i];
+        
+        // Calculate scale degrees for chord tones
+        const thirdIndex = (i + 2) % scale.length;
+        const fifthIndex = (i + 4) % scale.length;
+        const sixthIndex = (i + 5) % scale.length; // 6th is the same as 13th but simpler
+        
+        const third = scale[thirdIndex];
+        const fifth = scale[fifthIndex];
+        const sixth = scale[sixthIndex];
+        
+        // Calculate intervals from the chord root
+        let thirdInterval = getIntervalBetweenNotes(root, third);
+        let fifthInterval = getIntervalBetweenNotes(root, fifth);
+        let sixthInterval = getIntervalBetweenNotes(root, sixth);
+        
+        // Fix octave wrapping issues
+        while (thirdInterval > 6) thirdInterval -= 12;
+        while (thirdInterval < 0) thirdInterval += 12;
+        while (fifthInterval > 11) fifthInterval -= 12;
+        while (fifthInterval < 4) fifthInterval += 12;
+        while (sixthInterval > 11) sixthInterval -= 12;
+        while (sixthInterval < 8) sixthInterval += 12;
+        
+        // Analyze the 6th chord
+        const chordAnalysis = analyzeSixthChord(thirdInterval, fifthInterval, sixthInterval);
+        
+        sixthChords.push({
+            degree: i + 1,
+            roman: getRomanNumeral(i + 1, chordAnalysis.quality),
+            root: root,
+            notes: [root, third, fifth, sixth],
+            quality: chordAnalysis.quality,
+            symbol: chordAnalysis.symbol,
+            name: `${root}${chordAnalysis.symbol}`,
+            intervals: [thirdInterval, fifthInterval, sixthInterval],
+            function: getChordFunction(i + 1, scaleType),
+            isNonStandard: chordAnalysis.isNonStandard || false,
+            description: chordAnalysis.description
+        });
+    });
+    
+    return sixthChords;
+}
+
+function analyzeSixthChord(thirdInterval, fifthInterval, sixthInterval) {
+    const quality = thirdInterval === 4 ? 'Major' : 'minor';
+    const symbol = thirdInterval === 4 ? '6' : 'm6';
+    return { quality, symbol };
+}
+
+function calculateSus2Chords(scale, scaleType = 'major', category = null) {
+    if (!scale || scale.length < 7) return [];
+    
+    // Only calculate sus2 chords for major modes
+    if (scaleType !== 'major') return [];
+    
+    // Sus2 chords are typically found on degrees I, ii, IV, V, vi in major
+    const sus2Degrees = [1, 2, 4, 5, 6];
+    const chords = [];
+    
+    for (const degree of sus2Degrees) {
+        const rootIndex = degree - 1;
+        const root = scale[rootIndex];
+        
+        // Calculate sus2 chord: root + 2nd + 5th
+        const secondIndex = (rootIndex + 1) % scale.length;
+        const fifthIndex = (rootIndex + 4) % scale.length;
+        
+        const second = scale[secondIndex];
+        const fifth = scale[fifthIndex];
+        
+        const notes = [root, second, fifth];
+        
+        // Calculate intervals from root
+        const secondInterval = getIntervalBetweenNotes(root, second);
+        const fifthInterval = getIntervalBetweenNotes(root, fifth);
+        
+        const analysis = analyzeSus2Chord(secondInterval, fifthInterval);
+        const function_ = getChordFunction(degree, scaleType);
+        const color = getChordColor(function_, analysis.quality);
+        
+        chords.push({
+            degree: degree,
+            roman: getRomanNumeral(degree, 'sus2'),
+            root: root,
+            name: `${root}${analysis.symbol}`,
+            notes: notes,
+            quality: analysis.quality,
+            symbol: `${root}${analysis.symbol}`,
+            description: `${analysis.quality} sus2 chord`,
+            intervals: ['1', '2', '5'],
+            function: function_,
+            color: color
+        });
+    }
+    
+    return chords;
+}
+
+function analyzeSus2Chord(secondInterval, fifthInterval) {
+    // Sus2 chords are neither major nor minor, but we can categorize by fifth
+    const quality = fifthInterval === 7 ? 'Sus2' : 'Sus2♭5';
+    const symbol = fifthInterval === 7 ? 'sus2' : 'sus2♭5';
+    return { quality, symbol };
+}
+
+function calculateSus4Chords(scale, scaleType = 'major', category = null) {
+    if (!scale || scale.length < 7) return [];
+    
+    // Only calculate sus4 chords for major modes
+    if (scaleType !== 'major') return [];
+    
+    // Sus4 chords are typically found on degrees I, ii, iii, V, vi in major
+    const sus4Degrees = [1, 2, 3, 5, 6];
+    const chords = [];
+    
+    for (const degree of sus4Degrees) {
+        const rootIndex = degree - 1;
+        const root = scale[rootIndex];
+        
+        // Calculate sus4 chord: root + 4th + 5th
+        const fourthIndex = (rootIndex + 3) % scale.length;
+        const fifthIndex = (rootIndex + 4) % scale.length;
+        
+        const fourth = scale[fourthIndex];
+        const fifth = scale[fifthIndex];
+        
+        const notes = [root, fourth, fifth];
+        
+        // Calculate intervals from root
+        const fourthInterval = getIntervalBetweenNotes(root, fourth);
+        const fifthInterval = getIntervalBetweenNotes(root, fifth);
+        
+        const analysis = analyzeSus4Chord(fourthInterval, fifthInterval);
+        const function_ = getChordFunction(degree, scaleType);
+        const color = getChordColor(function_, analysis.quality);
+        
+        chords.push({
+            degree: degree,
+            roman: getRomanNumeral(degree, 'sus4'),
+            root: root,
+            name: `${root}${analysis.symbol}`,
+            notes: notes,
+            quality: analysis.quality,
+            symbol: `${root}${analysis.symbol}`,
+            description: `${analysis.quality} sus4 chord`,
+            intervals: ['1', '4', '5'],
+            function: function_,
+            color: color
+        });
+    }
+    
+    return chords;
+}
+
+function analyzeSus4Chord(fourthInterval, fifthInterval) {
+    // Sus4 chords are neither major nor minor, but we can categorize by fifth
+    const quality = fifthInterval === 7 ? 'Sus4' : 'Sus4♭5';
+    const symbol = fifthInterval === 7 ? 'sus4' : 'sus4♭5';
+    return { quality, symbol };
+}
+
+function calculateSus4SeventhChords(scale, scaleType = 'major', category = null) {
+    if (!scale || scale.length < 7) return [];
+    
+    // Only calculate 7sus4 chords for major modes
+    if (scaleType !== 'major') return [];
+    
+    // 7sus4 chords are typically found on degrees I, ii, iii, V, vi in major
+    const sus4SeventhDegrees = [1, 2, 3, 5, 6];
+    const chords = [];
+    
+    for (const degree of sus4SeventhDegrees) {
+        const rootIndex = degree - 1;
+        const root = scale[rootIndex];
+        
+        // Calculate 7sus4 chord: root + 4th + 5th + 7th
+        const fourthIndex = (rootIndex + 3) % scale.length;
+        const fifthIndex = (rootIndex + 4) % scale.length;
+        const seventhIndex = (rootIndex + 6) % scale.length;
+        
+        const fourth = scale[fourthIndex];
+        const fifth = scale[fifthIndex];
+        const seventh = scale[seventhIndex];
+        
+        const notes = [root, fourth, fifth, seventh];
+        
+        // Calculate intervals from root
+        const fourthInterval = getIntervalBetweenNotes(root, fourth);
+        const fifthInterval = getIntervalBetweenNotes(root, fifth);
+        const seventhInterval = getIntervalBetweenNotes(root, seventh);
+        
+        const analysis = analyzeSus4SeventhChord(fourthInterval, fifthInterval, seventhInterval);
+        const function_ = getChordFunction(degree, scaleType);
+        const color = getChordColor(function_, analysis.quality);
+        
+        chords.push({
+            degree: degree,
+            roman: getRomanNumeral(degree, 'sus4seventh'),
+            root: root,
+            name: `${root}${analysis.symbol}`,
+            notes: notes,
+            quality: analysis.quality,
+            symbol: `${root}${analysis.symbol}`,
+            description: `${analysis.quality} sus4 seventh chord`,
+            intervals: ['1', '4', '5', analysis.seventhInterval],
+            function: function_,
+            color: color
+        });
+    }
+    
+    return chords;
+}
+
+function analyzeSus4SeventhChord(fourthInterval, fifthInterval, seventhInterval) {
+    let quality, symbol, seventhIntervalName;
+    
+    if (seventhInterval === 11) {
+        // Major 7th
+        quality = 'Major 7';
+        symbol = 'maj7sus4';
+        seventhIntervalName = '7';
+    } else if (seventhInterval === 10) {
+        // Minor 7th (dominant)
+        quality = 'Dominant 7';
+        symbol = '7sus4';
+        seventhIntervalName = '♭7';
+    } else {
+        // Other seventh intervals
+        quality = 'Sus4 7th';
+        symbol = '7sus4';
+        seventhIntervalName = '♭7';
+    }
+    
+    // Adjust for altered fifths
+    if (fifthInterval !== 7) {
+        symbol += '♭5';
+        quality += '♭5';
+    }
+    
+    return { quality, symbol, seventhInterval: seventhIntervalName };
+}
+
 // Export all functions
 window.MusicTheory = {
     hexToRgb,
@@ -2797,5 +3285,13 @@ window.MusicTheory = {
     getEnharmonicEquivalent,
     getIntervalEnharmonicEquivalent,
     getEnharmonicTooltip,
-    getChordIntervals
+    getChordIntervals,
+    calculateSixthChords,
+    analyzeSixthChord,
+    calculateSus2Chords,
+    analyzeSus2Chord,
+    calculateSus4Chords,
+    analyzeSus4Chord,
+    calculateSus4SeventhChords,
+    analyzeSus4SeventhChord
 };
