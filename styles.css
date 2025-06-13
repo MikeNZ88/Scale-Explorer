@@ -1804,27 +1804,10 @@ body {
 }
 
 .fretboard-display-container {
-    transition: all 0.3s ease;
-    overflow-x: auto;
-    padding: 10px;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 400px;
-}
-
-.fretboard-display-container.rotated {
-    transform-origin: center;
-    min-height: 800px;
-    padding: 60px 10px;
-    overflow: visible;
-}
-
-/* Rotated SVG styles */
-.fretboard-display-container.rotated .fretboard-svg {
-    transform: rotate(90deg);
-    transform-origin: center center;
-    margin: 0;
 }
 
 /* Improved chord fretboard styling */
@@ -4123,43 +4106,17 @@ body {
 
 /* Chord Controls Styling */
 .chord-controls-container {
-    margin-bottom: 20px;
-    padding: 15px;
-    background: #f8fafc;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .chord-controls-row {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     gap: 15px;
-}
-
-.rotation-btn {
-    background: #f97316;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 18px;
-    transition: all 0.2s ease;
-    display: none; /* Hidden by default on desktop */
-    align-items: center;
-    justify-content: center;
-    min-width: 40px;
-    height: 40px;
-}
-
-.rotation-btn:hover {
-    background: #ea580c;
-    transform: scale(1.05);
-}
-
-.rotation-btn:active {
-    transform: scale(0.95);
 }
 
 /* Mobile responsive adjustments */
@@ -4174,19 +4131,9 @@ body {
         justify-content: center;
     }
     
-    .rotation-btn {
-        display: flex; /* Show rotation button on mobile */
-        align-self: center;
-    }
-    
     .fretboard-display-container {
         min-height: 300px;
         padding: 5px;
-    }
-    
-    .fretboard-display-container.rotated {
-        min-height: 600px;
-        padding: 40px 5px;
     }
 }
 
