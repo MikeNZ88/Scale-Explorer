@@ -2376,6 +2376,13 @@ function displayTraditionalChords(scale, scaleType, category) {
         return;
     }
 
+    // Show traditional chord controls and update section title
+    const chordControls = document.querySelector('.chord-controls');
+    const chordsSection = document.querySelector('.chords-section');
+    if (chordControls) chordControls.style.display = 'block';
+    const sectionTitle = chordsSection?.querySelector('h3');
+    if (sectionTitle) sectionTitle.textContent = 'Chords from the Scale';
+
     // Add informational note for harmonic minor and melodic minor scales
     let scaleNote = '';
     if (scaleType === 'harmonic-minor' || scaleType === 'melodic-minor') {
