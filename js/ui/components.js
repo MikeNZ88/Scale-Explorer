@@ -1672,11 +1672,11 @@ function getParentScaleName(category, parentRoot) {
     
     // For pentatonic modes
     if (category === 'pentatonic') {
-        return `These modes are derived from: ${parentRoot} Major Pentatonic`;
+        return `${parentRoot} Major Pentatonic`;
     }
     
     // For other categories, use the category name
-    return `These modes are derived from: ${parentRoot} ${categoryData.name}`;
+    return `${parentRoot} ${categoryData.name}`;
 }
 
 // Search functionality
@@ -3420,8 +3420,10 @@ function addOctaveVisual(notes, octaveNote, section) {
         octaveIntervalElement.textContent = '8'; // Octave interval
         octaveIntervalElement.setAttribute('data-interval', '8');
         // Apply the same color as the "1" interval (unison)
-        octaveIntervalElement.style.background = MusicTheory.getIntervalColor('1') || '#E8B4B8';
-        octaveIntervalElement.style.color = 'white';
+        const backgroundColor = MusicTheory.getIntervalColor('1') || '#E8B4B8';
+        octaveIntervalElement.style.background = backgroundColor;
+        // Use black text for white/light backgrounds, white text for dark backgrounds
+        octaveIntervalElement.style.color = backgroundColor === '#FFFFFF' ? '#000000' : 'white';
         octaveIntervalElement.style.fontWeight = '600';
         intervalsContainer.appendChild(octaveIntervalElement);
         
