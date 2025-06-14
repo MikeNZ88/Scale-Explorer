@@ -788,29 +788,31 @@ function displayFormula(formula) {
 
     // Handle undefined or null formula
     if (formula === undefined || formula === null) {
-        console.warn('Formula is undefined or null');
         formulaElement.textContent = 'Formula: Not available';
+        formulaElement.style.display = 'block';
         return;
     }
 
     // Handle non-array formula
     if (!Array.isArray(formula)) {
-        console.warn('Formula is not an array, type:', typeof formula, 'value:', formula);
-        formulaElement.textContent = `Formula: Invalid format`;
+        formulaElement.textContent = `Formula: Invalid format (${typeof formula})`;
+        formulaElement.style.display = 'block';
         return;
     }
 
     // Handle empty array
     if (formula.length === 0) {
-        console.warn('Formula is empty array');
+        console.log('Formula is empty array');
         formulaElement.textContent = 'Formula: No data';
+        formulaElement.style.display = 'block';
         return;
     }
+    
+    console.log('Processing formula array:', formula);
     
     // Convert intervals to W/H/WH notation
     const intervalNotation = formula.map((interval, index) => {
         if (typeof interval !== 'number') {
-            console.warn(`Non-numeric interval at index ${index}:`, interval);
             return `${interval}?`;
         }
         
@@ -819,13 +821,18 @@ function displayFormula(formula) {
             case 2: return 'W';
             case 3: return 'WH';
             default: 
-                console.warn(`Unknown interval value: ${interval}`);
                 return `${interval}?`;
         }
     });
     
     const formulaText = intervalNotation.join(' - ');
-    formulaElement.textContent = `Formula: ${formulaText}`;
+    console.log('Final formula text:', formulaText);
+    
+    formulaElement.textContent = formulaText;
+    formulaElement.style.display = 'block';
+    formulaElement.style.visibility = 'visible';
+    
+    console.log('Formula element updated');
 }
 
 function updateScaleColor(intervals) {

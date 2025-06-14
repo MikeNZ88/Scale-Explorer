@@ -234,7 +234,7 @@ const modeMetadata = {
     },
     aeolian: { 
         mood: 'Melancholy', 
-        description: 'The standard minor scale, balanced and emotionally rich. Sad, introspective, dramatic, melancholic.', 
+        description: 'The Natural Minor scale. Sad, introspective, dramatic, melancholic.', 
         applications: ['Classical', 'pop ballads', 'emotional songs', 'minor key harmony'] 
     },
     locrian: { 
@@ -352,7 +352,7 @@ const modeNumbers = {
     'phrygian': { number: 3, properName: 'Phrygian' },
     'lydian': { number: 4, properName: 'Lydian' },
     'mixolydian': { number: 5, properName: 'Mixolydian' },
-    'aeolian': { number: 6, properName: 'Aeolian' },
+    'aeolian': { number: 6, properName: 'Aeolian (Natural Minor)' },
     'locrian': { number: 7, properName: 'Locrian' },
     
     // Harmonic Minor modes
