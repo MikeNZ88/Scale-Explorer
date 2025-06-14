@@ -189,6 +189,10 @@ function calculateScaleWithDegrees(root, formula, scaleType = 'major') {
     }
     
     // Handle special scale types with predefined degree mappings
+    if (scaleType === 'chromatic') {
+        return calculateChromaticScale(root);
+    }
+    
     if (scaleType === 'pentatonic-major' || scaleType === 'pentatonic') {
         return calculatePentatonicScale(root, formula, rootNoteIndex, rootChromaticIndex, noteNames, noteToIndex, scaleType);
     }
@@ -505,12 +509,12 @@ function getChromatic(chromaticIndex, key, scaleType = 'major') {
         // Blues scales generally prefer flats for altered notes
         chromaticScale = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
     } else if (usesSharps) {
-        chromaticScale = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        chromaticScale = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
     } else if (usesFlats) {
         chromaticScale = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
     } else {
         // Default for C and enharmonic roots
-        chromaticScale = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        chromaticScale = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
     }
     
     return chromaticScale[normalizedIndex];
@@ -3416,6 +3420,68 @@ function analyzeSus4SeventhChord(fourthInterval, fifthInterval, seventhInterval)
     return { quality, symbol, seventhInterval: seventhIntervalName };
 }
 
+function calculateChromaticScale(root) {
+    // Chromatic scale interval formula: 1 - ♭2 - 2 - ♭3 - 3 - 4 - ♭5 - 5 - ♭6 - 6 - ♭7 - 7 - 8
+    // This creates a consistent flat-based spelling for all chromatic scales
+    
+    const noteNames = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+    const noteToIndex = {
+        'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11,
+        'C#': 1, 'Db': 1, 'D#': 3, 'Eb': 3, 'F#': 6, 'Gb': 6,
+        'G#': 8, 'Ab': 8, 'A#': 10, 'Bb': 10,
+        'B#': 0, 'Cb': 11, 'E#': 5, 'Fb': 4
+    };
+    
+    // Get root note information
+    const rootNoteName = root.charAt(0);
+    const rootNoteIndex = noteNames.indexOf(rootNoteName);
+    const rootChromaticIndex = noteToIndex[root];
+    
+    if (rootNoteIndex === -1 || rootChromaticIndex === undefined) {
+        console.warn('Invalid root note:', root);
+        return [];
+    }
+    
+    // Chromatic scale degree pattern (which scale degree each chromatic note represents)
+    // 1, ♭2, 2, ♭3, 3, 4, ♭5, 5, ♭6, 6, ♭7, 7
+    const chromaticDegreePattern = [0, 1, 1, 2, 2, 3, 4, 4, 5, 5, 6, 6]; // 0-indexed scale degrees
+    
+    const scale = [root]; // Start with root
+    
+    for (let chromaticStep = 1; chromaticStep < 12; chromaticStep++) {
+        // Calculate target chromatic position
+        const targetChromaticIndex = (rootChromaticIndex + chromaticStep) % 12;
+        
+        // Get the scale degree this chromatic step represents
+        const scaleDegreeIndex = chromaticDegreePattern[chromaticStep];
+        const targetLetterIndex = (rootNoteIndex + scaleDegreeIndex) % 7;
+        const targetLetter = noteNames[targetLetterIndex];
+        
+        // Get natural chromatic position of target letter
+        const naturalChromaticIndex = noteToIndex[targetLetter];
+        
+        // Calculate accidental needed
+        const chromaticDifference = (targetChromaticIndex - naturalChromaticIndex + 12) % 12;
+        
+        let noteName;
+        if (chromaticDifference === 0) {
+            noteName = targetLetter; // Natural
+        } else if (chromaticDifference === 1) {
+            noteName = targetLetter + '#'; // Sharp
+        } else if (chromaticDifference === 11) {
+            noteName = targetLetter + 'b'; // Flat
+        } else {
+            // This shouldn't happen with proper chromatic scale calculation
+            console.warn('Unexpected chromatic difference:', chromaticDifference, 'for', targetLetter);
+            noteName = targetLetter;
+        }
+        
+        scale.push(noteName);
+    }
+    
+    return scale;
+}
+
 // Export all functions
 window.MusicTheory = {
     hexToRgb,
@@ -3469,5 +3535,6 @@ window.MusicTheory = {
     calculateSus4Chords,
     analyzeSus4Chord,
     calculateSus4SeventhChords,
-    analyzeSus4SeventhChord
+    analyzeSus4SeventhChord,
+    calculateChromaticScale
 };

@@ -1308,7 +1308,7 @@ function getConsistentNoteSpelling(noteIndex, spellingConvention) {
     const normalizedIndex = ((noteIndex % 12) + 12) % 12;
     
     // Chromatic scales with consistent spelling
-    const sharpChromatic = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const sharpChromatic = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
     const flatChromatic = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
     
     // Double accidental alternatives (for special cases)
@@ -3234,7 +3234,7 @@ async function playScaleSequence(notes, ascending, section) {
 
 function calculateScaleOctaves(notes, ascending) {
     // Note names in chromatic order for octave calculation
-    const chromaticNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const chromaticNotes = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
     
     // Function to get note index (handles both sharp and flat notation)
     function getNoteIndex(note) {
