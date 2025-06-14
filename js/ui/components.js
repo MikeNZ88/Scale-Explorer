@@ -986,17 +986,17 @@ function createRelatedModes(currentMode, category, currentKey) {
     // Keys that use sharps in their key signatures  
     const sharpKeys = ['G', 'D', 'A', 'E', 'B', 'F#', 'C#'];
     
-    // Minor scales (harmonic minor, melodic minor) typically use flat spellings
-    // due to their characteristic flat intervals (b3, b6, etc.)
-    // However, for certain root notes, we need to be smarter about avoiding double flats
+    // Minor scales (harmonic minor, melodic minor) need smart spelling to avoid double flats
     const parentScaleType = getScaleTypeFromCategory(category);
     if (parentScaleType === 'harmonic-minor' || parentScaleType === 'melodic-minor') {
-        // Use smart spelling for minor scales to avoid problematic double flats
-        // For roots with flats (Ab, Eb, Bb, Db, Gb), use mixed spelling to avoid double flats
-        if (parentRootFlat.includes('b')) {
-            // For flat roots, use a hybrid approach that prioritizes readability
-            spellingConvention = 'mixed-minor';
+        // For minor scales, use the same logic as major scales based on key signatures
+        // This prevents problematic double flats in scales like A melodic minor
+        if (flatKeys.includes(parentRootFlat)) {
+            spellingConvention = 'flat';
+        } else if (sharpKeys.includes(parentRoot)) {
+            spellingConvention = 'sharp';
         } else {
+            // For C minor scales, default to flat (natural minor key signature)
             spellingConvention = 'flat';
         }
     } else if (flatKeys.includes(parentRootFlat)) {
@@ -1308,7 +1308,7 @@ function getConsistentNoteSpelling(noteIndex, spellingConvention) {
     const normalizedIndex = ((noteIndex % 12) + 12) % 12;
     
     // Chromatic scales with consistent spelling
-    const sharpChromatic = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+    const sharpChromatic = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const flatChromatic = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
     
     // Double accidental alternatives (for special cases)
@@ -1476,16 +1476,9 @@ function calculateScaleWithConsistentSpelling(root, formula, scaleType, spelling
             }
         } else if (chromaticDifference === 2) {
             // Two semitones up - use double sharp or flat
-            if (spellingConvention === 'flat' || spellingConvention === 'mixed-minor') {
+            if (spellingConvention === 'flat') {
                 const nextDegreeIndex = (scaleDegreeIndex + 1) % 7;
-                const candidateName = noteNames[nextDegreeIndex] + 'bb';
-                
-                // For mixed-minor, avoid double flats
-                if (spellingConvention === 'mixed-minor' && candidateName.includes('bb')) {
-                    noteName = baseNoteName + '##';
-                } else {
-                    noteName = candidateName;
-                }
+                noteName = noteNames[nextDegreeIndex] + 'bb';
             } else {
                 noteName = baseNoteName + '##';
             }
@@ -1494,15 +1487,6 @@ function calculateScaleWithConsistentSpelling(root, formula, scaleType, spelling
             if (spellingConvention === 'sharp') {
                 const prevDegreeIndex = (scaleDegreeIndex - 1 + 7) % 7;
                 noteName = noteNames[prevDegreeIndex] + '##';
-            } else if (spellingConvention === 'mixed-minor') {
-                // For mixed-minor, avoid double flats
-                const candidateName = baseNoteName + 'bb';
-                if (candidateName.includes('bb')) {
-                    // Use enharmonic equivalent instead
-                    noteName = getConsistentNoteSpelling(currentChromaticIndex, 'sharp');
-                } else {
-                    noteName = candidateName;
-                }
             } else {
                 noteName = baseNoteName + 'bb';
             }
@@ -1920,6 +1904,17 @@ function updateSuggestionHighlight() {
 function selectSearchResult(result) {
     console.log('Selecting search result:', result);
     
+    // Calculate the correct enharmonic spelling based on modal system logic
+    const correctedResult = getCorrectedEnharmonicSpelling(result);
+    
+    // Use the corrected result if it's different from the original
+    const finalResult = correctedResult || result;
+    
+    console.log('Original result:', result);
+    if (correctedResult) {
+        console.log('Corrected to:', correctedResult);
+    }
+    
     // Immediately clear search and hide suggestions to prevent timing issues
     const searchInput = document.getElementById('mode-search');
     const suggestionsContainer = document.getElementById('search-suggestions');
@@ -1936,13 +1931,13 @@ function selectSearchResult(result) {
     // Use the AppController's setState method with a callback to ensure everything updates
     if (window.AppController && typeof AppController.setState === 'function') {
         console.log('Using AppController.setState to update state');
-        console.log('Setting state to:', { key: result.root, category: result.category, mode: result.mode });
+        console.log('Setting state to:', { key: finalResult.root, category: finalResult.category, mode: finalResult.mode });
         
         // Update state and force scale update
         AppController.setState({
-            key: result.root,
-            category: result.category,
-            mode: result.mode
+            key: finalResult.root,
+            category: finalResult.category,
+            mode: finalResult.mode
         });
         
         // Force an additional update after a short delay to ensure everything is set
@@ -1963,14 +1958,14 @@ function selectSearchResult(result) {
         
         // Set root note first
         if (rootSelect) {
-            rootSelect.value = result.root;
+            rootSelect.value = finalResult.root;
             const changeEvent = new Event('change', { bubbles: true });
             rootSelect.dispatchEvent(changeEvent);
         }
         
         // Set category and wait for it to fully update
         if (categorySelect) {
-            categorySelect.value = result.category;
+            categorySelect.value = finalResult.category;
             const changeEvent = new Event('change', { bubbles: true });
             categorySelect.dispatchEvent(changeEvent);
             
@@ -1982,9 +1977,9 @@ function selectSearchResult(result) {
                 }
                 
                 if (modeSelect) {
-                    const modeOption = modeSelect.querySelector(`option[value="${result.mode}"]`);
+                    const modeOption = modeSelect.querySelector(`option[value="${finalResult.mode}"]`);
                     if (modeOption) {
-                        modeSelect.value = result.mode;
+                        modeSelect.value = finalResult.mode;
                         const changeEvent = new Event('change', { bubbles: true });
                         modeSelect.dispatchEvent(changeEvent);
                     } else {
@@ -1998,6 +1993,76 @@ function selectSearchResult(result) {
     }
     
     console.log('Search result selection completed');
+}
+
+// Helper function to calculate correct enharmonic spelling based on modal system
+function getCorrectedEnharmonicSpelling(result) {
+    const { root, mode, category } = result;
+    
+    // Only correct for modal systems that have parent scales
+    const modalCategories = ['major-modes', 'harmonic-minor-modes', 'melodic-minor-modes'];
+    if (!modalCategories.includes(category)) {
+        return null; // No correction needed for non-modal scales
+    }
+    
+    // Mode offset lookup table - semitones from parent scale root to mode root
+    const modeOffsets = {
+        // Major modes
+        'major': 0, 'dorian': 2, 'phrygian': 4, 'lydian': 5, 'mixolydian': 7, 'aeolian': 9, 'locrian': 11,
+        // Harmonic minor modes  
+        'harmonic-minor': 0, 'locrian-natural-6': 2, 'ionian-sharp-5': 3, 'dorian-sharp-4': 5, 
+        'phrygian-dominant': 7, 'lydian-sharp-2': 8, 'altered-dominant': 11,
+        // Melodic minor modes
+        'melodic-minor': 0, 'dorian-b2': 2, 'lydian-augmented': 3, 'lydian-dominant': 5,
+        'mixolydian-b6': 7, 'locrian-natural-2': 9, 'super-locrian': 11
+    };
+    
+    const currentModeOffset = modeOffsets[mode] || 0;
+    const rootIndex = noteToIndex(root);
+    const parentRootIndex = (rootIndex - currentModeOffset + 12) % 12;
+    
+    // Determine spelling convention based on the parent scale root
+    const parentRoot = getConsistentNoteSpelling(parentRootIndex, 'sharp');
+    const parentRootFlat = getConsistentNoteSpelling(parentRootIndex, 'flat');
+    
+    // Keys that use flats/sharps in their key signatures
+    const flatKeys = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'];
+    const sharpKeys = ['G', 'D', 'A', 'E', 'B', 'F#', 'C#'];
+    
+    let spellingConvention;
+    const parentScaleType = getScaleTypeFromCategory(category);
+    
+    if (parentScaleType === 'harmonic-minor' || parentScaleType === 'melodic-minor') {
+        // For minor scales, use the same logic as major scales based on key signatures
+        if (flatKeys.includes(parentRootFlat)) {
+            spellingConvention = 'flat';
+        } else if (sharpKeys.includes(parentRoot)) {
+            spellingConvention = 'sharp';
+        } else {
+            spellingConvention = 'flat'; // For C minor scales
+        }
+    } else if (flatKeys.includes(parentRootFlat)) {
+        spellingConvention = 'flat';
+    } else if (sharpKeys.includes(parentRoot)) {
+        spellingConvention = 'sharp';
+    } else {
+        spellingConvention = 'sharp'; // For C major
+    }
+    
+    // Calculate the correct root note for this mode
+    const correctRootIndex = (parentRootIndex + currentModeOffset) % 12;
+    const correctRoot = getConsistentNoteSpelling(correctRootIndex, spellingConvention);
+    
+    // If the correct root is different from the search result root, return corrected result
+    if (correctRoot !== root) {
+        return {
+            ...result,
+            root: correctRoot,
+            matchedText: `${correctRoot} ${result.modeName}`
+        };
+    }
+    
+    return null; // No correction needed
 }
 
 function showSuggestionsIfResults() {
@@ -4024,4 +4089,14 @@ function handleIntervalInfoModalEscape(e) {
     if (e.key === 'Escape') {
         closeIntervalInfoModal();
     }
+}
+
+// Helper function to map category names to scale types
+function getScaleTypeFromCategory(category) {
+    const categoryMap = {
+        'major-modes': 'major',
+        'harmonic-minor-modes': 'harmonic-minor',
+        'melodic-minor-modes': 'melodic-minor'
+    };
+    return categoryMap[category] || 'major';
 }

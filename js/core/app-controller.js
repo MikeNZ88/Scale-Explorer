@@ -125,18 +125,78 @@ function updateScale() {
         // For diminished scales, use the specific mode as scale type
         const actualScaleType = (category === 'diminished-modes') ? mode : scaleType;
         
+        // Calculate correct enharmonic spelling for modal systems
+        let correctedKey = key;
+        const modalCategories = ['major-modes', 'harmonic-minor-modes', 'melodic-minor-modes'];
+        
+        if (modalCategories.includes(category)) {
+            // Mode offset lookup table - semitones from parent scale root to mode root
+            const modeOffsets = {
+                // Major modes
+                'major': 0, 'dorian': 2, 'phrygian': 4, 'lydian': 5, 'mixolydian': 7, 'aeolian': 9, 'locrian': 11,
+                // Harmonic minor modes  
+                'harmonic-minor': 0, 'locrian-natural-6': 2, 'ionian-sharp-5': 3, 'dorian-sharp-4': 5, 
+                'phrygian-dominant': 7, 'lydian-sharp-2': 8, 'altered-dominant': 11,
+                // Melodic minor modes
+                'melodic-minor': 0, 'dorian-b2': 2, 'lydian-augmented': 3, 'lydian-dominant': 5,
+                'mixolydian-b6': 7, 'locrian-natural-2': 9, 'super-locrian': 11
+            };
+            
+            const currentModeOffset = modeOffsets[mode] || 0;
+            const rootIndex = noteToIndex(key);
+            const parentRootIndex = (rootIndex - currentModeOffset + 12) % 12;
+            
+            // Determine spelling convention based on the parent scale root
+            const parentRoot = getConsistentNoteSpelling(parentRootIndex, 'sharp');
+            const parentRootFlat = getConsistentNoteSpelling(parentRootIndex, 'flat');
+            
+            // Keys that use flats/sharps in their key signatures
+            const flatKeys = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'];
+            const sharpKeys = ['G', 'D', 'A', 'E', 'B', 'F#', 'C#'];
+            
+            let spellingConvention;
+            const parentScaleType = getScaleTypeFromCategory(category);
+            
+            if (parentScaleType === 'harmonic-minor' || parentScaleType === 'melodic-minor') {
+                // For minor scales, use the same logic as major scales based on key signatures
+                if (flatKeys.includes(parentRootFlat)) {
+                    spellingConvention = 'flat';
+                } else if (sharpKeys.includes(parentRoot)) {
+                    spellingConvention = 'sharp';
+                } else {
+                    spellingConvention = 'flat'; // For C minor scales
+                }
+            } else if (flatKeys.includes(parentRootFlat)) {
+                spellingConvention = 'flat';
+            } else if (sharpKeys.includes(parentRoot)) {
+                spellingConvention = 'sharp';
+            } else {
+                spellingConvention = 'sharp'; // For C major
+            }
+            
+            // Calculate the correct root note for this mode
+            const correctRootIndex = (parentRootIndex + currentModeOffset) % 12;
+            const correctRoot = getConsistentNoteSpelling(correctRootIndex, spellingConvention);
+            
+            // Use the corrected root if it's different
+            if (correctRoot !== key) {
+                correctedKey = correctRoot;
+                console.log(`Corrected enharmonic spelling: ${key} → ${correctedKey} (based on parent scale)`);
+            }
+        }
+        
         // Add debugging for diminished scales
         if (category === 'diminished-modes') {
             console.log('=== DIMINISHED SCALE DEBUG ===');
             console.log('Category:', category);
             console.log('Mode:', mode);
-            console.log('Key:', key);
+            console.log('Key:', correctedKey);
             console.log('Mode Formula:', modeFormula);
             console.log('Actual Scale Type:', actualScaleType);
         }
         
-        // Calculate the scale directly using the mode's formula
-        const modeNotes = MusicTheory.calculateScale(key, modeFormula, actualScaleType);
+        // Calculate the scale using the corrected key
+        const modeNotes = MusicTheory.calculateScale(correctedKey, modeFormula, actualScaleType);
         
         // Add more debugging for diminished scales
         if (category === 'diminished-modes') {
@@ -145,6 +205,17 @@ function updateScale() {
         
         // Get intervals
         const intervals = MusicTheory.getIntervals(modeNotes, modeNotes[0], actualScaleType, mode);
+        
+        // Update state with corrected key if it was changed
+        if (correctedKey !== key) {
+            currentState.key = correctedKey;
+            
+            // Update the UI dropdown to reflect the corrected key
+            const keySelect = document.getElementById('key-select');
+            if (keySelect && keySelect.value !== correctedKey) {
+                keySelect.value = correctedKey;
+            }
+        }
         
         // Update state
         currentState.scaleType = actualScaleType;
@@ -157,14 +228,14 @@ function updateScale() {
         window.currentMode = mode;
         
         // Display the scale
-        UIComponents.displayScale(modeNotes, intervals, modeFormula, actualScaleType, key, category);
+        UIComponents.displayScale(modeNotes, intervals, modeFormula, actualScaleType, correctedKey, category);
         
         // Update mode information
         updateModeInfo(mode, category);
         
         // Update audio controls with new scale and chords
         if (window.audioControls) {
-            window.audioControls.updateScale(modeNotes, key, mode);
+            window.audioControls.updateScale(modeNotes, correctedKey, mode);
         }
         
     } catch (error) {
@@ -535,6 +606,43 @@ function toggleModeInfo() {
 
 // Make the function globally available
 window.toggleModeInfo = toggleModeInfo;
+
+// Helper function to map category names to scale types
+function getScaleTypeFromCategory(category) {
+    const categoryMap = {
+        'major-modes': 'major',
+        'harmonic-minor-modes': 'harmonic-minor',
+        'melodic-minor-modes': 'melodic-minor'
+    };
+    return categoryMap[category] || 'major';
+}
+
+// Helper function to convert note names to chromatic indices (handles both sharps and flats)
+function noteToIndex(note) {
+    const noteMapping = {
+        'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4,
+        'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9,
+        'A#': 10, 'Bb': 10, 'B': 11,
+        // Add double accidentals
+        'C##': 2, 'D##': 4, 'F##': 7, 'G##': 9, 'A##': 11,
+        'Dbb': 0, 'Ebb': 2, 'Gbb': 5, 'Abb': 7, 'Bbb': 9,
+        // Add enharmonic equivalents for edge cases
+        'B#': 0, 'E#': 5, 'Fb': 4, 'Cb': 11
+    };
+    return noteMapping[note] !== undefined ? noteMapping[note] : 0;
+}
+
+// Helper function to get consistent note spelling
+function getConsistentNoteSpelling(chromaticIndex, convention) {
+    const sharpChromatic = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const flatChromatic = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+    
+    if (convention === 'sharp') {
+        return sharpChromatic[chromaticIndex];
+    } else {
+        return flatChromatic[chromaticIndex];
+    }
+}
 
 // Export functions
 window.AppController = {
