@@ -683,7 +683,6 @@ function makeResizable(modal) {
 function displayScale(scale, intervals, formula, scaleType, key, category) {
     displayNotes(scale);
     displayIntervals(intervals);
-    displayFormula(formula);
     displayChords(scale, scaleType, category);
     updateScaleColor(intervals);
     updateParentScale(scaleType, key, category);
@@ -746,36 +745,36 @@ function displayNotes(notes) {
 function displayIntervals(intervals) {
     const intervalsContainer = document.querySelector('.intervals');
     if (!intervalsContainer) return;
-    
+
     intervalsContainer.innerHTML = '';
-    
+
     // Create intervals display container (no play controls here)
     const intervalsDisplay = document.createElement('div');
     intervalsDisplay.className = 'intervals-display';
-    
+
     intervals.forEach((interval, index) => {
         const intervalElement = document.createElement('span');
         intervalElement.className = 'interval';
         intervalElement.textContent = interval;
         intervalElement.setAttribute('data-interval', interval);
         intervalElement.setAttribute('data-index', index);
-        
+
         // Add enharmonic tooltip if available
         const tooltip = MusicTheory.getEnharmonicTooltip(interval, 'interval');
         if (tooltip) {
             intervalElement.title = tooltip;
         }
-        
+
         // Set background color based on interval using the consistent color scheme
         const color = window.colorsVisible ? 
             MusicTheory.getIntervalColor(interval) : '#d97706';
         if (color) {
             intervalElement.style.backgroundColor = color;
         }
-        
+
         intervalsDisplay.appendChild(intervalElement);
     });
-    
+
     intervalsContainer.appendChild(intervalsDisplay);
 }
 
