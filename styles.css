@@ -3534,7 +3534,7 @@ flex-direction: column;
 align-items: stretch;
 }
 .key-selector-wrapper {
-justify-content: space-between;
+justify-content: flex-start;
 width: 100%;
 }
 .key-selector {
