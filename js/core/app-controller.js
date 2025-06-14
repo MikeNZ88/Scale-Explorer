@@ -351,7 +351,13 @@ function updateModeInfo(mode, category) {
 // Color toggle functionality
 function setupColorToggle() {
     const colorToggle = document.getElementById('color-toggle');
-    if (!colorToggle) return;
+    
+    // If no color toggle element exists, set colors visible by default
+    if (!colorToggle) {
+        currentState.colorsVisible = true;
+        updateColorVisibility(true);
+        return;
+    }
     
     // Set initial state
     colorToggle.checked = currentState.colorsVisible;

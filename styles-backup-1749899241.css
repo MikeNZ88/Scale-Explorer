@@ -86,24 +86,37 @@ margin-right: auto;
 margin-bottom: 1.5rem;
 }
 .key-controls {
-flex-direction: column;
-align-items: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
 }
 .key-selector-wrapper {
-/* Remove problematic flexbox rules - keep it simple */
-display: inline-block;
+    /* Maintain flexbox alignment on mobile */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
 }
 .key-selector-wrapper label {
 font-weight: 700;
 color: #1f2937;
 font-size: 1rem;
-min-width: 80px;
 text-transform: uppercase;
 letter-spacing: 0.5px;
 }
 .key-selector {
-flex: 1;
-min-width: auto;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #2d3748;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: auto;
+    display: block;
 }
 .key-selector:hover {
 background-color: #f3f4f6;
@@ -144,7 +157,7 @@ border-radius: 4px;
 padding: 0.125rem 0.375rem;
 font-size: 0.65rem;
 font-weight: 700;
-display: inline-block;
+display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
 box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
 border: 2px solid rgba(255, 255, 255, 0.2);
 text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
@@ -207,7 +220,7 @@ font-size: 0.875rem;
 background: white;
 border: 2px solid #e2e8f0;
 border-radius: 8px;
-display: inline-block;
+display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
 font-size: 0.875rem;
 font-weight: 500;
 color: #2d3748;
@@ -274,7 +287,7 @@ margin-bottom: 0.5rem;
 background: rgba(217, 119, 6, 0.1);
 padding: 0.25rem 0.5rem;
 border-radius: 6px;
-display: inline-block;
+display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
 }
 .mode-card-mood {
 font-size: 0.9rem;
@@ -1344,7 +1357,7 @@ box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2),
 inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 .interval-colored {
-display: inline-block;
+display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
 padding: 0.2rem 0.4rem;
 margin: 0.1rem 0.2rem;
 border-radius: 4px;
@@ -1542,37 +1555,25 @@ border-color: #F39C12;
 }
 .scale-controls {
 display: flex;
-flex-direction: column;
 justify-content: center;
-align-items: center;
-gap: 1rem;
+align-items: flex-end;
+gap: 2rem;
+flex-wrap: wrap;
 max-width: 800px;
 margin: 0 auto 2rem auto;
 }
 .control-group {
 display: flex;
-flex-direction: column;
-gap: 8px;
-align-items: center;
-justify-content: center;
-width: 100%;
-max-width: 300px;
-}
-
-/* Special styling for the last control group with Colors and Information */
-.control-group:last-child {
 flex-direction: row;
 gap: 12px;
-justify-content: center;
 align-items: center;
-max-width: 400px;
+justify-content: flex-start;
 }
 .control-group label {
 font-weight: 600;
 color: #2c3e50;
 font-size: 0.9rem;
 margin-bottom: 0;
-text-align: center;
 }
 .scale-controls select {
 padding: 10px 12px;
@@ -2121,7 +2122,7 @@ height: 0;
 border-left: 8px solid white;
 border-top: 6px solid transparent;
 border-bottom: 6px solid transparent;
-display: inline-block;
+display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
 }
 .play-btn:hover {
 background: linear-gradient(135deg, #FF7F00, #FF6600);
@@ -2196,7 +2197,7 @@ padding: 8px 12px;
 border-radius: 6px;
 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 margin: 0 4px;
-display: inline-block;
+display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
 }
 @keyframes octaveAppear {
 0% {
@@ -2209,7 +2210,7 @@ transform: scale(1) translateY(0);
 }
 }
 .characteristic-chord {
-display: inline-block;
+display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
 background-color: #FF8C00;
 color: white;
 padding: 8px 12px;
@@ -2305,7 +2306,7 @@ color: #E74C3C;
 background-color: #f8f9fa;
 padding: 5px 8px;
 border-radius: 4px;
-display: inline-block;
+display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
 }
 .usage-note {
 font-size: 12px;
@@ -2519,7 +2520,7 @@ border: 2px solid #ff7700;
 color: white;
 font-weight: 500;
 transition: all 0.2s ease;
-display: inline-block;
+display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
 }
 .clickable-chord:hover {
 background-color: #ff7700;
@@ -2729,16 +2730,15 @@ line-height: 1.4;
     padding: 10px 15px;
     background: linear-gradient(135deg, #E8743B, #DC6C27);
     border-radius: 8px;
-color: white;
+    color: white;
     font-weight: 500;
-cursor: pointer;
+    cursor: pointer;
     transition: all 0.2s ease;
     width: auto;
-    height: 44px;
+    height: 40px;
     border: 2px solid transparent;
     font-size: 0.95rem;
     margin-left: 8px;
-    margin-top: 0;
     align-self: flex-end;
 }
 .info-btn:hover {
@@ -3009,34 +3009,7 @@ max-height: 800px !important;
 
 @media (max-width: 768px) {
 .container {
-padding: 0.25rem;
-}
-.scale-content {
 padding: 1rem;
-}
-.fretboard-section {
-padding: 1rem;
-}
-.scale-section {
-padding: 1rem;
-}
-.header {
-padding: 0.75rem 0.5rem;
-margin-bottom: 0.75rem;
-}
-.header h1 {
-font-size: 1.5rem;
-margin-bottom: 0.125rem;
-}
-.header h1::before {
-font-size: 1.25rem;
-}
-.header .subtitle {
-font-size: 0.85rem;
-margin-bottom: 0.25rem;
-}
-.key-selector-section {
-padding: 0.75rem;
 margin-bottom: 1rem;
 }
 .key-controls {
@@ -3044,7 +3017,7 @@ gap: 0.75rem;
 margin-bottom: 0.25rem;
 }
 .key-selector-wrapper {
-display: inline-block;
+display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
 
 }
 .key-selector-wrapper label {
@@ -3086,13 +3059,10 @@ gap: 0.75rem;
 .scale-controls {
 padding: 0.75rem;
 margin-bottom: 1rem;
-flex-direction: column;
-align-items: center;
-gap: 1rem;
 }
 .color-toggle-container {
-height: 44px;
-padding: 10px 15px;
+height: 36px;
+padding: 8px 12px;
 font-size: 0.85rem;
 }
 .scale-controls select {
@@ -3103,14 +3073,9 @@ min-width: 100px;
 }
 .control-group {
 gap: 8px;
-flex-direction: column;
-align-items: center;
-width: 100%;
-max-width: 250px;
 }
 .control-group label {
 font-size: 0.8rem;
-text-align: center;
 }
 .comparison-controls {
 flex-direction: column;
@@ -3314,6 +3279,7 @@ font-size: 0.75rem !important;
 margin-bottom: 0.5rem !important;
 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
 transition: all 0.2s ease !important;
+margin: 0 !important;
 }
 .interval-name {
 font-size: 0.85rem !important;
@@ -3513,14 +3479,11 @@ font-size: 0.75rem;
 .scale-controls {
 padding: 0.5rem;
 margin-bottom: 0.75rem;
-flex-direction: column;
-align-items: center;
-gap: 0.75rem;
 }
 .color-toggle-container {
-height: 44px;
-padding: 10px 15px;
-font-size: 0.85rem;
+height: 32px;
+padding: 6px 10px;
+font-size: 0.75rem;
 min-width: 100px;
 }
 .scale-controls select {
@@ -3531,14 +3494,9 @@ min-width: 80px;
 }
 .control-group {
 gap: 6px;
-flex-direction: column;
-align-items: center;
-width: 100%;
-max-width: 200px;
 }
 .control-group label {
 font-size: 0.7rem;
-text-align: center;
 }
 .key-controls {
 flex-direction: column;
@@ -3546,7 +3504,7 @@ align-items: stretch;
 }
 .key-selector-wrapper {
 /* Remove problematic flexbox rules - keep it simple */
-display: inline-block;
+display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
 }
 .key-selector {
 flex: 1;
@@ -3582,7 +3540,7 @@ border-radius: 8px;
 min-width: 300px;
 }
 .fretboard-modal .modal-header {
-display: inline-block;
+display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
 }
 .fretboard-modal .modal-header h3 {
 font-size: 1rem;
@@ -3723,43 +3681,37 @@ font-size: 0.85rem;
 }
 
 @media (max-width: 360px) {
-.header {
+    .header {
         padding: 0.5rem;
-}
-.header h1 {
+    }
+    .header h1 {
         font-size: 1.5rem;
-}
-.header .subtitle {
+    }
+    .header .subtitle {
         font-size: 0.8rem;
-}
-.key-selector-section {
+    }
         margin-bottom: 1rem;
-}
-.key-selector-wrapper {
+    }
         /* Keep it simple on mobile too */
-        display: inline-block;
-}
-.key-selector-wrapper label {
+        display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    }
         font-size: 0.75rem;
-}
-.key-selector {
+    }
         font-size: 0.85rem;
         padding: 0.4rem 0.5rem;
         /* Remove min-width on mobile to fit content */
         width: auto;
-}
-.category-tabs {
+    }
+    .category-tabs {
         gap: 0.25rem;
-}
-.category-tab {
+    }
+    .category-tab {
         font-size: 0.8rem;
-}
-.color-toggle-container {
-        height: 44px;
-        padding: 10px 15px;
-        font-size: 0.85rem;
-}
-.scale-controls select {
+    }
+    .color-toggle-container {
+        margin-top: 0.5rem;
+    }
+    .scale-controls select {
         font-size: 0.85rem;
         padding: 0.4rem;
     }
@@ -4380,62 +4332,3 @@ button.info-btn:hover {
     transform: translateY(-1px) !important;
 }
 
-@media (max-width: 768px) {
-    .key-selector-wrapper {
-        /* Keep it simple on mobile too */
-        display: inline-block;
-    }
-    .key-selector-wrapper label {
-        font-size: 0.85rem;
-    }
-    .key-selector {
-        font-size: 0.95rem;
-        padding: 0.5rem 0.625rem;
-        /* Remove min-width on mobile to fit content */
-        width: auto;
-    }
-}
-
-@media (max-width: 480px) {
-    .key-selector-wrapper {
-        display: inline-block;
-    }
-    .key-selector-wrapper label {
-    }
-    .key-selector {
-        font-size: 0.9rem;
-        padding: 0.4rem 0.6rem;
-        /* Remove min-width on mobile to fit content */
-        width: auto;
-    }
-}
-
-/* Special styling for the last control group with Information button only */
-.control-group:last-child {
-    flex-direction: row;
-    gap: 12px;
-    justify-content: center;
-    align-items: center;
-    max-width: 200px;
-}
-
-/* Mobile media query updates for centered Information button */
-@media (max-width: 768px) {
-    .control-group:last-child {
-        flex-direction: row;
-        gap: 10px;
-        justify-content: center;
-        align-items: center;
-        max-width: 180px;
-    }
-}
-
-@media (max-width: 480px) {
-    .control-group:last-child {
-        flex-direction: row;
-        gap: 8px;
-        justify-content: center;
-        align-items: center;
-        max-width: 160px;
-    }
-}

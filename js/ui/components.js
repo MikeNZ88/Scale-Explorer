@@ -60,6 +60,9 @@ function createFretboard(scale) {
         <div class="display-toggle">
             <button id="toggle-display" class="toggle-btn">${fretboardState.showIntervals ? 'Show Notes' : 'Show Intervals'}</button>
         </div>
+        <div class="color-toggle">
+            <button id="fretboard-color-toggle" class="toggle-btn ${window.colorsVisible ? 'active' : ''}">${window.colorsVisible ? 'Colors On' : 'Colors Off'}</button>
+        </div>
         <div class="compare-toggle">
             <button id="compare-scales" class="toggle-btn ${fretboardState.compareMode ? 'active' : ''}">${fretboardState.compareMode ? 'Exit Compare' : 'Compare Scales'}</button>
         </div>
@@ -83,6 +86,19 @@ function createFretboard(scale) {
             intervalInfo.style.display = fretboardState.showIntervals ? 'block' : 'none';
         }
         
+        createFretboard(scale);
+    });
+    
+    // Add color toggle functionality
+    document.getElementById('fretboard-color-toggle').addEventListener('click', () => {
+        window.colorsVisible = !window.colorsVisible;
+        
+        // Update the app controller state if available
+        if (window.AppController) {
+            window.AppController.updateColorVisibility(window.colorsVisible);
+        }
+        
+        // Re-render the fretboard
         createFretboard(scale);
     });
     
