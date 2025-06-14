@@ -541,8 +541,8 @@ function getIntervals(notes, root, scaleType = 'major', mode = null) {
     const rootIndex = noteToIndex(root);
     const intervals = [];
     
-            for (let i = 0; i < notes.length; i++) {
-                const noteIndex = noteToIndex(notes[i]);
+    for (let i = 0; i < notes.length; i++) {
+        const noteIndex = noteToIndex(notes[i]);
         let semitones = (noteIndex - rootIndex + 12) % 12;
         
         // Convert semitones to interval names
@@ -551,7 +551,20 @@ function getIntervals(notes, root, scaleType = 'major', mode = null) {
             6: 'b5', 7: '5', 8: 'b6', 9: '6', 10: 'b7', 11: '7'
         };
         
-        intervals.push(intervalMap[semitones] || '1');
+        let interval = intervalMap[semitones] || '1';
+        
+        // Context-aware interval naming for specific modes
+        if (semitones === 6) { // Tritone - can be b5 or #4
+            if (mode === 'lydian') {
+                interval = '#4'; // Lydian mode uses #4, not b5
+            }
+            // Other Lydian-related modes that use #4 instead of b5
+            else if (mode === 'lydian-dominant' || mode === 'lydian-augmented' || mode === 'lydian-sharp-2') {
+                interval = '#4';
+            }
+        }
+        
+        intervals.push(interval);
     }
     
     // Handle special cases for 8-note scales
@@ -561,24 +574,13 @@ function getIntervals(notes, root, scaleType = 'major', mode = null) {
         } else if (scaleType === 'hw-diminished' || mode === 'hw-diminished') {
             return ['1', 'b2', 'b3', '3', '#4', '5', '6', 'b7'];
         } else {
-            // Generic 8-note scale
-        return ['1', '2', 'b3', '4', 'b5', 'b6', '6', '7'];
-    }
+            // Generic 8-note scale - use calculated intervals
+            return intervals;
+        }
     }
     
-    // Handle other special scale types
-    if (scaleType === 'harmonic-minor' || isHarmonicMinorPattern(notes, root)) {
-            return ['1', '2', 'b3', '4', '5', 'b6', '7'];
-        }
-        
-    if (scaleType === 'melodic-minor' || isMelodicMinorPattern(notes, root)) {
-            return ['1', '2', 'b3', '4', '5', '6', '7'];
-        }
-        
-    if (scaleType === 'major' || isMajorPattern(notes, root)) {
-            return ['1', '2', '3', '4', '5', '6', '7'];
-        }
-    
+    // Handle special scale types that need hardcoded intervals
+    // Only use hardcoded intervals for specific scale types, not for modes
     if (scaleType === 'blues' || isBluesPattern(notes, root)) {
         return ['1', 'b3', '4', 'b5', '5', 'b7'];
     }
@@ -595,6 +597,8 @@ function getIntervals(notes, root, scaleType = 'major', mode = null) {
         }
     }
     
+    // For all other cases, including major modes, harmonic minor modes, etc.
+    // Use the calculated intervals instead of hardcoded ones
     return intervals;
 }
 

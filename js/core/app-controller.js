@@ -400,16 +400,11 @@ function updateColorVisibility(visible) {
     }
     
     // Re-render the current scale to update fretboard colors
-    if (window.currentScale && window.currentIntervals && window.currentFormula) {
-        const currentState = getCurrentState();
-        UIComponents.displayScale(
-            window.currentScale, 
-            window.currentIntervals, 
-            window.currentFormula, 
-            getScaleType(currentState.category), 
-            currentState.key, 
-            currentState.category
-        );
+    // Instead of using cached values, recalculate everything from current state
+    const currentState = getCurrentState();
+    if (currentState.key && currentState.category && currentState.mode) {
+        // Force a complete scale update to ensure intervals are recalculated
+        updateScale();
     }
     
     // Re-render modal fretboard if it's open
