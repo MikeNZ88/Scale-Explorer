@@ -181,13 +181,6 @@
                 <button class="close-modal" onclick="UIComponents.closeChordModal()">×</button>
             </div>
             <div class="modal-body">
-                <div class="chord-info-section">
-                    <div class="chord-details">
-                        <div class="chord-name-display" id="chord-name-display"></div>
-                        <div class="chord-notes-display" id="chord-notes-display"></div>
-                        <div class="chord-quality-display" id="chord-quality-display"></div>
-                    </div>
-                </div>
                 <div class="chord-fretboard-container" id="chord-fretboard-container">
                     <!-- Chord fretboard will be rendered here -->
                 </div>
@@ -320,9 +313,9 @@
                         <div class="scale-types-note">
                             <h5>📝 Different Scale Types:</h5>
                             <ul>
-                                <li><strong>7-note scales (Major scale, Harmonic minor scale, Melodic minor scale):</strong> Use all 7 numbers (1, 2, 3, 4, 5, 6, 7) exactly once</li>
-                                <li><strong>5-note scales (Pentatonic, Blues):</strong> Derived from major scale with missing intervals. Pentatonic omits 4 and 7 (e.g., 1, 2, 3, 5, 6). Blues scale adds ♭5 as a passing tone but still counts as 5-note because ♭5 is viewed as chromatic ornamentation, not a structural scale degree</li>
-                                <li><strong>6-note scales (Whole Tone):</strong> Use all 6 numbers (1, 2, 3, ♯4, ♯5, ♯6)</li>
+                                <li><strong>7-note scales (Major scale, Harmonic minor scale, Melodic minor scale):</strong> Use all 7 scale degrees (1, 2, 3, 4, 5, 6, 7) exactly once</li>
+                                <li><strong>5-note scales (Pentatonic):</strong> Derived from major scale with missing intervals. Pentatonic omits 4 and 7 (e.g., 1, 2, 3, 5, 6)</li>
+                                <li><strong>6-note scales (Blues, Whole Tone):</strong> Blues scales are pentatonic scales with added chromatic passing tones. Whole tone scales use 6 consecutive scale degrees with all intervals being whole steps</li>
                                 <li><strong>8-note scales (Diminished/Octatonic):</strong> Too large for 1-7 system, may repeat numbers with different accidentals (e.g., both ♭6 and 6)</li>
                             </ul>
                             <p><em>The key principle: interval spelling determines note spelling using consecutive letters. <strong>Exceptions:</strong> Pentatonic scales skip certain letters to match their missing intervals, and diminished scales may repeat letters due to their size exceeding the 7-letter system.</em></p>

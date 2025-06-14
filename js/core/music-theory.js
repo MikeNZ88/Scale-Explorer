@@ -541,8 +541,8 @@ function getIntervals(notes, root, scaleType = 'major', mode = null) {
     const rootIndex = noteToIndex(root);
     const intervals = [];
     
-    for (let i = 0; i < notes.length; i++) {
-        const noteIndex = noteToIndex(notes[i]);
+            for (let i = 0; i < notes.length; i++) {
+                const noteIndex = noteToIndex(notes[i]);
         let semitones = (noteIndex - rootIndex + 12) % 12;
         
         // Convert semitones to interval names
@@ -570,7 +570,7 @@ function getIntervals(notes, root, scaleType = 'major', mode = null) {
     // Handle special cases for 8-note scales
     if (notes.length === 8) {
         if (scaleType === 'wh-diminished' || mode === 'wh-diminished') {
-            return ['1', '2', 'b3', '4', 'b5', 'b6', '6', '7'];
+        return ['1', '2', 'b3', '4', 'b5', 'b6', '6', '7'];
         } else if (scaleType === 'hw-diminished' || mode === 'hw-diminished') {
             return ['1', 'b2', 'b3', '3', '#4', '5', '6', 'b7'];
         } else {
@@ -1626,13 +1626,21 @@ function analyzeNinthChord(thirdInterval, fifthInterval, seventhInterval, ninthI
     
     if (fifthAlteration) symbol += fifthAlteration;
     
-    // Construct the quality name
+    // Construct the quality name - fix the duplication issue
     let quality = baseQuality;
-    if (seventhInterval === 11) quality += ' Major';
-    else if (seventhInterval === 10 && baseQuality === 'Major') quality = 'Dominant';
+    if (seventhInterval === 11 && baseQuality !== 'Major') {
+        quality += ' Major';
+    } else if (seventhInterval === 10 && baseQuality === 'Major') {
+        quality = 'Dominant';
+    }
     
-    quality += ' 9th';
-    if (ninthAlteration) quality += ` ${ninthAlteration}`;
+    // Add the ninth extension - use alteration if present, otherwise use "9th"
+    if (ninthAlteration) {
+        quality += ` ${ninthAlteration}`;
+    } else {
+        quality += ' 9th';
+    }
+    
     if (fifthAlteration) quality += ` ${fifthAlteration}`;
     
     return { 
@@ -1719,14 +1727,22 @@ function analyzeEleventhChord(thirdInterval, fifthInterval, seventhInterval, nin
     if (ninthAlteration) symbol += ninthAlteration;
     if (fifthAlteration) symbol += fifthAlteration;
     
-    // Construct the quality name
+    // Construct the quality name - fix the duplication issue
     let quality = baseQuality;
-    if (seventhInterval === 11) quality += ' Major';
-    else if (seventhInterval === 10 && baseQuality === 'Major') quality = 'Dominant';
+    if (seventhInterval === 11 && baseQuality !== 'Major') {
+        quality += ' Major';
+    } else if (seventhInterval === 10 && baseQuality === 'Major') {
+        quality = 'Dominant';
+    }
     
-    quality += ' 11th';
+    // Add the eleventh extension - use alteration if present, otherwise use "11th"
+    if (eleventhAlteration) {
+        quality += ` ${eleventhAlteration}`;
+    } else {
+        quality += ' 11th';
+    }
+    
     if (ninthAlteration) quality += ` ${ninthAlteration}`;
-    if (eleventhAlteration) quality += ` ${eleventhAlteration}`;
     if (fifthAlteration) quality += ` ${fifthAlteration}`;
     
     return { 
@@ -1822,15 +1838,23 @@ function analyzeThirteenthChord(thirdInterval, fifthInterval, seventhInterval, n
     if (eleventhAlteration) symbol += eleventhAlteration;
     if (fifthAlteration) symbol += fifthAlteration;
     
-    // Construct the quality name
+    // Construct the quality name - fix the duplication issue
     let quality = baseQuality;
-    if (seventhInterval === 11) quality += ' Major';
-    else if (seventhInterval === 10 && baseQuality === 'Major') quality = 'Dominant';
+    if (seventhInterval === 11 && baseQuality !== 'Major') {
+        quality += ' Major';
+    } else if (seventhInterval === 10 && baseQuality === 'Major') {
+        quality = 'Dominant';
+    }
     
-    quality += ' 13th';
+    // Add the thirteenth extension - use alteration if present, otherwise use "13th"
+    if (thirteenthAlteration) {
+        quality += ` ${thirteenthAlteration}`;
+    } else {
+        quality += ' 13th';
+    }
+    
     if (ninthAlteration) quality += ` ${ninthAlteration}`;
     if (eleventhAlteration) quality += ` ${eleventhAlteration}`;
-    if (thirteenthAlteration) quality += ` ${thirteenthAlteration}`;
     if (fifthAlteration) quality += ` ${fifthAlteration}`;
     
     return { 

@@ -2701,40 +2701,29 @@ function openChordModal(chord, key) {
     
     const modal = document.getElementById('chord-modal');
     const modalTitle = document.getElementById('chord-modal-title');
-    const chordNameDisplay = document.getElementById('chord-name-display');
-    const chordNotesDisplay = document.getElementById('chord-notes-display');
-    const chordQualityDisplay = document.getElementById('chord-quality-display');
     
-    if (!modal || !modalTitle || !chordNameDisplay || !chordNotesDisplay || !chordQualityDisplay) {
+    if (!modal || !modalTitle) {
         console.error('Chord modal elements not found');
         return;
     }
     
-    let chordSymbol, chordNotes, chordQuality;
+    let chordSymbol;
     
     if (typeof chord === 'string') {
         // Handle characteristic chords (string chord name + root note)
         console.log('Handling characteristic chord (string):', chord, 'with key:', key);
         chordSymbol = chord;
-        // For characteristic chords, we don't have the notes calculated, so we'll show basic info
-        chordNotes = `Based on ${key || 'C'} scale`;
-        chordQuality = 'See fretboard for notes';
     } else if (chord && typeof chord === 'object') {
         // Handle traditional chords (object with name, notes, quality properties)
         console.log('Handling traditional chord (object):', chord);
         chordSymbol = chord.symbol || chord.name || 'Unknown';
-        chordNotes = chord.notes ? chord.notes.join(' - ') : 'Notes not available';
-        chordQuality = chord.quality || 'Quality not specified';
     } else {
         console.error('Invalid chord data format:', chord);
         return;
     }
     
-    // Update modal content
+    // Update modal title
     modalTitle.textContent = chordSymbol;
-    chordNameDisplay.textContent = chordSymbol;
-    chordNotesDisplay.textContent = chordNotes;
-    chordQualityDisplay.textContent = chordQuality;
     
     // Render the chord fretboard
     renderChordFretboard(chord, key);
@@ -2774,7 +2763,6 @@ function renderChordFretboard(chord, key) {
                 <button class="fretboard-toggle-btn active" data-display="notes">Notes</button>
                 <button class="fretboard-toggle-btn" data-display="intervals">Intervals</button>
             </div>
-            <button class="rotation-btn" title="Rotate for mobile viewing">🔄</button>
         </div>
     `;
     container.appendChild(controlsContainer);
@@ -2784,9 +2772,8 @@ function renderChordFretboard(chord, key) {
     displayContainer.className = 'fretboard-display-container';
     container.appendChild(displayContainer);
 
-    // State for display mode and rotation
+    // State for display mode
     let displayMode = 'notes';
-    let isRotated = false;
 
     // Add toggle event listeners
     const toggleButtons = controlsContainer.querySelectorAll('.fretboard-toggle-btn');
@@ -2799,38 +2786,18 @@ function renderChordFretboard(chord, key) {
         });
     });
 
-    // Add rotation event listener
-    const rotationBtn = controlsContainer.querySelector('.rotation-btn');
-    rotationBtn.addEventListener('click', () => {
-        isRotated = !isRotated;
-        displayContainer.classList.toggle('rotated', isRotated);
-        renderFretboard();
-    });
-
     function renderFretboard() {
-        // Dynamic dimensions based on rotation
+        // Static dimensions (no rotation)
         const fretCount = 12;
         const stringCount = 6;
         
-        let fretWidth, stringSpacing, leftMargin, topMargin, svgWidth, svgHeight;
-        
-        if (isRotated) {
-            // Rotated (mobile-friendly) dimensions
-            fretWidth = 60;
-            stringSpacing = 35;
-            leftMargin = 60;
-            topMargin = 80;
-            svgWidth = leftMargin + (fretCount * fretWidth) + 20;
-            svgHeight = topMargin + ((stringCount - 1) * stringSpacing) + 40;
-        } else {
-            // Normal (desktop) dimensions
-            fretWidth = 90;
-            stringSpacing = 45;
-            leftMargin = 80;
-            topMargin = 80; // Increased to prevent overlap
-            svgWidth = leftMargin + (fretCount * fretWidth) + 20;
-            svgHeight = topMargin + ((stringCount - 1) * stringSpacing) + 60;
-        }
+        // Normal (desktop) dimensions
+        const fretWidth = 90;
+        const stringSpacing = 45;
+        const leftMargin = 80;
+        const topMargin = 80;
+        const svgWidth = leftMargin + (fretCount * fretWidth) + 20;
+        const svgHeight = topMargin + ((stringCount - 1) * stringSpacing) + 60;
 
         // Create SVG with dynamic structure
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -2863,7 +2830,7 @@ function renderChordFretboard(chord, key) {
                 fretNumber.setAttribute('y', topMargin - 35);
                 fretNumber.setAttribute('text-anchor', 'middle');
                 fretNumber.setAttribute('fill', '#FFFFFF');
-                fretNumber.setAttribute('font-size', isRotated ? '16' : '18');
+                fretNumber.setAttribute('font-size', '18');
                 fretNumber.setAttribute('font-weight', 'bold');
                 fretNumber.textContent = fret;
                 svg.appendChild(fretNumber);
@@ -2888,7 +2855,7 @@ function renderChordFretboard(chord, key) {
             label.setAttribute('y', y + 6);
             label.setAttribute('text-anchor', 'middle');
             label.setAttribute('fill', '#FFFFFF');
-            label.setAttribute('font-size', isRotated ? '16' : '18');
+            label.setAttribute('font-size', '18');
             label.setAttribute('font-weight', 'bold');
             label.textContent = stringNotes[stringCount - 1 - string]; // Reverse order for display
             svg.appendChild(label);
@@ -2902,7 +2869,7 @@ function renderChordFretboard(chord, key) {
             
             if (markerFret === 12) {
                 // Double dots for 12th fret
-                const dotSize = isRotated ? 8 : 10;
+                const dotSize = 10;
                 const marker1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 marker1.setAttribute('cx', x);
                 marker1.setAttribute('cy', centerY - stringSpacing * 0.8);
@@ -2920,7 +2887,7 @@ function renderChordFretboard(chord, key) {
                 svg.appendChild(marker2);
             } else {
                 // Single dot for other markers
-                const dotSize = isRotated ? 8 : 10;
+                const dotSize = 10;
                 const marker = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 marker.setAttribute('cx', x);
                 marker.setAttribute('cy', centerY);
@@ -3008,7 +2975,7 @@ function renderChordFretboard(chord, key) {
                     const x = fret === 0 ? leftMargin - 30 : leftMargin + ((fret - 0.5) * fretWidth);
                     const y = topMargin + (string * stringSpacing);
                     
-                    const circleRadius = isRotated ? 15 : 18;
+                    const circleRadius = 15;
                     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                     circle.setAttribute('cx', x);
                     circle.setAttribute('cy', y);
@@ -3039,7 +3006,7 @@ function renderChordFretboard(chord, key) {
                     // Use black text for root note (1), white for others
                     text.setAttribute('fill', isRootNote ? 'black' : 'white');
                     text.setAttribute('style', `fill: ${isRootNote ? 'black' : 'white'} !important;`);
-                    text.setAttribute('font-size', isRotated ? '12' : '14');
+                    text.setAttribute('font-size', '14');
                     text.setAttribute('font-weight', 'bold');
                     
                     text.textContent = displayText;
