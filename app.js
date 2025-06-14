@@ -15,12 +15,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize the modular app
     if (window.AppController) {
         AppController.initializeApp();
-        } else {
+    } else {
         console.error('AppController module not loaded');
     }
-    
-    // Initialize UI components
-    UIComponents.displayScale([], [], [], '', '');
     
     // Initialize audio controls
     if (window.AudioControls) {

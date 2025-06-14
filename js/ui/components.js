@@ -383,7 +383,7 @@ function renderModalFretboard(container, scale) {
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         line.setAttribute('x1', leftMargin);
         line.setAttribute('y1', y);
-        line.setAttribute('x2', leftMargin + (fretCount * fretWidth));
+        line.setAttribute('x2', leftMargin + (displayFrets * fretWidth));
         line.setAttribute('y2', y);
         line.setAttribute('stroke', '#6b7280');
         line.setAttribute('stroke-width', '3');
@@ -571,13 +571,33 @@ function setOptimalModalSize() {
 }
 
 function handleMobileOrientation() {
-    // Adjust modal size on orientation change
-    window.addEventListener('orientationchange', function() {
-        setTimeout(setOptimalModalSize, 100);
-    });
+    // Handle mobile orientation changes for modal
+    if (window.innerWidth <= 768) {
+        const modal = document.getElementById('fretboard-modal');
+        if (!modal) return;
+        
+        const isLandscape = window.innerWidth > window.innerHeight;
+        
+        if (isLandscape) {
+            // Landscape mode - maximize width
+            modal.style.width = '98vw';
+            modal.style.height = '95vh';
+            modal.style.left = '1vw';
+            modal.style.top = '2.5vh';
+        } else {
+            // Portrait mode - adjust for mobile
+            modal.style.width = '95vw';
+            modal.style.height = '90vh';
+            modal.style.left = '2.5vw';
+            modal.style.top = '5vh';
+        }
+    }
 }
 
 function makeDraggable(modal) {
+    // Skip dragging on mobile devices
+    if (window.innerWidth <= 768) return;
+    
     const header = modal.querySelector('.modal-header');
     if (!header) return;
     
@@ -611,6 +631,13 @@ function makeDraggable(modal) {
             currentX = e.clientX - initialX;
             currentY = e.clientY - initialY;
             
+            // Constrain to viewport
+            const maxX = window.innerWidth - modal.offsetWidth;
+            const maxY = window.innerHeight - modal.offsetHeight;
+            
+            currentX = Math.max(0, Math.min(currentX, maxX));
+            currentY = Math.max(0, Math.min(currentY, maxY));
+            
             modal.style.left = currentX + 'px';
             modal.style.top = currentY + 'px';
         }
@@ -627,28 +654,46 @@ function makeDraggable(modal) {
 }
 
 function makeResizable(modal) {
-    // Add resize handles
-    const resizeHandles = ['ne', 'nw', 'se', 'sw', 'n', 's', 'e', 'w'];
+    // Skip resizing on mobile devices
+    if (window.innerWidth <= 768) return;
     
-    resizeHandles.forEach(direction => {
-        const handle = document.createElement('div');
-        handle.className = `resize-handle resize-${direction}`;
-        modal.appendChild(handle);
-        
-        handle.addEventListener('mousedown', initResize);
-    });
+    // Remove any existing resize handles
+    const existingHandles = modal.querySelectorAll('.resize-handle');
+    existingHandles.forEach(handle => handle.remove());
+    
+    // Add only the southeast resize handle for simplicity
+    const handle = document.createElement('div');
+    handle.className = 'resize-handle resize-se';
+    handle.style.cssText = `
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 20px;
+        height: 20px;
+        background: linear-gradient(135deg, transparent 0%, transparent 30%, #ff6b35 30%, #ff6b35 100%);
+        cursor: se-resize;
+        border-radius: 0 0 8px 0;
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+        z-index: 10;
+    `;
+    
+    handle.addEventListener('mouseenter', () => handle.style.opacity = '1');
+    handle.addEventListener('mouseleave', () => handle.style.opacity = '0.7');
+    
+    modal.appendChild(handle);
+    
+    handle.addEventListener('mousedown', initResize);
     
     function initResize(e) {
-        const handle = e.target;
-        const direction = handle.className.split(' ')[1].replace('resize-', '');
+        e.preventDefault();
+        e.stopPropagation();
         
         let isResizing = true;
         const startX = e.clientX;
         const startY = e.clientY;
         const startWidth = parseInt(window.getComputedStyle(modal).width, 10);
         const startHeight = parseInt(window.getComputedStyle(modal).height, 10);
-        const startLeft = parseInt(window.getComputedStyle(modal).left, 10);
-        const startTop = parseInt(window.getComputedStyle(modal).top, 10);
         
         function doResize(e) {
             if (!isResizing) return;
@@ -656,30 +701,11 @@ function makeResizable(modal) {
             const deltaX = e.clientX - startX;
             const deltaY = e.clientY - startY;
             
-            let newWidth = startWidth;
-            let newHeight = startHeight;
-            let newLeft = startLeft;
-            let newTop = startTop;
-            
-            if (direction.includes('e')) {
-                newWidth = Math.max(400, startWidth + deltaX);
-            }
-            if (direction.includes('w')) {
-                newWidth = Math.max(400, startWidth - deltaX);
-                newLeft = startLeft + deltaX;
-            }
-            if (direction.includes('s')) {
-                newHeight = Math.max(300, startHeight + deltaY);
-            }
-            if (direction.includes('n')) {
-                newHeight = Math.max(300, startHeight - deltaY);
-                newTop = startTop + deltaY;
-            }
+            const newWidth = Math.max(400, Math.min(window.innerWidth - 50, startWidth + deltaX));
+            const newHeight = Math.max(300, Math.min(window.innerHeight - 50, startHeight + deltaY));
             
             modal.style.width = newWidth + 'px';
             modal.style.height = newHeight + 'px';
-            modal.style.left = newLeft + 'px';
-            modal.style.top = newTop + 'px';
         }
         
         function stopResize() {
@@ -690,8 +716,6 @@ function makeResizable(modal) {
         
         document.addEventListener('mousemove', doResize);
         document.addEventListener('mouseup', stopResize);
-        
-        e.preventDefault();
     }
 }
 
