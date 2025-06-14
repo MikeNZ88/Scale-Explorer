@@ -780,29 +780,52 @@ function displayIntervals(intervals) {
 }
 
 function displayFormula(formula) {
-    const formulaContainer = document.querySelector('.formula');
-    if (!formulaContainer || !formula) return;
+    const formulaElement = document.querySelector('.formula');
+    if (!formulaElement) {
+        console.warn('Formula element not found in DOM');
+        return;
+    }
+
+    // Handle undefined or null formula
+    if (formula === undefined || formula === null) {
+        console.warn('Formula is undefined or null');
+        formulaElement.textContent = 'Formula: Not available';
+        return;
+    }
+
+    // Handle non-array formula
+    if (!Array.isArray(formula)) {
+        console.warn('Formula is not an array, type:', typeof formula, 'value:', formula);
+        formulaElement.textContent = `Formula: Invalid format`;
+        return;
+    }
+
+    // Handle empty array
+    if (formula.length === 0) {
+        console.warn('Formula is empty array');
+        formulaElement.textContent = 'Formula: No data';
+        return;
+    }
     
-    // Add debugging for augmented scale
-    console.log('=== displayFormula DEBUG ===');
-    console.log('Formula received:', formula);
-    console.log('Formula type:', typeof formula);
-    console.log('Formula is array:', Array.isArray(formula));
-    
-    // Convert interval numbers to W/H/WH notation
-    const convertedFormula = formula.map(interval => {
+    // Convert intervals to W/H/WH notation
+    const intervalNotation = formula.map((interval, index) => {
+        if (typeof interval !== 'number') {
+            console.warn(`Non-numeric interval at index ${index}:`, interval);
+            return `${interval}?`;
+        }
+        
         switch (interval) {
             case 1: return 'H';
             case 2: return 'W';
             case 3: return 'WH';
-            default: return interval.toString();
+            default: 
+                console.warn(`Unknown interval value: ${interval}`);
+                return `${interval}?`;
         }
     });
     
-    console.log('Converted formula:', convertedFormula);
-    console.log('Final display:', convertedFormula.join(' - '));
-    
-    formulaContainer.textContent = convertedFormula.join(' - ');
+    const formulaText = intervalNotation.join(' - ');
+    formulaElement.textContent = `Formula: ${formulaText}`;
 }
 
 function updateScaleColor(intervals) {
@@ -3961,7 +3984,7 @@ function openIntervalInfoModal() {
     
     // Show modal
     modal.classList.remove('hidden');
-    modal.style.display = 'block';
+    modal.style.display = 'flex';
     
     // Add escape key listener
     document.addEventListener('keydown', handleIntervalInfoModalEscape);

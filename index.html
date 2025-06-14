@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guitar Scale Explorer</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -16,25 +13,26 @@
         <!-- Scale Controls -->
         <div class="scale-controls">
             <div class="control-group">
-                <label for="key-select">Root Note:</label>
-                <select id="key-select">
-                    <option value="C">C</option>
-                    <option value="Db">Db</option>
-                    <option value="D">D</option>
-                    <option value="Eb">Eb</option>
-                    <option value="E">E</option>
-                    <option value="F">F</option>
-                    <option value="F#">F#</option>
-                    <option value="G">G</option>
-                    <option value="Ab">Ab</option>
-                    <option value="A">A</option>
-                    <option value="Bb">Bb</option>
-                    <option value="B">B</option>
-                </select>
+                <div class="key-selector-wrapper">
+                    <select id="key-select" class="key-selector">
+                        <option value="C">C</option>
+                        <option value="Db">Db</option>
+                        <option value="D">D</option>
+                        <option value="Eb">Eb</option>
+                        <option value="E">E</option>
+                        <option value="F">F</option>
+                        <option value="F#">F#</option>
+                        <option value="G">G</option>
+                        <option value="Ab">Ab</option>
+                        <option value="A">A</option>
+                        <option value="Bb">Bb</option>
+                        <option value="B">B</option>
+                    </select>
+                </div>
             </div>
 
             <div class="control-group">
-                <label for="category-select">Scale Type:</label>
+                <label for="category-select">Scale:</label>
                 <select id="category-select">
                     <!-- Options will be populated by JavaScript -->
                 </select>
@@ -51,7 +49,7 @@
                 <label for="color-toggle">
                     <input type="checkbox" id="color-toggle" checked>
                     <span class="color-toggle-container">
-                        <span class="color-toggle-label">🎨 Colours</span>
+                        <span class="color-toggle-label">Colours</span>
                     </span>
                 </label>
                 <button class="info-btn" onclick="UIComponents.openIntervalInfoModal()" title="Interval Spelling & Colour Guide">i</button>
@@ -414,12 +412,39 @@
                     </div>
 
                     <div class="info-section">
+                        <h4>🔄 Enharmonic Equivalents</h4>
+                        <p>Intervals that sound the same but are spelled differently share <strong>identical colours</strong>:</p>
+                        
+                        <div class="example-grid">
+                            <div class="example-item">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 0.5rem;">
+                                    <span style="display: inline-block; width: 20px; height: 20px; background-color: #922B21; border-radius: 50%;"></span>
+                                    <strong>♯4 = ♭5</strong>
+                                </div>
+                                <small>Both represent the tritone</small>
+                            </div>
+                            <div class="example-item">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 0.5rem;">
+                                    <span style="display: inline-block; width: 20px; height: 20px; background-color: #F4D03F; border-radius: 50%;"></span>
+                                    <strong>♭4 = 3</strong>
+                                </div>
+                                <small>Diminished fourth = Major third</small>
+                            </div>
+                        </div>
+                        
+                        <div class="hover-tip">
+                            💡 <strong>Tip:</strong> Hover over any interval in the app to see its enharmonic equivalent!
+                        </div>
+                    </div>
+
+                    <div class="info-section">
                         <h4>🎸 Chord Intervals: Extended vs Simple</h4>
                         <p>Chord intervals follow different rules than scale intervals. Understanding when to display <strong>9, 11, 13</strong> vs <strong>2, 4, 6</strong> is crucial for proper chord analysis.</p>
                         
                         <div class="color-theory-section">
                             <h5>🔢 The Logic Behind Chord Interval Numbers</h5>
                             <p><strong>Tertiary chord tones (1, 3, 5, 7)</strong> are always displayed as simple intervals, regardless of octave:</p>
+                            <p><strong>Extensions (9, 11, 13)</strong> are calculated by adding 7 to simple intervals (2, 4, 6), representing their octave displacement—a full seven scale degrees higher.</p>
                             <ul class="benefits-list">
                                 <li><strong>Root (1)</strong> - Always shown as "1"</li>
                                 <li><strong>Third (3/♭3)</strong> - Always shown as "3" or "♭3"</li>
@@ -430,24 +455,24 @@
                             <p><strong>Extensions (2, 4, 6)</strong> depend on harmonic context:</p>
                             <div class="example-grid">
                                 <div class="example-item">
-                                    <strong>🎵 9th vs 2nd</strong><br>
-                                    <span class="correct">9th</span> when 3rd exists<br>
-                                    <span class="incorrect">2nd</span> when no 3rd
+                                    <strong>9th vs 2nd</strong><br>
+                                    9th when 3rd exists<br>
+                                    2nd when no 3rd
                                 </div>
                                 <div class="example-item">
-                                    <strong>🎵 11th vs 4th</strong><br>
-                                    <span class="correct">11th</span> when 7th exists<br>
-                                    <span class="incorrect">4th</span> when no 7th
+                                    <strong>11th vs 4th</strong><br>
+                                    11th when 7th exists<br>
+                                    4th when no 7th
                                 </div>
                                 <div class="example-item">
-                                    <strong>🎵 13th vs 6th</strong><br>
-                                    <span class="correct">13th</span> when 7th exists<br>
-                                    <span class="incorrect">6th</span> when no 7th
+                                    <strong>13th vs 6th</strong><br>
+                                    13th when 7th exists<br>
+                                    6th when no 7th
                                 </div>
                                 <div class="example-item">
-                                    <strong>🎵 ♯11 vs ♭5</strong><br>
-                                    <span class="correct">♯11</span> when perfect 5th exists<br>
-                                    <span class="incorrect">♭5</span> when no perfect 5th
+                                    <strong>♯11 vs ♭5</strong><br>
+                                    ♯11 when perfect 5th exists<br>
+                                    ♭5 when no perfect 5th
                                 </div>
                             </div>
                         </div>
@@ -481,8 +506,8 @@
                                 <div class="interval-item">
                                     <div class="interval-dot" style="background-color: #922B21; color: #fff;">♯11</div>
                                     <div class="interval-labels">
-                                        <div class="interval-name">Same as ♭5</div>
-                                        <div class="interval-number">♯11 = ♭5</div>
+                                        <div class="interval-name">Same as ♯4</div>
+                                        <div class="interval-number">♯11 = ♯4</div>
                                     </div>
                                 </div>
                                 <div class="interval-item">
@@ -550,32 +575,6 @@
                                 <li>Cross-modal perception research on music-colour mappings</li>
                                 <li>Educational research on colour-enhanced learning</li>
                             </ul>
-                        </div>
-                    </div>
-
-                    <div class="info-section">
-                        <h4>🔄 Enharmonic Equivalents</h4>
-                        <p>Intervals that sound the same but are spelled differently share <strong>identical colours</strong>:</p>
-                        
-                        <div class="example-grid">
-                            <div class="example-item">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 0.5rem;">
-                                    <span style="display: inline-block; width: 20px; height: 20px; background-color: #922B21; border-radius: 50%;"></span>
-                                    <strong>♯4 = ♭5</strong>
-                                </div>
-                                <small>Both represent the tritone</small>
-                            </div>
-                            <div class="example-item">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 0.5rem;">
-                                    <span style="display: inline-block; width: 20px; height: 20px; background-color: #F4D03F; border-radius: 50%;"></span>
-                                    <strong>♭4 = 3</strong>
-                                </div>
-                                <small>Diminished fourth = Major third</small>
-                            </div>
-                        </div>
-                        
-                        <div class="hover-tip">
-                            💡 <strong>Tip:</strong> Hover over any interval in the app to see its enharmonic equivalent!
                         </div>
                     </div>
                 </div>
