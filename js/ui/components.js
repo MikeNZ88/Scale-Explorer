@@ -2767,60 +2767,277 @@ function getContrastTextColor(backgroundColor) {
     return luminance > 0.5 ? '#1f2937' : '#ffffff';
 }
 
-function displayChordType(type, chords) {
-    const chordsList = document.getElementById('chords-list');
+function displayChordType(type, chords, container = null) {
+    const chordsList = container || document.getElementById('chords-list');
     if (!chordsList || !chords) return;
     
     chordsList.innerHTML = '';
     
-    chords.forEach((chord, index) => {
-        const chordElement = document.createElement('div');
-        chordElement.className = `chord-item ${chord.isNonStandard ? 'non-standard' : ''}`;
+    // For triads and sevenths, organize by chord quality for better display
+    if ((type === 'triads' || type === 'sevenths') && chords.length > 0) {
+        const organized = organizeChordsByQuality(chords, type);
         
-        // Always use orange color for chord degrees instead of function-based colors
-        const functionColor = '#f97316'; // Orange color
-        const textColor = 'white'; // White text for good contrast with orange
-        
-        // Add a tooltip for non-standard chords
-        const tooltip = chord.isNonStandard ? 
-            `title="Non-standard chord: ${chord.intervals.map(i => MusicTheory.getIntervalName(i)).join(', ')}"` : '';
-        
-        chordElement.innerHTML = `
-            <div class="chord-degree" style="background-color: ${functionColor}; color: ${textColor};">
-                <span class="degree-number">${chord.degree}</span>
-                <span class="roman-numeral">${chord.roman}</span>
-            </div>
-            <div class="chord-info" ${tooltip}>
-                <div class="chord-name ${chord.isNonStandard ? 'exotic' : ''}">${chord.name}</div>
-                <div class="chord-notes">${chord.notes.join(' - ')}</div>
-                <div class="chord-quality ${chord.isNonStandard ? 'exotic' : ''}">${chord.quality}</div>
-                <div class="chord-function">${chord.function}</div>
-                ${chord.isNonStandard ? '<div class="chord-exotic-note">⚡ Exotic</div>' : ''}
-            </div>
-        `;
-        
-        // Add click handler for future chord playback or visualization
-        chordElement.addEventListener('click', (e) => {
-            // Only prevent modal if clicking directly on audio control buttons
-            if (window.audioControls && (e.target.closest('.play-btn') || e.target.closest('.direction-btn'))) {
-                return; // Let audio controls handle it
-            }
+        // Display organized chord sections
+        Object.keys(organized).forEach(quality => {
+            const qualityChords = organized[quality];
+            if (qualityChords.length === 0) return;
             
-            console.log('Traditional chord clicked:', chord);
-            console.log('Chord properties:', Object.keys(chord));
-            console.log('Chord details:', {
-                name: chord.name,
-                notes: chord.notes,
-                quality: chord.quality,
-                degree: chord.degree,
-                roman: chord.roman,
-                function: chord.function
+            // Create section header
+            const sectionHeader = document.createElement('div');
+            sectionHeader.className = 'chord-type-section';
+            sectionHeader.innerHTML = `
+                <h4 class="chord-type-title">${quality}</h4>
+                <p class="chord-type-description">${qualityChords.length} chord${qualityChords.length > 1 ? 's' : ''}</p>
+            `;
+            chordsList.appendChild(sectionHeader);
+            
+            // Create container for this chord type
+            const sectionContainer = document.createElement('div');
+            sectionContainer.className = 'chord-type-container';
+            chordsList.appendChild(sectionContainer);
+            
+            // Display chords in this section
+            qualityChords.forEach((chord, index) => {
+                const chordElement = document.createElement('div');
+                chordElement.className = `chord-item ${chord.isNonStandard ? 'non-standard' : ''}`;
+                
+                // Always use orange color for chord degrees instead of function-based colors
+                const functionColor = '#f97316'; // Orange color
+                const textColor = 'white'; // White text for good contrast with orange
+                
+                // Add a tooltip for non-standard chords
+                const tooltip = chord.isNonStandard ? 
+                    `title="Non-standard chord: ${chord.intervals.map(i => MusicTheory.getIntervalName(i)).join(', ')}"` : '';
+                
+                chordElement.innerHTML = `
+                    <div class="chord-degree" style="background-color: ${functionColor}; color: ${textColor};">
+                        <span class="degree-number">${chord.degree}</span>
+                        <span class="roman-numeral">${chord.roman}</span>
+                    </div>
+                    <div class="chord-info" ${tooltip}>
+                        <div class="chord-name ${chord.isNonStandard ? 'exotic' : ''}">${chord.name}</div>
+                        <div class="chord-notes">${chord.notes.join(' - ')}</div>
+                        <div class="chord-quality ${chord.isNonStandard ? 'exotic' : ''}">${chord.quality}</div>
+                        <div class="chord-function">${chord.function}</div>
+                        ${chord.isNonStandard ? '<div class="chord-exotic-note">⚡ Exotic</div>' : ''}
+                    </div>
+                `;
+                
+                // Add click handler for future chord playback or visualization
+                chordElement.addEventListener('click', (e) => {
+                    // Only prevent modal if clicking directly on audio control buttons
+                    if (window.audioControls && (e.target.closest('.play-btn') || e.target.closest('.direction-btn'))) {
+                        return; // Let audio controls handle it
+                    }
+                    
+                    console.log('Traditional chord clicked:', chord);
+                    console.log('Chord properties:', Object.keys(chord));
+                    console.log('Chord details:', {
+                        name: chord.name,
+                        notes: chord.notes,
+                        quality: chord.quality,
+                        degree: chord.degree,
+                        roman: chord.roman,
+                        function: chord.function
+                    });
+                    highlightChordOnFretboard(chord);
+                });
+                
+                sectionContainer.appendChild(chordElement);
             });
-            highlightChordOnFretboard(chord);
         });
+    } else {
+        // For other chord types, display in simple list format
+        chords.forEach((chord, index) => {
+            const chordElement = document.createElement('div');
+            chordElement.className = `chord-item ${chord.isNonStandard ? 'non-standard' : ''}`;
+            
+            // Always use orange color for chord degrees instead of function-based colors
+            const functionColor = '#f97316'; // Orange color
+            const textColor = 'white'; // White text for good contrast with orange
+            
+            // Add a tooltip for non-standard chords
+            const tooltip = chord.isNonStandard ? 
+                `title="Non-standard chord: ${chord.intervals.map(i => MusicTheory.getIntervalName(i)).join(', ')}"` : '';
+            
+            chordElement.innerHTML = `
+                <div class="chord-degree" style="background-color: ${functionColor}; color: ${textColor};">
+                    <span class="degree-number">${chord.degree}</span>
+                    <span class="roman-numeral">${chord.roman}</span>
+                </div>
+                <div class="chord-info" ${tooltip}>
+                    <div class="chord-name ${chord.isNonStandard ? 'exotic' : ''}">${chord.name}</div>
+                    <div class="chord-notes">${chord.notes.join(' - ')}</div>
+                    <div class="chord-quality ${chord.isNonStandard ? 'exotic' : ''}">${chord.quality}</div>
+                    <div class="chord-function">${chord.function}</div>
+                    ${chord.isNonStandard ? '<div class="chord-exotic-note">⚡ Exotic</div>' : ''}
+                </div>
+            `;
+            
+            // Add click handler for future chord playback or visualization
+            chordElement.addEventListener('click', (e) => {
+                // Only prevent modal if clicking directly on audio control buttons
+                if (window.audioControls && (e.target.closest('.play-btn') || e.target.closest('.direction-btn'))) {
+                    return; // Let audio controls handle it
+                }
+                
+                console.log('Traditional chord clicked:', chord);
+                console.log('Chord properties:', Object.keys(chord));
+                console.log('Chord details:', {
+                    name: chord.name,
+                    notes: chord.notes,
+                    quality: chord.quality,
+                    degree: chord.degree,
+                    roman: chord.roman,
+                    function: chord.function
+                });
+                highlightChordOnFretboard(chord);
+            });
+            
+            chordsList.appendChild(chordElement);
+        });
+    }
+}
+
+// Helper function to organize chords by their quality/type
+function organizeChordsByQuality(chords, chordType) {
+    const organized = {};
+    
+    chords.forEach(chord => {
+        let quality = chord.quality || 'Unknown';
         
-        chordsList.appendChild(chordElement);
+        // Normalize quality names for better grouping
+        if (chordType === 'triads') {
+            if (quality.toLowerCase().includes('major') && !quality.toLowerCase().includes('minor')) {
+                quality = 'Major Triads';
+            } else if (quality.toLowerCase().includes('minor') && !quality.toLowerCase().includes('major')) {
+                quality = 'Minor Triads';
+            } else if (quality.toLowerCase().includes('diminished')) {
+                quality = 'Diminished Triads';
+            } else if (quality.toLowerCase().includes('augmented')) {
+                quality = 'Augmented Triads';
+            } else if (quality.toLowerCase().includes('sus2')) {
+                quality = 'Sus2 Triads';
+            } else if (quality.toLowerCase().includes('sus4')) {
+                quality = 'Sus4 Triads';
+            }
+        } else if (chordType === 'sevenths') {
+            if (quality.toLowerCase().includes('major 7') || quality.toLowerCase().includes('maj7')) {
+                quality = 'Major 7th';
+            } else if (quality.toLowerCase().includes('half-diminished') || quality.includes('ø7') || quality.includes('m7♭5') || quality.toLowerCase().includes('minor 7 ♭5')) {
+                quality = 'Half Diminished';
+            } else if (quality.toLowerCase().includes('minor 7') && !quality.toLowerCase().includes('major') && !quality.toLowerCase().includes('♭5')) {
+                quality = 'Minor 7th';
+            } else if (quality.toLowerCase().includes('dominant 7') || quality === '7') {
+                quality = 'Dominant 7th';
+            } else if (quality.toLowerCase().includes('diminished 7') || quality.includes('°7')) {
+                quality = 'Diminished 7th';
+            } else if (quality.toLowerCase().includes('minor major 7') || quality.includes('mMaj7')) {
+                quality = 'Minor Major 7th';
+            }
+        } else if (chordType === 'sixths') {
+            if (quality.toLowerCase().includes('major')) {
+                quality = 'Major 6th';
+            } else if (quality.toLowerCase().includes('minor')) {
+                quality = 'Minor 6th';
+            }
+        } else if (chordType === 'sus2') {
+            quality = 'Sus2';
+        } else if (chordType === 'sus4') {
+            quality = 'Sus4';
+        } else if (chordType === 'sus4-sevenths') {
+            if (quality.toLowerCase().includes('major 7') || quality.includes('maj7')) {
+                quality = 'Major 7sus4';
+            } else {
+                quality = 'Dominant 7sus4';
+            }
+        } else if (chordType === 'ninths') {
+            if (quality.toLowerCase().includes('major 9') || quality.includes('maj9')) {
+                quality = 'Major 9th';
+            } else if (quality.toLowerCase().includes('minor 9')) {
+                quality = 'Minor 9th';
+            } else if (quality.toLowerCase().includes('dominant 9') || quality === '9') {
+                quality = 'Dominant 9th';
+            } else if (quality.toLowerCase().includes('half-diminished 9') || quality.includes('m9♭5')) {
+                quality = 'Half-Diminished 9th';
+            } else if (quality.toLowerCase().includes('diminished 9') || quality.includes('°9')) {
+                quality = 'Diminished 9th';
+            }
+        } else if (chordType === 'elevenths') {
+            if (quality.toLowerCase().includes('major 11') || quality.includes('maj11')) {
+                quality = 'Major 11th';
+            } else if (quality.toLowerCase().includes('minor 11')) {
+                quality = 'Minor 11th';
+            } else if (quality.toLowerCase().includes('dominant 11') || quality === '11') {
+                quality = 'Dominant 11th';
+            } else if (quality.toLowerCase().includes('half-diminished 11') || quality.includes('m11♭5')) {
+                quality = 'Half-Diminished 11th';
+            } else if (quality.toLowerCase().includes('diminished 11') || quality.includes('°11')) {
+                quality = 'Diminished 11th';
+            }
+        } else if (chordType === 'thirteenths') {
+            if (quality.toLowerCase().includes('major 13') || quality.includes('maj13')) {
+                quality = 'Major 13th';
+            } else if (quality.toLowerCase().includes('minor 13')) {
+                quality = 'Minor 13th';
+            } else if (quality.toLowerCase().includes('dominant 13') || quality === '13') {
+                quality = 'Dominant 13th';
+            } else if (quality.toLowerCase().includes('half-diminished 13') || quality.includes('m13♭5')) {
+                quality = 'Half-Diminished 13th';
+            } else if (quality.toLowerCase().includes('diminished 13') || quality.includes('°13')) {
+                quality = 'Diminished 13th';
+            }
+        }
+        
+        if (!organized[quality]) {
+            organized[quality] = [];
+        }
+        organized[quality].push(chord);
     });
+    
+    // Sort qualities in a logical order
+    const qualityOrder = [
+        'Major Triads', 'Minor Triads', 'Diminished Triads', 'Augmented Triads', 'Sus2 Triads', 'Sus4 Triads',
+        'Major 7th', 'Minor 7th', 'Dominant 7th', 'Diminished 7th', 'Half Diminished', 'Minor Major 7th',
+        'Major 6th', 'Minor 6th',
+        'Sus2', 'Sus4',
+        'Major 7sus4', 'Dominant 7sus4',
+        'Major 9th', 'Minor 9th', 'Dominant 9th', 'Half-Diminished 9th', 'Diminished 9th',
+        'Major 11th', 'Minor 11th', 'Dominant 11th', 'Half-Diminished 11th', 'Diminished 11th',
+        'Major 13th', 'Minor 13th', 'Dominant 13th', 'Half-Diminished 13th', 'Diminished 13th'
+    ];
+    
+    const sortedOrganized = {};
+    qualityOrder.forEach(quality => {
+        if (organized[quality]) {
+            sortedOrganized[quality] = organized[quality];
+        }
+    });
+    
+    // Add any remaining qualities not in the predefined order
+    Object.keys(organized).forEach(quality => {
+        if (!sortedOrganized[quality]) {
+            sortedOrganized[quality] = organized[quality];
+        }
+    });
+    
+    return sortedOrganized;
+}
+
+// Helper function to get chord type title
+function getChordTypeTitle(type) {
+    const titles = {
+        'triads': 'Triads',
+        'sevenths': '7th Chords',
+        'sixths': '6th Chords',
+        'sus2': 'Sus2 Chords',
+        'sus4': 'Sus4 Chords',
+        'sus4-sevenths': '7sus4 Chords',
+        'ninths': '9th Chords',
+        'elevenths': '11th Chords',
+        'thirteenths': '13th Chords'
+    };
+    return titles[type] || type.charAt(0).toUpperCase() + type.slice(1);
 }
 
 function highlightChordOnFretboard(chord) {

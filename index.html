@@ -573,7 +573,18 @@
     <!-- Scripts -->
     <!-- Core modules in dependency order -->
     <script src="js/core/constants.js"></script>
+    
+    <!-- Load individual music theory modules first -->
+    <script src="js/core/color-utils.js"></script>
+    <script src="js/core/interval-utils.js"></script>
+    <script src="js/core/pattern-detection.js"></script>
+    <script src="js/core/scale-calculator.js"></script>
+    <script src="js/core/chord-analyzer.js"></script>
+    
+    <!-- Main music theory aggregator (loads after individual modules) -->
     <script src="js/core/music-theory.js"></script>
+    
+    <!-- Other core modules -->
     <script src="js/core/audio-engine.js"></script>
     <script src="js/ui/components.js"></script>
     <script src="js/ui/audio-controls.js"></script>
