@@ -1018,31 +1018,51 @@ function createRelatedModes(currentMode, category, currentKey) {
     // Determine which spelling convention to use based on standard key signatures AND scale type
     let spellingConvention;
     
-    // Keys that use flats in their key signatures
-    const flatKeys = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'];
-    // Keys that use sharps in their key signatures  
-    const sharpKeys = ['G', 'D', 'A', 'E', 'B', 'F#', 'C#'];
-    
-    // Minor scales (harmonic minor, melodic minor) need smart spelling to avoid double flats
-    const parentScaleType = getScaleTypeFromCategory(category);
-    if (parentScaleType === 'harmonic-minor' || parentScaleType === 'melodic-minor') {
-        // For minor scales, use the same logic as major scales based on key signatures
-        // This prevents problematic double flats in scales like A melodic minor
-        if (flatKeys.includes(parentRootFlat)) {
+    // Special override for pentatonic scales to prevent B# issues
+    if (category === 'pentatonic') {
+        // For pentatonic scales, avoid B# by using flat spelling when parent root is B#
+        if (parentRoot === 'B#') {
+            spellingConvention = 'flat';
+        } else {
+            // Use standard logic for other pentatonic roots
+            const flatKeys = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'];
+            const sharpKeys = ['G', 'D', 'A', 'E', 'B', 'F#', 'C#'];
+            
+            if (flatKeys.includes(parentRootFlat)) {
+                spellingConvention = 'flat';
+            } else if (sharpKeys.includes(parentRoot)) {
+                spellingConvention = 'sharp';
+            } else {
+                spellingConvention = 'sharp'; // Default for C
+            }
+        }
+    } else {
+        // Keys that use flats in their key signatures
+        const flatKeys = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'];
+        // Keys that use sharps in their key signatures  
+        const sharpKeys = ['G', 'D', 'A', 'E', 'B', 'F#', 'C#'];
+        
+        // Minor scales (harmonic minor, melodic minor) need smart spelling to avoid double flats
+        const parentScaleType = getScaleTypeFromCategory(category);
+        if (parentScaleType === 'harmonic-minor' || parentScaleType === 'melodic-minor') {
+            // For minor scales, use the same logic as major scales based on key signatures
+            // This prevents problematic double flats in scales like A melodic minor
+            if (flatKeys.includes(parentRootFlat)) {
+                spellingConvention = 'flat';
+            } else if (sharpKeys.includes(parentRoot)) {
+                spellingConvention = 'sharp';
+            } else {
+                // For C minor scales, default to flat (natural minor key signature)
+                spellingConvention = 'flat';
+            }
+        } else if (flatKeys.includes(parentRootFlat)) {
             spellingConvention = 'flat';
         } else if (sharpKeys.includes(parentRoot)) {
             spellingConvention = 'sharp';
         } else {
-            // For C minor scales, default to flat (natural minor key signature)
-            spellingConvention = 'flat';
+            // For C major (no sharps or flats), default to sharp
+            spellingConvention = 'sharp';
         }
-    } else if (flatKeys.includes(parentRootFlat)) {
-        spellingConvention = 'flat';
-    } else if (sharpKeys.includes(parentRoot)) {
-        spellingConvention = 'sharp';
-    } else {
-        // For C major (no sharps or flats), default to sharp
-        spellingConvention = 'sharp';
     }
     
     // Get the final parent root with the determined spelling convention
@@ -1242,6 +1262,13 @@ function createRelatedModes(currentMode, category, currentKey) {
     const parentFormula = categoryData.formulas[categoryData.modes[0]]; // Get the first mode's formula (the parent scale)
     const parentScaleNotes = calculateScaleWithConsistentSpelling(finalParentRoot, parentFormula, scaleType, spellingConvention);
     
+    // Clean up problematic enharmonic equivalents in parent scale for pentatonic modes
+    if (category === 'pentatonic') {
+        for (let i = 0; i < parentScaleNotes.length; i++) {
+            parentScaleNotes[i] = getProperEnharmonicSpelling(parentScaleNotes[i]);
+        }
+    }
+    
     console.log('=== DEBUG MODE GENERATION ===');
     console.log('finalParentRoot:', finalParentRoot);
     console.log('spellingConvention:', spellingConvention);
@@ -1288,18 +1315,68 @@ function createRelatedModes(currentMode, category, currentKey) {
             }
         } else {
             // For non-traditional scales (pentatonic, blues, etc.), use offset calculation
-            const modeOffset = modeOffsets[mode] || 0;
-            const modeRootIndex = (parentRootIndex + modeOffset) % 12;
-            modeKey = getConsistentNoteSpelling(modeRootIndex, spellingConvention);
-            console.log(`Mode ${mode}: using non-traditional offset ${modeOffset} = ${modeKey}`);
+            if (category === 'pentatonic' && parentScaleNotes.length === 5) {
+                // For pentatonic modes, use the parent scale notes directly based on mode index
+                const pentatonicModeIndices = {
+                    'major-pentatonic': 0,
+                    'suspended-pentatonic': 1, 
+                    'man-gong': 2,
+                    'ritusen': 3,
+                    'minor-pentatonic': 4
+                };
+                
+                const modeIndex = pentatonicModeIndices[mode];
+                if (modeIndex !== undefined && parentScaleNotes[modeIndex]) {
+                    modeKey = parentScaleNotes[modeIndex];
+                    console.log(`Mode ${mode}: using pentatonic scale degree ${modeIndex} = ${modeKey}`);
+                } else {
+                    // Fallback to offset calculation
+                    const modeOffset = modeOffsets[mode] || 0;
+                    const modeRootIndex = (parentRootIndex + modeOffset) % 12;
+                    modeKey = getConsistentNoteSpelling(modeRootIndex, spellingConvention);
+                    modeKey = getProperEnharmonicSpelling(modeKey);
+                    console.log(`Mode ${mode}: using fallback offset ${modeOffset} = ${modeKey}`);
+                }
+            } else {
+                // For other non-traditional scales, use offset calculation
+                const modeOffset = modeOffsets[mode] || 0;
+                const modeRootIndex = (parentRootIndex + modeOffset) % 12;
+                modeKey = getConsistentNoteSpelling(modeRootIndex, spellingConvention);
+                
+                // Clean up problematic enharmonic equivalents for pentatonic modes
+                if (category === 'pentatonic') {
+                    modeKey = getProperEnharmonicSpelling(modeKey);
+                }
+                
+                console.log(`Mode ${mode}: using non-traditional offset ${modeOffset} = ${modeKey}`);
+            }
         }
+        
+        // Define pentatonic shape mapping
+        const pentatonicShapes = {
+            'major-pentatonic': 'Shape 2',
+            'suspended-pentatonic': 'Shape 3', 
+            'man-gong': 'Shape 4',
+            'ritusen': 'Shape 5',
+            'minor-pentatonic': 'Shape 1'
+        };
         
         const button = document.createElement('button');
         button.className = `mode-button ${mode === currentMode ? 'active' : ''}`;
-        button.innerHTML = `
-            <span class="mode-number">${modeData.number}</span>
-            <span class="mode-name">${modeKey} ${modeData.properName}</span>
-        `;
+        
+        // Check if this is a pentatonic mode and add shape information
+        if (category === 'pentatonic' && pentatonicShapes[mode]) {
+            button.innerHTML = `
+                <span class="mode-number">${modeData.number}</span>
+                <span class="mode-name">${modeKey} ${modeData.properName}</span>
+                <span class="mode-shape">(${pentatonicShapes[mode]})</span>
+            `;
+        } else {
+            button.innerHTML = `
+                <span class="mode-number">${modeData.number}</span>
+                <span class="mode-name">${modeKey} ${modeData.properName}</span>
+            `;
+        }
         
         // Add click handler to change to this mode
         button.addEventListener('click', () => {

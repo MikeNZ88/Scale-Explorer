@@ -1671,6 +1671,13 @@ margin-bottom: 2px;
 font-size: 0.9rem;
 font-weight: 600;
 }
+.mode-shape {
+font-size: 0.75rem;
+opacity: 0.8;
+margin-top: 2px;
+font-style: italic;
+color: rgba(255, 255, 255, 0.9);
+}
 .parent-scale-info {
 margin-top: 15px;
 padding: 10px 15px;

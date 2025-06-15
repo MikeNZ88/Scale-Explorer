@@ -159,9 +159,9 @@ function shouldDisplayChords(scaleType, scaleLength, category = null) {
     // Always show chords for standard 7-note scales
     if (scaleLength === 7) return true;
     
-    // Show chords for pentatonic scales
+    // Don't show chords for pentatonic scales
     if (scaleLength === 5 && (scaleType.includes('pentatonic') || category === 'pentatonic')) {
-        return true;
+        return false;
     }
     
     // Show chords for blues scales
