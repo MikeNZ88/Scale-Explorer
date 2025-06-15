@@ -339,8 +339,9 @@ function getCharacteristicChords(scale, scaleType) {
         return result;
     }
     
-    // Augmented scales (6-note symmetrical scales)
-    if (scaleType === 'augmented' || scaleType.includes('augmented') || 
+    // Augmented scales (6-note symmetrical scales) - FIXED: exclude lydian-augmented
+    if (scaleType === 'augmented' || 
+        (scaleType.includes('augmented') && scaleType !== 'lydian-augmented') || 
         (scale && scale.length === 6 && isAugmentedScale(scale))) {
         return getAugmentedScaleChords(scale);
     }

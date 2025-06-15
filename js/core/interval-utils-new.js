@@ -332,6 +332,93 @@ function getModalFunction(degree, scaleType, category) {
             case 7: return '';                // vii°
             default: return '';
         }
+    } else if (scaleType === 'dorian-b2' || (category === 'melodic-minor-modes' && scaleType === 'dorian-b2')) {
+        // Dorian ♭2 (2nd mode of melodic minor) - characteristic: minor i + major ♭VII
+        switch (degree) {
+            case 1: return 'Modal Tonic';     // i (minor tonic)
+            case 2: return 'Characteristic';  // ♭II (major ♭II - Phrygian-like but softer)
+            case 3: return '';                // ♭III
+            case 4: return '';                // IV
+            case 5: return '';                // V
+            case 6: return '';                // VI (natural 6th - distinguishes from Phrygian)
+            case 7: return '';                // ♭VII
+            default: return '';
+        }
+    } else if (scaleType === 'lydian-augmented' || (category === 'melodic-minor-modes' && scaleType === 'lydian-augmented')) {
+        // Lydian Augmented (3rd mode of melodic minor) - characteristic: major I + augmented ♯V
+        switch (degree) {
+            case 1: return 'Modal Tonic';     // I (major tonic)
+            case 2: return '';                // II
+            case 3: return '';                // III
+            case 4: return '';                // ♯IV
+            case 5: return 'Characteristic';  // ♯V+ (augmented - bright, floating quality)
+            case 6: return '';                // VI
+            case 7: return '';                // VII
+            default: return '';
+        }
+    } else if (scaleType === 'lydian-dominant' || (category === 'melodic-minor-modes' && scaleType === 'lydian-dominant')) {
+        // Lydian Dominant (4th mode of melodic minor) - characteristic: major I + major ♯IV
+        switch (degree) {
+            case 1: return 'Modal Tonic';     // I (major tonic)
+            case 2: return '';                // II
+            case 3: return '';                // III
+            case 4: return 'Characteristic';  // ♯IV (major ♯IV - Lydian brightness with dominant function)
+            case 5: return '';                // V
+            case 6: return '';                // VI
+            case 7: return '';                // ♭VII
+            default: return '';
+        }
+    } else if (scaleType === 'mixolydian-b6' || (category === 'melodic-minor-modes' && scaleType === 'mixolydian-b6')) {
+        // Mixolydian ♭6 (5th mode of melodic minor) - characteristic: major I + major ♭VI
+        switch (degree) {
+            case 1: return 'Modal Tonic';     // I (major tonic)
+            case 2: return '';                // II
+            case 3: return '';                // III
+            case 4: return '';                // IV
+            case 5: return '';                // V
+            case 6: return 'Characteristic';  // ♭VI (major ♭VI - exotic, Eastern flavor)
+            case 7: return '';                // ♭VII
+            default: return '';
+        }
+    } else if (scaleType === 'locrian-natural-2' || (category === 'melodic-minor-modes' && scaleType === 'locrian-natural-2')) {
+        // Locrian ♮2 (6th mode of melodic minor) - characteristic: diminished i° + major II
+        switch (degree) {
+            case 1: return 'Modal Tonic';     // i° (diminished tonic - unstable but usable)
+            case 2: return 'Characteristic';  // II (major II - provides brightness and stability)
+            case 3: return '';                // ♭III
+            case 4: return '';                // IV
+            case 5: return '';                // ♭V
+            case 6: return '';                // ♭VI
+            case 7: return '';                // ♭VII
+            default: return '';
+        }
+    } else if (scaleType === 'super-locrian' || scaleType === 'altered-dominant' || 
+               (category === 'melodic-minor-modes' && (scaleType === 'super-locrian' || scaleType === 'altered-dominant')) ||
+               (category === 'harmonic-minor-modes' && (scaleType === 'super-locrian' || scaleType === 'altered'))) {
+        // Super Locrian/Altered Dominant (7th mode of melodic minor OR harmonic minor)
+        // characteristic: diminished i° + major ♭II
+        switch (degree) {
+            case 1: return 'Modal Tonic';     // i° (diminished tonic - extremely unstable)
+            case 2: return 'Characteristic';  // ♭II (major ♭II - provides some resolution)
+            case 3: return '';                // ♭III
+            case 4: return '';                // ♭IV
+            case 5: return '';                // ♭V
+            case 6: return '';                // ♭VI
+            case 7: return '';                // ♭VII (or ♭♭VII in harmonic minor context)
+            default: return '';
+        }
+    } else if (scaleType === 'harmonic-minor') {
+        // Harmonic minor - use grouped functional harmony
+        switch (degree) {
+            case 1: return 'Tonic';           // i (tonic function)
+            case 2: return 'Predominant';    // ii° (predominant function)
+            case 3: return 'Tonic';          // ♭III+ (tonic function)
+            case 4: return 'Predominant';    // iv (predominant function)
+            case 5: return 'Dominant';       // V (dominant function)
+            case 6: return 'Tonic';          // ♭VI (tonic function)
+            case 7: return 'Dominant';       // vii° (dominant function)
+            default: return '';
+        }
     }
     
     // For other exotic scales, return empty string (no function label)
