@@ -1182,17 +1182,22 @@ function createRelatedModes(currentMode, category, currentKey) {
             
             if (!modeData) return;
             
+            // Ensure consistent spelling for the mode root note
+            // Convert the note to the determined spelling convention
+            const noteIndex = noteToIndex(startingNote);
+            const consistentStartingNote = getConsistentNoteSpelling(noteIndex, spellingConvention);
+            
             const button = document.createElement('button');
-            button.className = `mode-button ${mode === currentMode && startingNote === currentKey ? 'active' : ''}`;
+            button.className = `mode-button ${mode === currentMode && consistentStartingNote === currentKey ? 'active' : ''}`;
             button.innerHTML = `
                 <span class="mode-number">${modeData.number}</span>
-                <span class="mode-name">${startingNote} ${modeData.properName}</span>
+                <span class="mode-name">${consistentStartingNote} ${modeData.properName}</span>
             `;
             
             // Add click handler to change to this mode using the specific starting note
             button.addEventListener('click', () => {
                 AppController.setState({
-                    key: startingNote,
+                    key: consistentStartingNote,
                     category: category,
                     mode: mode
                 });
@@ -1499,21 +1504,11 @@ function calculateScaleWithConsistentSpelling(root, formula, scaleType, spelling
                 noteName = baseNoteName + 'b';
             }
         } else if (chromaticDifference === 2) {
-            // Two semitones up - use double sharp or flat
-            if (spellingConvention === 'flat') {
-                const nextDegreeIndex = (scaleDegreeIndex + 1) % 7;
-                noteName = noteNames[nextDegreeIndex] + 'bb';
-            } else {
-                noteName = baseNoteName + '##';
-            }
+            // Avoid double sharp - use enharmonic equivalent instead
+            noteName = getConsistentNoteSpelling(currentChromaticIndex, spellingConvention);
         } else if (chromaticDifference === 10) {
-            // Two semitones down - use double flat or sharp  
-            if (spellingConvention === 'sharp') {
-                const prevDegreeIndex = (scaleDegreeIndex - 1 + 7) % 7;
-                noteName = noteNames[prevDegreeIndex] + '##';
-            } else {
-                noteName = baseNoteName + 'bb';
-            }
+            // Avoid double flat - use enharmonic equivalent instead
+            noteName = getConsistentNoteSpelling(currentChromaticIndex, spellingConvention);
         } else {
             // For other intervals, use consistent chromatic spelling
             noteName = getConsistentNoteSpelling(currentChromaticIndex, spellingConvention);
@@ -1598,9 +1593,11 @@ function calculateDiminishedScaleSpelling(root, formula, spellingConvention) {
         } else if (chromaticDifference === 11) {
             noteName = targetLetter + 'b'; // Flat
         } else if (chromaticDifference === 2) {
-            noteName = targetLetter + '##'; // Double sharp (rarely used)
+            // Avoid double sharp - use enharmonic equivalent instead
+            noteName = getConsistentNoteSpelling(targetChromaticIndex, spellingConvention);
         } else if (chromaticDifference === 10) {
-            noteName = targetLetter + 'bb'; // Double flat (rarely used)
+            // Avoid double flat - use enharmonic equivalent instead
+            noteName = getConsistentNoteSpelling(targetChromaticIndex, spellingConvention);
         } else {
             // This shouldn't happen with proper diminished scales
             console.warn('Unexpected chromatic difference:', chromaticDifference, 'for', targetLetter);
