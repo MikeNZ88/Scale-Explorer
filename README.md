@@ -1,158 +1,153 @@
-# 🎸 Guitar Tab Player
+# 🎵 Scale Explorer
 
-A modern, web-based Guitar Pro file player with beautiful UI and comprehensive playback controls.
+An interactive music theory tool for exploring scales, modes, and chord progressions with visual fretboard display.
 
-![Guitar Tab Player](https://img.shields.io/badge/Guitar-Tab%20Player-8B4513?style=for-the-badge&logo=music&logoColor=white)
+![Scale Explorer](https://img.shields.io/badge/Scale-Explorer-8B4513?style=for-the-badge&logo=music&logoColor=white)
 ![MIT License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
-![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
-![AlphaTab](https://img.shields.io/badge/AlphaTab-Latest-orange?style=for-the-badge)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![Web Audio API](https://img.shields.io/badge/Web%20Audio%20API-FF6B6B?style=for-the-badge)
 
 ## ✨ Features
 
-### 🎵 **File Support**
-- **Guitar Pro Files**: Load `.gp3`, `.gp4`, `.gp5`, `.gpx` files
-- **Drag & Drop**: Simply drag files onto the interface
-- **File Browser**: Traditional file selection
+### 🎸 **Interactive Fretboard**
+- **Visual Scale Display**: See scales and modes on a guitar fretboard
+- **Note Highlighting**: Color-coded notes and intervals
+- **Multiple Viewing Modes**: Notes, intervals, and scale degrees
+- **Responsive Design**: Works on desktop and mobile
 
-### 🎮 **Playback Controls**
-- **Play/Pause/Stop**: Full transport controls
-- **Master Volume**: Global volume control
-- **Progress Tracking**: Visual playback progress
-- **Loop Support**: Repeat sections
+### 🎼 **Comprehensive Music Theory**
+- **200+ Scales**: Major, minor, modes, exotic scales, and more
+- **Chord Analysis**: Real-time chord detection and naming
+- **Interval Recognition**: Perfect, major, minor, augmented, diminished
+- **Scale Relationships**: See parent scales and related modes
 
-### 🎛️ **Track Management**
-- **Individual Track Controls**: Solo, mute, and volume per track
-- **Track Visibility**: Show/hide specific instruments
-- **Real-time Updates**: Instant response to control changes
+### 🎵 **Audio Playback**
+- **Scale Playback**: Hear scales ascending and descending
+- **Web Audio API**: High-quality audio synthesis
+- **Tempo Control**: Adjustable playback speed
+- **Note Highlighting**: Visual feedback during playback
 
-### 🖼️ **Export Features**
-- **PNG Export**: High-quality image export
-- **Selection Options**: Export specific sections
-- **Multiple Formats**: Various image sizes and qualities
+### 🎯 **Chord Explorer**
+- **Chord Categories**: Organized by type (7th, 9th, 11th, 13th, etc.)
+- **Chord Voicings**: Multiple fingering options
+- **Quality Analysis**: Major, minor, diminished, augmented, and more
+- **Symbol Recognition**: Proper chord symbol formatting
 
-### 🎨 **Modern UI**
-- **Beautiful Design**: Wood-grain inspired theme
-- **Responsive Layout**: Works on desktop and mobile
-- **Smooth Animations**: Polished user experience
-- **Clean Interface**: Intuitive controls
+### 🔍 **Smart Search**
+- **Scale Search**: Find scales by name or characteristics
+- **Mode Discovery**: Explore related modes and variations
+- **Filter Options**: Search by scale type, category, or interval pattern
 
 ## 🚀 Quick Start
 
-### **Option 1: Run Locally**
+### **Run Locally**
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/MikeNZ88/guitar-tab-player.git
-   cd guitar-tab-player
+   git clone https://github.com/MikeNZ88/Scale-Explorer.git
+   cd Scale-Explorer
    ```
 
-2. **Install dependencies**
+2. **Start a local server**
    ```bash
-   npm install
-   ```
-
-3. **Start the development server**
-   ```bash
-   npm run dev
-   ```
-
-4. **Open in browser**
-   ```
-   http://localhost:5173
-   ```
-
-### **Option 2: Use with Vite (No npm install needed)**
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/MikeNZ88/guitar-tab-player.git
-   cd guitar-tab-player
-   ```
-
-2. **Run with npx**
-   ```bash
-   npx vite --host
+   # Using Python 3
+   python -m http.server 3000
+   
+   # Or using Python 2
+   python -m SimpleHTTPServer 3000
+   
+   # Or using Node.js
+   npx http-server -p 3000
    ```
 
 3. **Open in browser**
    ```
-   http://localhost:5173
+   http://localhost:3000
    ```
 
 ## 📖 How to Use
 
-### **Loading Files**
-1. Click the **"Choose Guitar Pro File"** button
-2. Select a `.gp3`, `.gp4`, `.gp5`, or `.gpx` file
-3. The tab will automatically load and display
+### **Exploring Scales**
+1. **Select a Key**: Choose your root note (C, D, E, etc.)
+2. **Pick a Scale**: Browse categories or use the search
+3. **View on Fretboard**: See the scale highlighted on the guitar neck
+4. **Play Audio**: Click the play button to hear the scale
 
-### **Playback**
-- **Play**: Click the play button to start playback
-- **Pause**: Click pause to temporarily stop
-- **Stop**: Click stop to return to the beginning
-- **Volume**: Adjust the master volume slider
+### **Chord Analysis**
+1. **Navigate to Chords**: Scroll down to see chord progressions
+2. **Explore Categories**: Browse by chord type (triads, 7ths, etc.)
+3. **View Voicings**: Click on chords to see fretboard positions
+4. **Analyze Quality**: See chord symbols and quality descriptions
 
-### **Track Controls**
-- **Solo**: Click the solo button to hear only that track
-- **Mute**: Click mute to silence a specific track
-- **Volume**: Adjust individual track volumes
-- **Visibility**: Toggle track display on/off
-
-### **Export**
-1. Load a Guitar Pro file
-2. Click the **"Export as PNG"** button
-3. Choose your export options
-4. Download the generated image
+### **Scale Comparison**
+1. **Enter Compare Mode**: Click the compare button
+2. **Select Second Scale**: Choose another scale to compare
+3. **Visual Overlay**: See both scales on the same fretboard
+4. **Spot Differences**: Identify unique and shared notes
 
 ## 🛠️ Technical Details
 
 ### **Built With**
-- **[AlphaTab](https://alphatab.net/)**: Guitar tablature rendering engine
-- **[Vite](https://vitejs.dev/)**: Fast build tool and dev server
 - **Vanilla JavaScript**: No framework dependencies
-- **Modern CSS**: Grid, Flexbox, and CSS Variables
+- **Web Audio API**: Real-time audio synthesis
+- **SVG Graphics**: Scalable fretboard visualization
+- **CSS Grid/Flexbox**: Responsive layout system
 
 ### **Browser Support**
-- ✅ Chrome 80+
-- ✅ Firefox 75+
-- ✅ Safari 13+
-- ✅ Edge 80+
+- ✅ Chrome 60+
+- ✅ Firefox 55+
+- ✅ Safari 11+
+- ✅ Edge 79+
 
-### **File Format Support**
-- ✅ Guitar Pro 3 (`.gp3`)
-- ✅ Guitar Pro 4 (`.gp4`)
-- ✅ Guitar Pro 5 (`.gp5`)
-- ✅ Guitar Pro X (`.gpx`)
+### **Key Features**
+- ✅ 200+ scales and modes
+- ✅ Real-time chord analysis
+- ✅ Audio playback with Web Audio API
+- ✅ Responsive design for all devices
+- ✅ No external dependencies
 
 ## 📁 Project Structure
 
 ```
-guitar-tab-player/
-├── index.html          # Main application file
-├── package.json        # Dependencies and scripts
-├── vite.config.js      # Vite configuration
-├── public/             # Static assets
-│   └── vite.svg       # Vite logo
-├── README.md           # This file
-├── LICENSE             # MIT License
-└── .gitignore         # Git ignore rules
+Scale-Explorer/
+├── index.html              # Main application file
+├── styles.css              # Main stylesheet
+├── app.js                  # Application entry point
+├── js/
+│   ├── core/
+│   │   ├── constants.js        # Musical constants and data
+│   │   ├── scale-calculator.js # Scale generation logic
+│   │   ├── chord-analyzer.js   # Chord analysis engine
+│   │   ├── music-theory.js     # Core music theory functions
+│   │   ├── audio-engine.js     # Web Audio API integration
+│   │   ├── app-controller.js   # Main application controller
+│   │   ├── color-utils.js      # Color generation utilities
+│   │   ├── interval-utils.js   # Interval calculation functions
+│   │   └── pattern-detection.js # Scale pattern recognition
+│   └── ui/
+│       ├── components.js       # UI components and rendering
+│       └── audio-controls.js   # Audio control interface
+├── README.md               # This file
+├── LICENSE                 # MIT License
+└── .gitignore             # Git ignore rules
 ```
 
-## 🔧 Development
+## 🎓 Music Theory Coverage
 
-### **Scripts**
-```bash
-npm run dev     # Start development server
-npm run build   # Build for production
-npm run preview # Preview production build
-```
+### **Scale Types**
+- **Major Scales**: Ionian and all modes
+- **Minor Scales**: Natural, harmonic, melodic
+- **Pentatonic**: Major and minor pentatonic scales
+- **Blues**: Traditional and modern blues scales
+- **Exotic**: Hungarian, Japanese, Arabic, and more
+- **Synthetic**: Whole tone, diminished, chromatic
 
-### **Configuration**
-The project uses Vite with minimal configuration. See `vite.config.js` for details.
-
-### **Dependencies**
-- **AlphaTab**: Loaded via CDN for optimal performance
-- **Vite**: Development server and build tool
+### **Chord Types**
+- **Triads**: Major, minor, diminished, augmented
+- **Seventh Chords**: Major 7, minor 7, dominant 7, half-diminished
+- **Extended Chords**: 9th, 11th, 13th chords
+- **Altered Chords**: Various alterations and tensions
+- **Sus Chords**: Sus2, sus4, and combinations
 
 ## 🤝 Contributing
 
@@ -168,9 +163,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- **[AlphaTab](https://alphatab.net/)** - Excellent guitar tablature rendering
-- **[Vite](https://vitejs.dev/)** - Lightning-fast development experience
-- **Guitar Pro** - For creating the file format standard
+- **Music Theory Community** - For comprehensive scale and chord knowledge
+- **Web Audio API** - For enabling real-time audio synthesis
+- **Open Source Community** - For inspiration and best practices
 
 ## 📞 Support
 
@@ -182,4 +177,4 @@ If you encounter any issues or have questions:
 
 ---
 
-**Made with ❤️ for guitarists and developers**
+**Made with ❤️ for musicians and music theory enthusiasts**
