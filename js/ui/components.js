@@ -2531,6 +2531,17 @@ function displayTraditionalChords(scale, scaleType, category) {
         `;
     }
 
+    // Add jazz theory naming convention note
+    const jazzTheoryNote = `
+        <div class="jazz-theory-note">
+            <p><strong>Jazz Theory Naming:</strong> Chord functions (tonic, predominant, dominant, etc.) and quality descriptions in this tool are based on jazz theory conventions. This approach emphasizes harmonic function and voice leading principles commonly used in jazz, contemporary, and popular music analysis.</p>
+            <p><strong>Chord Functions:</strong> <em>Tonic</em> = home/rest (I, iii, vi); <em>Predominant</em> = preparation/tension (ii, IV); <em>Dominant</em> = resolution/pull back to tonic (V, vii°). These functions describe how chords move and resolve in progressions, creating the sense of musical motion and harmonic rhythm.</p>
+        </div>
+    `;
+
+    // Combine notes
+    const combinedNotes = scaleNote + jazzTheoryNote;
+
     // Calculate triads
     const triads = MusicTheory.calculateTriads(scale, scaleType, category);
     console.log('Generated triads:', triads);
@@ -2586,10 +2597,10 @@ function displayTraditionalChords(scale, scaleType, category) {
         }
     });
 
-    // Add the scale note if it exists, then display triads by default
+    // Add the combined notes if they exist, then display triads by default
     const chordsList = document.getElementById('chords-list');
-    if (chordsList && scaleNote) {
-        chordsList.innerHTML = scaleNote;
+    if (chordsList && combinedNotes) {
+        chordsList.innerHTML = combinedNotes;
         const triadsContainer = document.createElement('div');
         triadsContainer.id = 'triads-container';
         chordsList.appendChild(triadsContainer);
@@ -2622,13 +2633,13 @@ function displayTraditionalChords(scale, scaleType, category) {
             e.target.classList.add('active');
             
             // Clear the scale note when switching chord types
-            const targetContainer = scaleNote ? document.getElementById('triads-container') || chordsList : chordsList;
+            const targetContainer = combinedNotes ? document.getElementById('triads-container') || chordsList : chordsList;
             
             // Display the selected chord type
             const chordType = e.target.dataset.type;
             if (chordType === 'triads') {
-                if (scaleNote) {
-                    chordsList.innerHTML = scaleNote;
+                if (combinedNotes) {
+                    chordsList.innerHTML = combinedNotes;
                     const triadsContainer = document.createElement('div');
                     triadsContainer.id = 'triads-container';
                     chordsList.appendChild(triadsContainer);
@@ -2656,7 +2667,16 @@ function displayTraditionalChords(scale, scaleType, category) {
                 }
             } else if (chordType === 'sus2') {
                 if (sus2Chords.length > 0) {
-                    displayChordType('sus2', sus2Chords);
+                    const sus2Note = `
+                        <div class="sus-chord-explanation">
+                            <strong>Sus2 Chords:</strong> Suspended second chords are neither major nor minor because the third of the chord is substituted for the second. This creates an open, unresolved sound that wants to resolve back to a major or minor chord.
+                        </div>
+                    `;
+                    chordsList.innerHTML = sus2Note;
+                    const sus2Container = document.createElement('div');
+                    sus2Container.id = 'sus2-container';
+                    chordsList.appendChild(sus2Container);
+                    displayChordType('sus2', sus2Chords, sus2Container);
                     // Update audio controls with sus2 chords
                     if (window.audioControls) {
                         window.audioControls.updateChords(sus2Chords);
@@ -2670,7 +2690,16 @@ function displayTraditionalChords(scale, scaleType, category) {
                 }
             } else if (chordType === 'sus4') {
                 if (sus4Chords.length > 0) {
-                    displayChordType('sus4', sus4Chords);
+                    const sus4Note = `
+                        <div class="sus-chord-explanation">
+                            <strong>Sus4 Chords:</strong> Suspended fourth chords are neither major nor minor because the third of the chord is substituted for the fourth. This creates tension that typically resolves down to the third, making these chords excellent for creating movement and anticipation in progressions.
+                        </div>
+                    `;
+                    chordsList.innerHTML = sus4Note;
+                    const sus4Container = document.createElement('div');
+                    sus4Container.id = 'sus4-container';
+                    chordsList.appendChild(sus4Container);
+                    displayChordType('sus4', sus4Chords, sus4Container);
                     // Update audio controls with sus4 chords
                     if (window.audioControls) {
                         window.audioControls.updateChords(sus4Chords);
@@ -2684,7 +2713,16 @@ function displayTraditionalChords(scale, scaleType, category) {
                 }
             } else if (chordType === 'sus4-sevenths') {
                 if (sus4SeventhChords.length > 0) {
-                    displayChordType('sus4-sevenths', sus4SeventhChords);
+                    const sus4SeventhNote = `
+                        <div class="sus-chord-explanation">
+                            <strong>7sus4 Chords:</strong> Seventh suspended fourth chords combine the tension of a suspended fourth with the color of a seventh. Like sus4 chords, the third is substituted for the fourth, creating harmonic ambiguity that's neither major nor minor. These are commonly used in jazz and contemporary music for their sophisticated, unresolved sound.
+                        </div>
+                    `;
+                    chordsList.innerHTML = sus4SeventhNote;
+                    const sus4SeventhContainer = document.createElement('div');
+                    sus4SeventhContainer.id = 'sus4-seventh-container';
+                    chordsList.appendChild(sus4SeventhContainer);
+                    displayChordType('sus4-sevenths', sus4SeventhChords, sus4SeventhContainer);
                     // Update audio controls with sus4 seventh chords
                     if (window.audioControls) {
                         window.audioControls.updateChords(sus4SeventhChords);
@@ -2801,9 +2839,9 @@ function displayChordType(type, chords, container = null) {
                 const chordElement = document.createElement('div');
                 chordElement.className = `chord-item ${chord.isNonStandard ? 'non-standard' : ''}`;
                 
-                // Always use orange color for chord degrees instead of function-based colors
-                const functionColor = '#f97316'; // Orange color
-                const textColor = 'white'; // White text for good contrast with orange
+                // Use simple neutral color for all chord degrees
+                const functionColor = '#6b7280'; // Neutral gray color
+                const textColor = 'white'; // White text for good contrast
                 
                 // Add a tooltip for non-standard chords
                 const tooltip = chord.isNonStandard ? 
@@ -2852,9 +2890,9 @@ function displayChordType(type, chords, container = null) {
             const chordElement = document.createElement('div');
             chordElement.className = `chord-item ${chord.isNonStandard ? 'non-standard' : ''}`;
             
-            // Always use orange color for chord degrees instead of function-based colors
-            const functionColor = '#f97316'; // Orange color
-            const textColor = 'white'; // White text for good contrast with orange
+            // Use simple neutral color for all chord degrees
+            const functionColor = '#6b7280'; // Neutral gray color
+            const textColor = 'white'; // White text for good contrast
             
             // Add a tooltip for non-standard chords
             const tooltip = chord.isNonStandard ? 
@@ -2995,7 +3033,22 @@ function organizeChordsByQuality(chords, chordType) {
         organized[quality].push(chord);
     });
     
-    // Sort qualities in a logical order
+    // Sort chords within each quality group by degree, with degree 1 first
+    Object.keys(organized).forEach(quality => {
+        organized[quality].sort((a, b) => {
+            const degreeA = a.degree || 0;
+            const degreeB = b.degree || 0;
+            
+            // Put degree 1 first
+            if (degreeA === 1 && degreeB !== 1) return -1;
+            if (degreeB === 1 && degreeA !== 1) return 1;
+            
+            // For all other degrees, sort in ascending order
+            return degreeA - degreeB;
+        });
+    });
+    
+    // Sort qualities in a logical order, but prioritize the quality containing degree 1
     const qualityOrder = [
         'Major Triads', 'Minor Triads', 'Diminished Triads', 'Augmented Triads', 'Sus2 Triads', 'Sus4 Triads',
         'Major 7th', 'Minor 7th', 'Dominant 7th', 'Diminished 7th', 'Half Diminished', 'Minor Major 7th',
@@ -3007,9 +3060,25 @@ function organizeChordsByQuality(chords, chordType) {
         'Major 13th', 'Minor 13th', 'Dominant 13th', 'Half-Diminished 13th', 'Diminished 13th'
     ];
     
+    // Find which quality contains the degree 1 chord
+    let degree1Quality = null;
+    Object.keys(organized).forEach(quality => {
+        const hasDegree1 = organized[quality].some(chord => chord.degree === 1);
+        if (hasDegree1) {
+            degree1Quality = quality;
+        }
+    });
+    
     const sortedOrganized = {};
+    
+    // Add the quality containing degree 1 first
+    if (degree1Quality && organized[degree1Quality]) {
+        sortedOrganized[degree1Quality] = organized[degree1Quality];
+    }
+    
+    // Then add other qualities in their normal order
     qualityOrder.forEach(quality => {
-        if (organized[quality]) {
+        if (organized[quality] && quality !== degree1Quality) {
             sortedOrganized[quality] = organized[quality];
         }
     });

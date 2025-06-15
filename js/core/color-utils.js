@@ -123,13 +123,28 @@ function lightenColor(hex, percent = 50) {
 
 function getChordColor(chordFunction, quality) {
     const functionColors = {
-        'Tonic': '#4CAF50',      // Green
-        'Subdominant': '#2196F3', // Blue
-        'Dominant': '#FF9800',    // Orange
-        'Predominant': '#9C27B0', // Purple
-        'Secondary': '#607D8B',   // Blue Grey
-        'Chromatic': '#795548',   // Brown
-        'Substitute': '#E91E63'   // Pink
+        // Traditional functional harmony colors
+        'Tonic': '#4CAF50',           // Green
+        'Dominant': '#FF9800',        // Orange
+        'Predominant': '#9C27B0',     // Purple
+        
+        // Modal function colors
+        'Center': '#4CAF50',          // Green (same as Tonic)
+        'Stable': '#66BB6A',          // Light Green
+        'Tension': '#FF7043',         // Orange-Red
+        'Color': '#AB47BC',           // Purple-Pink
+        'Characteristic': '#42A5F5',  // Blue
+        'Resolution': '#FF9800',      // Orange (same as Dominant)
+        'Subtonic': '#FFA726',        // Light Orange
+        'Neapolitan': '#EC407A',      // Pink
+        'Chromatic': '#8D6E63',       // Brown
+        'Augmented': '#FFCA28',       // Yellow
+        'Diminished Center': '#F44336', // Red
+        'Modal': '#78909C',           // Blue Grey
+        
+        // Legacy colors for compatibility
+        'Secondary': '#607D8B',       // Blue Grey
+        'Substitute': '#E91E63'       // Pink
     };
     
     let baseColor = functionColors[chordFunction] || '#8B5CF6';

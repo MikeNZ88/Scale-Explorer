@@ -72,7 +72,7 @@ function calculateTriads(scale, scaleType = 'major', category = null) {
             symbol: chordAnalysis.symbol,
             name: `${root}${chordAnalysis.symbol}`,
             intervals: [thirdInterval, fifthInterval],
-            function: window.IntervalUtils.getChordFunction(i + 1, scaleType),
+            function: window.IntervalUtils.getChordFunction(i + 1, scaleType, category),
             isNonStandard: chordAnalysis.isNonStandard,
             description: chordAnalysis.description,
             inversion: chordAnalysis.inversion
@@ -159,7 +159,7 @@ function calculateSeventhChords(scale, scaleType = 'major', category = null) {
             symbol: chordAnalysis.symbol,
             name: `${root}${chordAnalysis.symbol}`,
             intervals: [thirdInterval, fifthInterval, seventhInterval],
-            function: window.IntervalUtils.getChordFunction(i + 1, scaleType),
+            function: window.IntervalUtils.getChordFunction(i + 1, scaleType, category),
             isNonStandard: chordAnalysis.isNonStandard,
             description: chordAnalysis.description,
             inversion: chordAnalysis.inversion
@@ -648,7 +648,6 @@ function calculateDiminishedScaleTriads(scale, scaleType) {
                         quality: quality,
                         symbol: symbol,
                         name: `${root}${symbol}`,
-                        notes: [root, third, fifth],
                         degree: i + 1,
                         intervals: [normalizedThird, normalizedFifth]
                     });
@@ -835,8 +834,8 @@ function calculateSixthChords(scale, scaleType = 'major', category = null) {
             symbol: chordAnalysis.symbol,
             name: `${root}${chordAnalysis.symbol}`,
             intervals: [thirdInterval, fifthInterval, sixthInterval],
-            function: window.IntervalUtils.getChordFunction(i + 1, scaleType),
-            isNonStandard: chordAnalysis.isNonStandard || false,
+            function: window.IntervalUtils.getChordFunction(i + 1, scaleType, category),
+            isNonStandard: chordAnalysis.isNonStandard,
             description: chordAnalysis.description
         });
     });
@@ -878,7 +877,7 @@ function calculateSus2Chords(scale, scaleType = 'major', category = null) {
         const fifthInterval = window.IntervalUtils.getIntervalBetweenNotes(root, fifth);
         
         const analysis = analyzeSus2Chord(secondInterval, fifthInterval);
-        const function_ = window.IntervalUtils.getChordFunction(degree, scaleType);
+        const function_ = window.IntervalUtils.getChordFunction(degree, scaleType, category);
         
         chords.push({
             degree: degree,
@@ -932,7 +931,7 @@ function calculateSus4Chords(scale, scaleType = 'major', category = null) {
         const fifthInterval = window.IntervalUtils.getIntervalBetweenNotes(root, fifth);
         
         const analysis = analyzeSus4Chord(fourthInterval, fifthInterval);
-        const function_ = window.IntervalUtils.getChordFunction(degree, scaleType);
+        const function_ = window.IntervalUtils.getChordFunction(degree, scaleType, category);
         
         chords.push({
             degree: degree,
@@ -989,7 +988,7 @@ function calculateSus4SeventhChords(scale, scaleType = 'major', category = null)
         const seventhInterval = window.IntervalUtils.getIntervalBetweenNotes(root, seventh);
         
         const analysis = analyzeSus4SeventhChord(fourthInterval, fifthInterval, seventhInterval);
-        const function_ = window.IntervalUtils.getChordFunction(degree, scaleType);
+        const function_ = window.IntervalUtils.getChordFunction(degree, scaleType, category);
         
         chords.push({
             degree: degree,
@@ -1077,7 +1076,7 @@ function calculateNinthChords(scale, scaleType = 'major', category = null) {
             symbol: chordAnalysis.symbol,
             name: `${root}${chordAnalysis.symbol}`,
             intervals: [thirdInterval, fifthInterval, seventhInterval, ninthInterval],
-            function: window.IntervalUtils.getChordFunction(i + 1, scaleType),
+            function: window.IntervalUtils.getChordFunction(i + 1, scaleType, category),
             isNonStandard: chordAnalysis.isNonStandard,
             description: chordAnalysis.description
         });
@@ -1242,7 +1241,7 @@ function calculateEleventhChords(scale, scaleType = 'major', category = null) {
             symbol: chordAnalysis.symbol,
             name: `${root}${chordAnalysis.symbol}`,
             intervals: [thirdInterval, fifthInterval, seventhInterval, ninthInterval, eleventhInterval],
-            function: window.IntervalUtils.getChordFunction(i + 1, scaleType),
+            function: window.IntervalUtils.getChordFunction(i + 1, scaleType, category),
             isNonStandard: chordAnalysis.isNonStandard,
             description: chordAnalysis.description
         });
@@ -1437,7 +1436,7 @@ function calculateThirteenthChords(scale, scaleType = 'major', category = null) 
             symbol: chordAnalysis.symbol,
             name: `${root}${chordAnalysis.symbol}`,
             intervals: [thirdInterval, fifthInterval, seventhInterval, ninthInterval, eleventhInterval, thirteenthInterval],
-            function: window.IntervalUtils.getChordFunction(i + 1, scaleType),
+            function: window.IntervalUtils.getChordFunction(i + 1, scaleType, category),
             isNonStandard: chordAnalysis.isNonStandard,
             description: chordAnalysis.description
         });

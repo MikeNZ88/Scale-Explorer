@@ -122,8 +122,8 @@ function updateScale() {
         // Get scale type
         const scaleType = getScaleType(category);
         
-        // For diminished scales, use the specific mode as scale type
-        const actualScaleType = (category === 'diminished-modes') ? mode : scaleType;
+        // For diminished scales and major modes, use the specific mode as scale type
+        const actualScaleType = (category === 'diminished-modes' || category === 'major-modes' || category === 'harmonic-minor-modes' || category === 'melodic-minor-modes') ? mode : scaleType;
         
         // Calculate correct enharmonic spelling for modal systems
         let correctedKey = key;
