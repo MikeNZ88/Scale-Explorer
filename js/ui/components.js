@@ -474,7 +474,20 @@ function renderModalFretboard(container, scale) {
                     
                     // Get interval and color
                     const scaleIndex = scale.indexOf(displayNote);
-                    const interval = MusicTheory.getIntervals(scale, scale[0])[scaleIndex] || '1';
+                    const scaleRoot = scale[0];
+                    
+                    // Determine scale type for interval calculation
+                    let scaleTypeForIntervals = window.currentScaleType || 'major';
+                    let modeForIntervals = window.currentMode || null;
+                    
+                    // Special handling for chromatic scales
+                    if (scale.length === 12) {
+                        scaleTypeForIntervals = 'chromatic';
+                        modeForIntervals = null;
+                    }
+                    
+                    const intervals = MusicTheory.getIntervals(scale, scaleRoot, scaleTypeForIntervals, modeForIntervals);
+                    const interval = intervals[scaleIndex] || '1';
                     const color = window.colorsVisible ? 
                         MusicTheory.getIntervalColor(interval) : '#d97706';
                     
@@ -1154,6 +1167,13 @@ function createRelatedModes(currentMode, category, currentKey) {
                 <br><strong>Complementary Scale:</strong> ${otherWholeToneNotes.join(', ')}
                 <br><small><strong>Note:</strong> The whole tone scale has rotations, not modes. Each rotation starts on a different note but maintains the same interval pattern (all whole steps). These rotations change the root note and harmonic focus but don't create new harmonic colors like traditional modes do.</small>
                 <br><small>Together, these two whole tone scales contain all 12 chromatic notes.</small>
+                <br><br><strong>Chords in Whole Tone Scale:</strong>
+                <br><small>• <strong>Augmented Triads:</strong> All triads are augmented - each scale note can be the root (C+, D+, E+, F#+, G#+, A#+)</small>
+                <br><small>• <strong>Dominant 7th Chords:</strong> Each scale note supports 7#5 and 7b5 chords (e.g., C7#5, C7b5, D7#5, D7b5, etc.)</small>
+                <br><small>• <strong>Extended Dominants:</strong> Each scale note supports highly altered dominants (e.g., C13#11#5, D13#11b5, etc.)</small>
+                <br><small>• <strong>French Augmented 6th:</strong> Contains 1, 2, #4, #6 intervals naturally from any root</small>
+                <br><small>• <strong>Quartal Harmony:</strong> Stacked augmented 4ths create unique sonorities</small>
+                <br><small><strong>Harmonic Character:</strong> The whole tone scale creates a dreamy, floating quality due to the lack of perfect 4ths and 5ths. It's commonly used in impressionist music and jazz for its ethereal, unresolved sound.</small>
             </div>
         `;
         parentScaleInfo.innerHTML = parentInfo;
@@ -2225,8 +2245,26 @@ function displayChordsFromScale(container, characteristicChords) {
     const chordsContainer = document.createElement('div');
     chordsContainer.className = 'chord-types-container';
     
+    // Special handling for chromatic scale - check first before other conditions
+    if (characteristicChords && characteristicChords.chords && Array.isArray(characteristicChords.chords) && 
+        characteristicChords.chords.length === 1 && characteristicChords.chords[0].chord) {
+        console.log('Detected chromatic scale structure, using special handling');
+        
+        const typeSection = document.createElement('div');
+        typeSection.className = 'chord-type-section';
+        
+        typeSection.innerHTML = `
+            <h4 class="chord-type-title">Available Chords</h4>
+            <p class="chord-type-description">The chromatic scale contains all 12 notes</p>
+            <div class="chord-type-chords">
+                <span class="characteristic-chord non-clickable" title="All chords are possible with the chromatic scale">All chords!</span>
+            </div>
+        `;
+        
+        chordsContainer.appendChild(typeSection);
+    }
     // Check if we have the new structure with 'chords' array
-    if (characteristicChords && characteristicChords.chords) {
+    else if (characteristicChords && characteristicChords.chords && Array.isArray(characteristicChords.chords)) {
         console.log('Using new chord structure with chords array');
         
         // Display each chord type section
@@ -2236,27 +2274,77 @@ function displayChordsFromScale(container, characteristicChords) {
             
             const isEmphasized = chordGroup.emphasis ? ' emphasized' : '';
             
-            const chordsHtml = chordGroup.chords.map(chord => {
-                // Check if this is a chord name vs description text
-                const isClickableChord = !chord.includes(' ') && !chord.includes('Contains') && !chord.includes('Creates') && !chord.includes('Multiple') && !chord.includes('Excellent');
+            // Add null checking for chordGroup.chords
+            if (chordGroup.chords && Array.isArray(chordGroup.chords)) {
+                const chordsHtml = chordGroup.chords.map(chord => {
+                    // Check if this is a chord name vs description text
+                    const isClickableChord = !chord.includes(' ') && !chord.includes('Contains') && !chord.includes('Creates') && !chord.includes('Multiple') && !chord.includes('Excellent');
+                    
+                    if (isClickableChord) {
+                        return `<span class="characteristic-chord clickable-chord" title="${chordGroup.description || ''}" data-chord="${chord}">${chord}</span>`;
+                    } else {
+                        return `<span class="characteristic-chord non-clickable" title="${chordGroup.description || ''}">${chord}</span>`;
+                    }
+                }).join('');
+                
+                typeSection.innerHTML = `
+                    <h4 class="chord-type-title${isEmphasized}">${chordGroup.type || 'Chords'}</h4>
+                    <p class="chord-type-description">${chordGroup.description || ''}</p>
+                    <div class="chord-type-chords">
+                        ${chordsHtml}
+                    </div>
+                `;
+            } else {
+                // Handle case where chordGroup.chords is missing or not an array
+                typeSection.innerHTML = `
+                    <h4 class="chord-type-title${isEmphasized}">${chordGroup.type || 'Chords'}</h4>
+                    <p class="chord-type-description">${chordGroup.description || 'No chord data available'}</p>
+                    <div class="chord-type-chords">
+                        <span class="characteristic-chord non-clickable">No chords available</span>
+                    </div>
+                `;
+            }
+            
+            chordsContainer.appendChild(typeSection);
+        });
+    } else if (characteristicChords && characteristicChords.chords && !Array.isArray(characteristicChords.chords)) {
+        // Handle old structure where chords is an array of chord objects (like chromatic scale)
+        console.log('Using old chord structure with chord objects array');
+        
+        const typeSection = document.createElement('div');
+        typeSection.className = 'chord-type-section';
+        
+        // Special handling for chromatic scale
+        if (characteristicChords.chords.length === 1 && characteristicChords.chords[0].chord) {
+            typeSection.innerHTML = `
+                <h4 class="chord-type-title">Available Chords</h4>
+                <p class="chord-type-description">The chromatic scale contains all 12 notes</p>
+                <div class="chord-type-chords">
+                    <span class="characteristic-chord non-clickable" title="All chords are possible with the chromatic scale">All chords!</span>
+                </div>
+            `;
+        } else {
+            const chordsHtml = characteristicChords.chords.map(chordObj => {
+                const chordName = chordObj.chord || chordObj.name || chordObj.root || 'Unknown';
+                const isClickableChord = /[+°#♭]|7|maj|m|sus|dim|aug/.test(chordName) && !chordName.includes(' ');
                 
                 if (isClickableChord) {
-                    return `<span class="characteristic-chord clickable-chord" title="${chordGroup.description}" data-chord="${chord}">${chord}</span>`;
+                    return `<span class="characteristic-chord clickable-chord" title="Chord from scale" data-chord="${chordName}">${chordName}</span>`;
                 } else {
-                    return `<span class="characteristic-chord non-clickable" title="${chordGroup.description}">${chord}</span>`;
+                    return `<span class="characteristic-chord non-clickable" title="Chord from scale">${chordName}</span>`;
                 }
             }).join('');
             
             typeSection.innerHTML = `
-                <h4 class="chord-type-title${isEmphasized}">${chordGroup.type}</h4>
-                <p class="chord-type-description">${chordGroup.description}</p>
+                <h4 class="chord-type-title">Available Chords</h4>
+                <p class="chord-type-description">Chords that can be constructed from this scale</p>
                 <div class="chord-type-chords">
                     ${chordsHtml}
                 </div>
             `;
-            
-            chordsContainer.appendChild(typeSection);
-        });
+        }
+        
+        chordsContainer.appendChild(typeSection);
     } else {
         console.log('Using legacy chord structure, calling organizeChordsByType');
         // Fallback to old structure
@@ -4230,7 +4318,18 @@ function renderSingleScale(svg, scale, displayFrets, fretWidth) {
                 // Get the scale index and interval for this note
                 const scaleIndex = scale.indexOf(displayNote);
                 const scaleRoot = scale[0];
-                const intervals = MusicTheory.getIntervals(scale, scaleRoot, window.currentScaleType || 'major', window.currentMode || null);
+                
+                // Determine scale type for interval calculation
+                let scaleTypeForIntervals = window.currentScaleType || 'major';
+                let modeForIntervals = window.currentMode || null;
+                
+                // Special handling for chromatic scales
+                if (scale.length === 12) {
+                    scaleTypeForIntervals = 'chromatic';
+                    modeForIntervals = null;
+                }
+                
+                const intervals = MusicTheory.getIntervals(scale, scaleRoot, scaleTypeForIntervals, modeForIntervals);
                 const interval = intervals[scaleIndex] || '1';
                 
                 // Check color visibility state - use orange if colors are disabled
