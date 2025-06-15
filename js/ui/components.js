@@ -2531,16 +2531,62 @@ function displayTraditionalChords(scale, scaleType, category) {
         `;
     }
 
-    // Add jazz theory naming convention note
-    const jazzTheoryNote = `
-        <div class="jazz-theory-note">
-            <p><strong>Jazz Theory Naming:</strong> Chord functions (tonic, predominant, dominant, etc.) and quality descriptions in this tool are based on jazz theory conventions. This approach emphasizes harmonic function and voice leading principles commonly used in jazz, contemporary, and popular music analysis.</p>
-            <p><strong>Chord Functions:</strong> <em>Tonic</em> = home/rest (I, iii, vi); <em>Predominant</em> = preparation/tension (ii, IV); <em>Dominant</em> = resolution/pull back to tonic (V, vii°). These functions describe how chords move and resolve in progressions, creating the sense of musical motion and harmonic rhythm.</p>
-        </div>
-    `;
+    // Add theory naming convention note based on scale type
+    function getTheoryExplanation(scaleType, category) {
+        // For major scale, natural minor, and harmonic minor - use functional harmony
+        if (scaleType === 'major' || scaleType === 'natural-minor' || scaleType === 'harmonic-minor' || 
+            scaleType === 'melodic-minor') {
+            return `
+                <div class="jazz-theory-note">
+                    <p><strong>Jazz Theory Naming:</strong> Chord functions (tonic, predominant, dominant, etc.) and quality descriptions in this tool are based on jazz theory conventions. This approach emphasizes harmonic function and voice leading principles commonly used in jazz, contemporary, and popular music analysis.</p>
+                    <p><strong>Chord Functions:</strong> <em>Tonic</em> = home/rest (I, iii, vi); <em>Predominant</em> = preparation/tension (ii, IV); <em>Dominant</em> = resolution/pull back to tonic (V, vii°). These functions describe how chords move and resolve in progressions, creating the sense of musical motion and harmonic rhythm.</p>
+                </div>
+            `;
+        }
+        
+        // For modal scales - use modal explanation
+        if (category === 'major-modes' || scaleType === 'dorian' || scaleType === 'phrygian' || 
+            scaleType === 'lydian' || scaleType === 'mixolydian' || scaleType === 'aeolian' || 
+            scaleType === 'locrian') {
+            
+            let avoidExample = '';
+            // Add specific avoid examples for common modes
+            if (scaleType === 'dorian') {
+                avoidExample = ' For example, in D Dorian, avoid the G→C progression as it pulls toward C Major (the relative major).';
+            } else if (scaleType === 'phrygian') {
+                avoidExample = ' For example, in E Phrygian, avoid the G→C progression as it pulls toward C Major (the relative major).';
+            } else if (scaleType === 'lydian') {
+                avoidExample = ' For example, in F Lydian, avoid the G→C progression as it pulls toward C Major (the relative major).';
+            } else if (scaleType === 'mixolydian') {
+                avoidExample = ' For example, in G Mixolydian, avoid the G→C progression as it pulls toward C Major (the relative major).';
+            } else if (scaleType === 'aeolian') {
+                avoidExample = ' For example, in A Aeolian, avoid the G→C progression as it pulls toward C Major (the relative major).';
+            } else if (scaleType === 'locrian') {
+                avoidExample = ' For example, in B Locrian, avoid the G→C progression as it pulls toward C Major (the relative major).';
+            }
+            
+            return `
+                <div class="modal-theory-note">
+                    <p><strong>Modal Theory:</strong> Modal scales use different harmonic approaches than traditional major/minor functional harmony. Each mode has its own unique character and harmonic tendencies.</p>
+                    <p><strong>Modal Tonic:</strong> The <em>Modal Tonic</em> is the home chord that establishes the modal center.</p>
+                    <p><strong>Characteristic Chords:</strong> These are chords that, when used in conjunction with the modal tonic, create the distinctive sound and character of the mode.</p>
+                    <p><strong>Modal Harmony:</strong> Other chords from the scale can also be used, but avoid traditional V-I cadences that pull toward the relative major.${avoidExample}</p>
+                </div>
+            `;
+        }
+        
+        // Default for other scales
+        return `
+            <div class="theory-note">
+                <p><strong>Scale Theory:</strong> This scale uses specialized harmonic structures. Chord functions and relationships may differ from traditional major/minor harmony.</p>
+            </div>
+        `;
+    }
+
+    const theoryNote = getTheoryExplanation(scaleType, category);
 
     // Combine notes
-    const combinedNotes = scaleNote + jazzTheoryNote;
+    const combinedNotes = scaleNote + theoryNote;
 
     // Calculate triads
     const triads = MusicTheory.calculateTriads(scale, scaleType, category);
@@ -2839,8 +2885,8 @@ function displayChordType(type, chords, container = null) {
                 const chordElement = document.createElement('div');
                 chordElement.className = `chord-item ${chord.isNonStandard ? 'non-standard' : ''}`;
                 
-                // Use simple neutral color for all chord degrees
-                const functionColor = '#6b7280'; // Neutral gray color
+                // Use orange color for all chord degrees
+                const functionColor = '#ff8c00'; // Orange color to match the theme
                 const textColor = 'white'; // White text for good contrast
                 
                 // Add a tooltip for non-standard chords
