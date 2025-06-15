@@ -2544,25 +2544,72 @@ function displayTraditionalChords(scale, scaleType, category) {
             `;
         }
         
-        // For modal scales - use modal explanation
+        // For modal scales - use modal explanation with dynamic examples
         if (category === 'major-modes' || scaleType === 'dorian' || scaleType === 'phrygian' || 
             scaleType === 'lydian' || scaleType === 'mixolydian' || scaleType === 'aeolian' || 
             scaleType === 'locrian') {
             
             let avoidExample = '';
-            // Add specific avoid examples for common modes
-            if (scaleType === 'dorian') {
-                avoidExample = ' For example, in D Dorian, avoid the G→C progression as it pulls toward C Major (the relative major).';
-            } else if (scaleType === 'phrygian') {
-                avoidExample = ' For example, in E Phrygian, avoid the G→C progression as it pulls toward C Major (the relative major).';
-            } else if (scaleType === 'lydian') {
-                avoidExample = ' For example, in F Lydian, avoid the G→C progression as it pulls toward C Major (the relative major).';
-            } else if (scaleType === 'mixolydian') {
-                avoidExample = ' For example, in G Mixolydian, avoid the G→C progression as it pulls toward C Major (the relative major).';
-            } else if (scaleType === 'aeolian') {
-                avoidExample = ' For example, in A Aeolian, avoid the G→C progression as it pulls toward C Major (the relative major).';
-            } else if (scaleType === 'locrian') {
-                avoidExample = ' For example, in B Locrian, avoid the G→C progression as it pulls toward C Major (the relative major).';
+            // Calculate the correct avoid progression based on the actual scale
+            if (scale && scale.length >= 7) {
+                // For all major modes, the avoid progression is V→I of the relative major
+                // The relative major is always the scale that starts on the 6th degree of the current mode
+                // But we need to find the V and I chords of that relative major
+                
+                // Get the modal tonic (first note of current scale)
+                const modalTonic = scale[0];
+                
+                // Calculate relative major root based on mode
+                let relativeMajorRoot;
+                if (scaleType === 'dorian') {
+                    // Dorian is the 2nd mode, so relative major is a minor 7th down (or major 2nd up)
+                    relativeMajorRoot = scale[6]; // 7th degree of dorian = 1st degree of relative major
+                } else if (scaleType === 'phrygian') {
+                    // Phrygian is the 3rd mode, so relative major is a major 6th down (or minor 3rd up)
+                    relativeMajorRoot = scale[5]; // 6th degree of phrygian = 1st degree of relative major
+                } else if (scaleType === 'lydian') {
+                    // Lydian is the 4th mode, so relative major is a perfect 5th down (or perfect 4th up)
+                    relativeMajorRoot = scale[4]; // 5th degree of lydian = 1st degree of relative major
+                } else if (scaleType === 'mixolydian') {
+                    // Mixolydian is the 5th mode, so relative major is a perfect 4th down (or perfect 5th up)
+                    relativeMajorRoot = scale[3]; // 4th degree of mixolydian = 1st degree of relative major
+                } else if (scaleType === 'aeolian') {
+                    // Aeolian is the 6th mode, so relative major is a major 3rd down (or minor 6th up)
+                    relativeMajorRoot = scale[2]; // 3rd degree of aeolian = 1st degree of relative major
+                } else if (scaleType === 'locrian') {
+                    // Locrian is the 7th mode, so relative major is a minor 2nd down (or major 7th up)
+                    relativeMajorRoot = scale[1]; // 2nd degree of locrian = 1st degree of relative major
+                } else {
+                    // Default fallback
+                    relativeMajorRoot = scale[2];
+                }
+                
+                // The V chord of the relative major is a perfect 5th above the relative major root
+                // In the context of our scale, we need to find which note is a perfect 5th above the relative major root
+                const noteToIndex = (note) => {
+                    const noteMap = { 'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11 };
+                    return noteMap[note] !== undefined ? noteMap[note] : 0;
+                };
+                
+                const relativeMajorIndex = noteToIndex(relativeMajorRoot);
+                const dominantIndex = (relativeMajorIndex + 7) % 12; // Perfect 5th up
+                
+                // Find the dominant note name from our scale
+                let dominantNote = null;
+                for (let note of scale) {
+                    if (noteToIndex(note) === dominantIndex) {
+                        dominantNote = note;
+                        break;
+                    }
+                }
+                
+                // If we couldn't find the exact dominant in the scale, use the calculated one
+                if (!dominantNote) {
+                    const indexToNote = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+                    dominantNote = indexToNote[dominantIndex];
+                }
+                
+                avoidExample = ` For example, in ${modalTonic} ${scaleType.charAt(0).toUpperCase() + scaleType.slice(1)}, avoid the ${dominantNote}→${relativeMajorRoot} progression as it pulls toward ${relativeMajorRoot} Major (the relative major).`;
             }
             
             return `
