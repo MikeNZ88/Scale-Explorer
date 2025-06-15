@@ -82,6 +82,30 @@ function getIntervals(notes, root, scaleType = 'major', mode = null) {
     const rootIndex = noteToIndex(root);
     if (rootIndex === undefined) return [];
     
+    // Special handling for whole tone scales
+    if (scaleType && (scaleType.includes('whole-tone') || scaleType.includes('whole_tone') || 
+                      mode && mode.includes('whole-tone'))) {
+        // Whole tone scale uses sharps: 1, 2, 3, #4, #5, #6
+        return notes.map(note => {
+            const noteIndex = noteToIndex(note);
+            if (noteIndex === undefined) return '1';
+            
+            const semitones = (noteIndex - rootIndex + 12) % 12;
+            
+            // Whole tone interval mapping with sharps
+            const wholeToneIntervalMap = {
+                0: '1',   // Root
+                2: '2',   // Major 2nd
+                4: '3',   // Major 3rd
+                6: '#4',  // Augmented 4th (not b5)
+                8: '#5',  // Augmented 5th (not b6)
+                10: '#6'  // Augmented 6th (not b7)
+            };
+            
+            return wholeToneIntervalMap[semitones] || '1';
+        });
+    }
+    
     return notes.map(note => {
         const noteIndex = noteToIndex(note);
         if (noteIndex === undefined) return '1';
