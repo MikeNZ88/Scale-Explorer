@@ -128,8 +128,21 @@ function getIntervals(notes, root, scaleType = 'major', mode = null) {
             // Other Lydian-related modes that use #4 instead of b5
             else if (mode === 'lydian-dominant' || scaleType === 'lydian-dominant' || 
                      mode === 'lydian-augmented' || scaleType === 'lydian-augmented' || 
-                     mode === 'lydian-sharp-2' || scaleType === 'lydian-sharp-2') {
+                     mode === 'lydian-sharp-2' || scaleType === 'lydian-sharp-2' ||
+                     mode === 'dorian-sharp-4' || scaleType === 'dorian-sharp-4') {
                 interval = '#4';
+            }
+        }
+        // Harmonic minor modes: #2 instead of b3
+        else if (semitones === 3) { // Minor third - can be b3 or #2
+            if (mode === 'lydian-sharp-2' || scaleType === 'lydian-sharp-2') {
+                interval = '#2'; // Lydian #2 uses #2, not b3
+            }
+        }
+        // Harmonic minor modes: #5 instead of b6
+        else if (semitones === 8) { // Minor sixth - can be b6 or #5
+            if (mode === 'ionian-sharp-5' || scaleType === 'ionian-sharp-5') {
+                interval = '#5'; // Ionian #5 uses #5, not b6
             }
         }
         
