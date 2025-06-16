@@ -63,7 +63,16 @@ function setupEventListeners() {
 
 // Event handlers
 function handleKeyChange(event) {
-    currentState.key = event.target.value;
+    let selectedKey = event.target.value;
+    
+    // Redirect F# to Gb for diminished scales (all diminished spellings use flats)
+    if (selectedKey === 'F#' && currentState.category === 'diminished-modes') {
+        selectedKey = 'Gb';
+        // Update the dropdown to reflect the redirect
+        event.target.value = 'Gb';
+    }
+    
+    currentState.key = selectedKey;
     updateScale();
 }
 

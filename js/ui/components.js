@@ -1301,24 +1301,31 @@ function createRelatedModes(currentMode, category, currentKey) {
             relatedModesSection.style.display = 'block';
         }
         
-        // Calculate the diminished scale from the current key to get all 8 notes
-        const diminishedFormula = categoryData.formulas['wh-diminished']; // Use WH pattern as base
-        const diminishedScale = calculateScaleWithConsistentSpelling(currentKey, diminishedFormula, 'diminished', spellingConvention);
+        // Calculate the diminished scale from the current key to get all 8 notes using the proper formula
+        const diminishedFormula = categoryData.formulas[currentMode]; // Use the actual current mode formula
+        const diminishedScale = calculateOriginalDiminishedSpelling(currentKey, diminishedFormula, 'flat');
         
         // Create 8 buttons - one for each note in the diminished scale
-        // Alternate between WH and HW patterns
+        // Determine WH vs HW based on position in the scale array
+        
+        // Determine what pattern the root is using (WH or HW)
+        const rootIsWH = currentMode === 'wh-diminished';
+        
         diminishedScale.forEach((startingNote, index) => {
-            // Determine which pattern this note uses
-            const isWHPattern = index % 2 === 0; // Even indices use WH, odd indices use HW
+            // Position in scale determines pattern:
+            // - Odd positions (1,3,5,7) have same pattern as root 
+            // - Even positions (2,4,6,8) have opposite pattern from root
+            const positionInScale = index + 1; // Convert 0-based to 1-based
+            const hasSamePatternAsRoot = positionInScale % 2 === 1; // Odd positions
+            
+            const isWHPattern = rootIsWH ? hasSamePatternAsRoot : !hasSamePatternAsRoot;
             const mode = isWHPattern ? 'wh-diminished' : 'hw-diminished';
             const modeData = MusicConstants.modeNumbers[mode];
             
             if (!modeData) return;
             
-            // Ensure consistent spelling for the mode root note
-            // Convert the note to the determined spelling convention
-            const noteIndex = noteToIndex(startingNote);
-            const consistentStartingNote = getConsistentNoteSpelling(noteIndex, spellingConvention);
+            // Use the actual calculated note - no conversion needed
+            const consistentStartingNote = startingNote;
             
             const button = document.createElement('button');
             button.className = `mode-button ${mode === currentMode && consistentStartingNote === currentKey ? 'active' : ''}`;
@@ -1721,10 +1728,54 @@ function calculateDiminishedScaleSpelling(root, formula, spellingConvention) {
         return [];
     }
     
-    // The principle: one note per letter name when possible
-    // C WH: C - D - Eb - F - Gb - Ab - A - B (formula: 1 - 2 - b3 - 4 - b5 - b6 - 6 - 7)
-    // C HW: C - Db - Eb - E - F# - G - A - Bb (formula: 1 - b2 - b3 - 3 - #4 - 5 - 6 - b7)
+    // Redirect F# to Gb for diminished scales (all diminished spellings use flats)
+    let adjustedRoot = root;
+    if (root === 'F#') {
+        adjustedRoot = 'Gb';
+    }
     
+    // Three standardized diminished scale spellings (all using flats)
+    const diminishedScaleSpellings = {
+        // Scale 1: C - D♭ - E♭ - F♭ - G♭ - G - A - B♭
+        'C': ['C', 'Db', 'Eb', 'Fb', 'Gb', 'G', 'A', 'Bb'],
+        'Db': ['Db', 'D', 'E', 'F', 'G', 'Ab', 'Bb', 'B'],
+        'D': ['D', 'Eb', 'F', 'Gb', 'Ab', 'A', 'B', 'C'],
+        
+        // Scale 2: D♭ - D - E - F - G - A♭ - B♭ - B  
+        'Eb': ['Eb', 'E', 'Gb', 'G', 'A', 'Bb', 'C', 'Db'],
+        'E': ['E', 'F', 'G', 'Ab', 'Bb', 'B', 'Db', 'D'],
+        'F': ['F', 'Gb', 'Ab', 'A', 'B', 'C', 'D', 'Eb'],
+        
+        // Scale 3: D - E♭ - F - G♭ - A♭ - A - B - C
+        'Gb': ['Gb', 'G', 'A', 'Bb', 'C', 'Db', 'Eb', 'E'],
+        'G': ['G', 'Ab', 'Bb', 'B', 'Db', 'D', 'E', 'F'],
+        'Ab': ['Ab', 'A', 'B', 'C', 'D', 'Eb', 'F', 'Gb'],
+        'A': ['A', 'Bb', 'C', 'Db', 'Eb', 'E', 'Gb', 'G'],
+        'Bb': ['Bb', 'B', 'Db', 'D', 'E', 'F', 'G', 'Ab'],
+        'B': ['B', 'C', 'D', 'Eb', 'F', 'Gb', 'Ab', 'A']
+    };
+    
+    // Get the standardized spelling for this root
+    const standardSpelling = diminishedScaleSpellings[adjustedRoot];
+    
+    if (!standardSpelling) {
+        console.warn('No standardized spelling found for diminished root:', adjustedRoot);
+        // Fallback to original logic
+        return calculateOriginalDiminishedSpelling(adjustedRoot, formula, 'flat');
+    }
+    
+    // For WH diminished, use the spelling as-is
+    // For HW diminished, rotate the spelling by 1 position
+    if (isWHDiminished) {
+        return [...standardSpelling];
+    } else {
+        // HW pattern starts one semitone higher, so rotate the array
+        return [...standardSpelling.slice(1), standardSpelling[0]];
+    }
+}
+
+// Fallback function using original logic
+function calculateOriginalDiminishedSpelling(root, formula, spellingConvention) {
     const noteNames = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
     const noteToIndex = {
         'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11,
@@ -1750,6 +1801,7 @@ function calculateDiminishedScaleSpelling(root, formula, spellingConvention) {
     const whLetterDegrees = [0, 1, 2, 3, 4, 5, 5, 6]; // Root=0, 2nd=1, b3=2, 4th=3, b5=4, b6=5, 6=5, 7th=6
     const hwLetterDegrees = [0, 1, 2, 2, 3, 4, 5, 6]; // Root=0, b2=1, b3=2, 3=2, #4=3, 5=4, 6=5, b7=6
     
+    const isWHDiminished = formula[0] === 2;
     const intervals = isWHDiminished ? whPattern : hwPattern;
     const letterDegrees = isWHDiminished ? whLetterDegrees : hwLetterDegrees;
     
