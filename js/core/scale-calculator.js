@@ -150,65 +150,44 @@ function calculateScaleWithDegrees(root, formula, scaleType = 'major') {
 }
 
 function calculatePentatonicScale(root, formula, rootNoteIndex, rootChromaticIndex, noteNames, noteToIndex, scaleType) {
-    // Different pentatonic scales use different scale degree mappings
-    let pentatonicDegreeMap;
-    
-    if (scaleType === 'pentatonic-major') {
-        // Major pentatonic: 1, 2, 3, 5, 6 (maps to C, D, E, G, A scale degrees)
-        pentatonicDegreeMap = [0, 1, 2, 4, 5];
-    } else if (scaleType === 'pentatonic') {
-        // Japanese pentatonic scales - handle based on formula
-        // hirojoshi-pentatonic: [2, 1, 4, 1, 4] - E, F#, G, B, C
-        // iwato-scale: [1, 4, 1, 4, 2] - E♭, F, B♭, B, D
-        
-        // For Japanese scales, we need to calculate the intervals and map them to appropriate degrees
-        const intervals = [0];
-        let tempIndex = rootChromaticIndex;
-        for (let i = 0; i < formula.length - 1; i++) {
-            tempIndex = (tempIndex + formula[i]) % 12;
-            intervals.push((tempIndex - rootChromaticIndex + 12) % 12);
-        }
-        
-        // Map intervals to scale degrees based on closest diatonic note
-        pentatonicDegreeMap = [0]; // Root is always 0
-        for (let i = 1; i < intervals.length; i++) {
-            const interval = intervals[i];
-            // Map chromatic intervals to closest scale degrees
-            if (interval <= 2) pentatonicDegreeMap.push(1); // 2nd degree
-            else if (interval <= 4) pentatonicDegreeMap.push(2); // 3rd degree  
-            else if (interval <= 6) pentatonicDegreeMap.push(3); // 4th degree
-            else if (interval <= 8) pentatonicDegreeMap.push(4); // 5th degree
-            else if (interval <= 10) pentatonicDegreeMap.push(5); // 6th degree
-            else pentatonicDegreeMap.push(6); // 7th degree
-        }
-    } else {
-        // Default to major pentatonic pattern
-        pentatonicDegreeMap = [0, 1, 2, 4, 5];
-    }
-    
+    // Simpler approach: Just use the formula directly with proper key signature spelling
     const scale = [root];
     let currentChromaticIndex = rootChromaticIndex;
     
+    // Determine spelling convention based on the root note and scale type
+    const flatKeys = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'];
+    const sharpKeys = ['G', 'D', 'A', 'E', 'B', 'F#', 'C#'];
+    
+    let spellingConvention;
+    
+    // Special handling for blues scales - always prefer flats for altered notes
+    if (formula.length === 6 || scaleType === 'blues' || scaleType.includes('blues')) {
+        spellingConvention = 'flat';
+    } else if (flatKeys.includes(root)) {
+        spellingConvention = 'flat';
+    } else if (sharpKeys.includes(root)) {
+        spellingConvention = 'sharp';
+    } else {
+        // For C and enharmonic equivalents, default to sharp for pentatonic, flat for blues
+        spellingConvention = (formula.length === 6) ? 'flat' : 'sharp';
+    }
+    
+    // Chromatic scales with consistent spelling
+    const sharpChromatic = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const flatChromatic = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+    
+    const chromatic = spellingConvention === 'flat' ? flatChromatic : sharpChromatic;
+    
+    // Calculate each note using the formula
     for (let i = 0; i < formula.length - 1; i++) {
         currentChromaticIndex = (currentChromaticIndex + formula[i]) % 12;
+        let noteName = chromatic[currentChromaticIndex];
         
-        // Get the corresponding diatonic scale degree
-        const scaleDegreeIndex = (rootNoteIndex + pentatonicDegreeMap[i + 1]) % 7;
-        const baseNoteName = noteNames[scaleDegreeIndex];
-        const baseNoteChromatic = noteToIndex(baseNoteName);
-        
-        const chromaticDifference = (currentChromaticIndex - baseNoteChromatic + 12) % 12;
-        
-        let noteName;
-        if (chromaticDifference === 0) {
-            noteName = baseNoteName;
-        } else if (chromaticDifference === 1) {
-            noteName = baseNoteName + '#';
-        } else if (chromaticDifference === 11) {
-            noteName = baseNoteName + 'b';
-        } else {
-            noteName = getChromatic(currentChromaticIndex, root, scaleType);
-        }
+        // Additional cleanup for problematic enharmonic spellings
+        if (noteName === 'B#') noteName = 'C';
+        if (noteName === 'E#') noteName = 'F';
+        if (noteName === 'Cb') noteName = 'B';
+        if (noteName === 'Fb') noteName = 'E';
         
         scale.push(noteName);
     }
@@ -217,62 +196,79 @@ function calculatePentatonicScale(root, formula, rootNoteIndex, rootChromaticInd
 }
 
 function calculateBluesScale(root, formula, rootNoteIndex, rootChromaticIndex, noteNames, noteToIndex) {
-    // Blues scales have specific note relationships
-    // Major blues: 1, 2, b3, 3, 5, 6
-    // Minor blues: 1, b3, 4, b5, 5, b7
+    // Blues scales should share the same note collection with consistent spelling
+    // Blues Major: 1, 2, b3, 3, 5, 6 
+    // Blues Minor: 1, b3, 4, b5, 5, b7 (from the 6th degree of blues major)
     
     const scale = [root];
     let currentChromaticIndex = rootChromaticIndex;
     
-    // Pre-defined degree mappings for blues scales
-    let degreeMap;
-    if (formula.length === 6) {
-        // Determine if it's major or minor blues based on the formula
-        const intervalsFromRoot = [0];
-        let tempIndex = rootChromaticIndex;
-        for (let i = 0; i < formula.length - 1; i++) {
-            tempIndex = (tempIndex + formula[i]) % 12;
-            intervalsFromRoot.push((tempIndex - rootChromaticIndex + 12) % 12);
-        }
-        
-        // Check for major blues pattern: [0, 2, 3, 4, 7, 9]
-        const majorBluesIntervals = [0, 2, 3, 4, 7, 9];
-        const isBluesMajor = JSON.stringify(intervalsFromRoot.sort((a,b) => a-b)) === JSON.stringify(majorBluesIntervals);
-        
-        if (isBluesMajor) {
-            // Major blues: 1, 2, b3, 3, 5, 6
-            degreeMap = [0, 1, 2, 2, 4, 5]; // Note: both b3 and 3 use the 3rd degree base
-        } else {
-            // Minor blues: 1, b3, 4, b5, 5, b7
-            degreeMap = [0, 2, 3, 3, 4, 6]; // Note: both b5 and 5 use different bases
-        }
+    // First, determine if this is blues major or minor based on the formula
+    const intervalsFromRoot = [0];
+    let tempIndex = rootChromaticIndex;
+    for (let i = 0; i < formula.length - 1; i++) {
+        tempIndex = (tempIndex + formula[i]) % 12;
+        intervalsFromRoot.push((tempIndex - rootChromaticIndex + 12) % 12);
     }
     
-    for (let i = 0; i < formula.length - 1; i++) {
-        currentChromaticIndex = (currentChromaticIndex + formula[i]) % 12;
+    // Check for major blues pattern: [0, 2, 3, 4, 7, 9]
+    const majorBluesIntervals = [0, 2, 3, 4, 7, 9];
+    const isBluesMajor = JSON.stringify(intervalsFromRoot.sort((a,b) => a-b)) === JSON.stringify(majorBluesIntervals);
+    
+    if (isBluesMajor) {
+        // For blues major, calculate normally with flat-friendly spelling
+        const flatChromatic = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
         
-        if (degreeMap) {
-            const scaleDegreeIndex = (rootNoteIndex + degreeMap[i + 1]) % 7;
-            const baseNoteName = noteNames[scaleDegreeIndex];
-            const baseNoteChromatic = noteToIndex(baseNoteName);
+        for (let i = 0; i < formula.length - 1; i++) {
+            currentChromaticIndex = (currentChromaticIndex + formula[i]) % 12;
+            let noteName = flatChromatic[currentChromaticIndex];
             
-            const chromaticDifference = (currentChromaticIndex - baseNoteChromatic + 12) % 12;
-            
-            let noteName;
-            if (chromaticDifference === 0) {
-                noteName = baseNoteName;
-            } else if (chromaticDifference === 1) {
-                noteName = baseNoteName + '#';
-            } else if (chromaticDifference === 11) {
-                noteName = baseNoteName + 'b';
-            } else {
-                noteName = getChromatic(currentChromaticIndex, root, 'blues');
-            }
+            // Clean up problematic enharmonic spellings
+            if (noteName === 'B#') noteName = 'C';
+            if (noteName === 'E#') noteName = 'F';
+            if (noteName === 'Cb') noteName = 'B';
+            if (noteName === 'Fb') noteName = 'E';
             
             scale.push(noteName);
-        } else {
-            // Fallback to chromatic
-            scale.push(getChromatic(currentChromaticIndex, root, 'blues'));
+        }
+    } else {
+        // For blues minor, we need to inherit spelling from the parent blues major
+        // Find the parent blues major scale (blues minor is 9 semitones up from blues major)
+        
+        // Calculate what the blues major root would be (9 semitones down = 3 semitones up from blues minor root)
+        const bluesMajorRootIndex = (rootChromaticIndex + 3) % 12;
+        const bluesMajorFormula = [2, 1, 1, 3, 2, 3]; // Blues major formula
+        
+        // Calculate the full blues major scale with consistent flat spelling
+        const flatChromatic = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+        const bluesMajorNotes = [flatChromatic[bluesMajorRootIndex]];
+        
+        let bluesMajorIndex = bluesMajorRootIndex;
+        for (let i = 0; i < bluesMajorFormula.length - 1; i++) {
+            bluesMajorIndex = (bluesMajorIndex + bluesMajorFormula[i]) % 12;
+            let noteName = flatChromatic[bluesMajorIndex];
+            
+            // Clean up problematic enharmonic spellings
+            if (noteName === 'B#') noteName = 'C';
+            if (noteName === 'E#') noteName = 'F';
+            if (noteName === 'Cb') noteName = 'B';
+            if (noteName === 'Fb') noteName = 'E';
+            
+            bluesMajorNotes.push(noteName);
+        }
+        
+        // Now extract the blues minor notes starting from the 6th degree (index 5) of blues major
+        // Blues minor uses: 6th, 1st, 2nd, 3rd, 4th, 5th degrees of blues major
+        const bluesMinorIndices = [5, 0, 1, 2, 3, 4]; // Indices in blues major scale
+        
+        for (let i = 0; i < bluesMinorIndices.length; i++) {
+            const noteIndex = bluesMinorIndices[i];
+            if (i === 0) {
+                // First note should be the root we were given
+                scale[0] = root;
+            } else {
+                scale.push(bluesMajorNotes[noteIndex]);
+            }
         }
     }
     

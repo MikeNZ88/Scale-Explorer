@@ -164,9 +164,9 @@ function shouldDisplayChords(scaleType, scaleLength, category = null) {
         return false;
     }
     
-    // Show chords for blues scales
-    if (scaleLength === 6 && (scaleType.includes('blues') || category === 'blues')) {
-        return true;
+    // Don't show chords for blues scales - they don't follow traditional chord progressions
+    if (scaleLength === 6 && (scaleType.includes('blues') || category === 'blues-scales' || category === 'blues-modes')) {
+        return false;
     }
     
     // Show chords for whole tone scales

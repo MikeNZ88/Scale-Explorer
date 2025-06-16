@@ -993,7 +993,7 @@ function createRelatedModes(currentMode, category, currentKey) {
         'mixolydian-b6': 7, 'locrian-natural-2': 9, 'super-locrian': 11,
         // Diminished modes
         'wh-diminished': 0, 'hw-diminished': 1,
-        // Major Pentatonic modes (correct offsets)
+        // Major Pentatonic modes (correct offsets to their major scale degrees)
         'major-pentatonic': 0, 'suspended-pentatonic': 2, 'man-gong': 4, 'ritusen': 7, 'minor-pentatonic': 9,
         // Blues scales
         'blues-major': 0, 'blues-minor': 9,
@@ -1122,6 +1122,99 @@ function createRelatedModes(currentMode, category, currentKey) {
         `;
         parentScaleInfo.innerHTML = parentInfo;
         return; // Exit early for blues scales
+    }
+    
+    // Special handling for pentatonic modes
+    if (category === 'pentatonic') {
+        console.log('=== PENTATONIC MODE GENERATION ===');
+        console.log('Current pentatonic mode:', currentMode);
+        console.log('Current key:', currentKey);
+        console.log('Final parent root:', finalParentRoot);
+        
+        // Pentatonic modes map to specific degrees of the major scale
+        // These are the correct major scale degrees for each pentatonic mode
+        const pentatonicModeToMajorDegree = {
+            'major-pentatonic': 0,      // 1st degree of major scale (C in C major)
+            'suspended-pentatonic': 1,  // 2nd degree of major scale (D in C major) 
+            'man-gong': 2,              // 3rd degree of major scale (E in C major)
+            'ritusen': 4,               // 5th degree of major scale (G in C major)
+            'minor-pentatonic': 5       // 6th degree of major scale (A in C major)
+        };
+        
+        // Calculate the parent major scale using the final parent root
+        const majorFormula = [2, 2, 1, 2, 2, 2, 1]; // Major scale formula
+        const parentMajorScale = calculateScaleWithConsistentSpelling(finalParentRoot, majorFormula, 'major', spellingConvention);
+        
+        console.log('Parent major scale:', parentMajorScale);
+        
+        // Create mode buttons for each pentatonic mode
+        categoryData.modes.forEach((mode, index) => {
+            const modeData = MusicConstants.modeNumbers[mode];
+            if (!modeData) return;
+            
+            // Get the correct major scale degree for this pentatonic mode
+            const majorDegree = pentatonicModeToMajorDegree[mode];
+            if (majorDegree === undefined) {
+                console.warn(`No major degree mapping for pentatonic mode: ${mode}`);
+                return;
+            }
+            
+            // Get the mode key from the parent major scale
+            const modeKey = parentMajorScale[majorDegree];
+            
+            console.log(`Pentatonic mode ${mode}: major degree ${majorDegree} = ${modeKey}`);
+            
+            // Define pentatonic shape mapping
+            const pentatonicShapes = {
+                'major-pentatonic': 'Shape 2',
+                'suspended-pentatonic': 'Shape 3', 
+                'man-gong': 'Shape 4',
+                'ritusen': 'Shape 5',
+                'minor-pentatonic': 'Shape 1'
+            };
+            
+            const button = document.createElement('button');
+            button.className = `mode-button ${mode === currentMode && modeKey === currentKey ? 'active' : ''}`;
+            
+            // Add shape information for pentatonic modes
+            if (pentatonicShapes[mode]) {
+                button.innerHTML = `
+                    <span class="mode-number">${modeData.number}</span>
+                    <span class="mode-name">${modeKey} ${modeData.properName}</span>
+                    <span class="mode-shape">(${pentatonicShapes[mode]})</span>
+                `;
+            } else {
+                button.innerHTML = `
+                    <span class="mode-number">${modeData.number}</span>
+                    <span class="mode-name">${modeKey} ${modeData.properName}</span>
+                `;
+            }
+            
+            // Add click handler to change to this mode
+            button.addEventListener('click', () => {
+                console.log(`Clicking pentatonic mode: ${mode} in key ${modeKey}`);
+                AppController.setState({
+                    key: modeKey,
+                    category: category,
+                    mode: mode
+                });
+            });
+            
+            modeButtonsContainer.appendChild(button);
+        });
+        
+        // Display parent scale information for pentatonic modes
+        const parentScaleName = getParentScaleName(category, finalParentRoot);
+        const parentInfo = `
+            <div class="parent-scale-info">
+                <strong>These modes are derived from:</strong> ${parentScaleName}
+                <br><small>Pentatonic modes use specific degrees of the major scale as starting points</small>
+            </div>
+        `;
+        parentScaleInfo.innerHTML = parentInfo;
+        
+        console.log('=== END PENTATONIC MODE GENERATION ===');
+        return; // Exit early for pentatonic scales
     }
     
     // Special handling for whole tone scales
@@ -1315,14 +1408,14 @@ function createRelatedModes(currentMode, category, currentKey) {
             }
         } else {
             // For non-traditional scales (pentatonic, blues, etc.), use offset calculation
-            if (category === 'pentatonic' && parentScaleNotes.length === 5) {
+            if (category === 'pentatonic') {
                 // For pentatonic modes, use the parent scale notes directly based on mode index
                 const pentatonicModeIndices = {
-                    'major-pentatonic': 0,
-                    'suspended-pentatonic': 1, 
-                    'man-gong': 2,
-                    'ritusen': 3,
-                    'minor-pentatonic': 4
+                    'major-pentatonic': 0,     // 1st degree of major scale
+                    'suspended-pentatonic': 1, // 2nd degree of major scale
+                    'man-gong': 2,             // 3rd degree of major scale
+                    'ritusen': 4,              // 5th degree of major scale
+                    'minor-pentatonic': 5      // 6th degree of major scale
                 };
                 
                 const modeIndex = pentatonicModeIndices[mode];
@@ -4678,3 +4771,27 @@ function getScaleTypeFromCategory(category) {
     };
     return categoryMap[category] || 'major';
 }
+// Make functions available globally
+window.UIComponents = {
+    createFretboard,
+    displayScale,
+    displayNotes,
+    displayIntervals,
+    displayChords,
+    displayFormula,
+    updateScaleColor,
+    updateModeName,
+    updateParentScale,
+    createRelatedModes,
+    initializeSearch,
+    closeChordModal,
+    closeChordVoicingModal,
+    closeIntervalInfoModal,
+    closeFretboardModal,
+    enterCompareMode,
+    exitCompareMode,
+    toggleDirection,
+    playScale,
+    openChordVoicingModal,
+    openIntervalInfoModal
+};
