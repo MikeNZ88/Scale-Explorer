@@ -4762,6 +4762,32 @@ function handleIntervalInfoModalEscape(e) {
     }
 }
 
+function openHelpModal() {
+    const modal = document.getElementById('help-modal');
+    if (!modal) return;
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    
+    // Add escape key listener
+    document.addEventListener('keydown', handleHelpModalEscape);
+}
+
+function closeHelpModal() {
+    const modal = document.getElementById('help-modal');
+    modal.classList.add('hidden');
+    
+    // Remove escape key listener
+    document.removeEventListener('keydown', handleHelpModalEscape);
+}
+
+function handleHelpModalEscape(e) {
+    if (e.key === 'Escape') {
+        closeHelpModal();
+    }
+}
+
 // Helper function to map category names to scale types
 function getScaleTypeFromCategory(category) {
     const categoryMap = {
@@ -4793,5 +4819,7 @@ window.UIComponents = {
     toggleDirection,
     playScale,
     openChordVoicingModal,
-    openIntervalInfoModal
+    openIntervalInfoModal,
+    openHelpModal,
+    closeHelpModal
 };

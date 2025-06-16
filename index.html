@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guitar Scale Explorer</title>
-    <link rel="stylesheet" href="styles.css?v=20250115-pentatonic-shapes">
+    <link rel="stylesheet" href="styles.css?v=20250115-help-modal-orange-button-fix">
 </head>
 <body>
     <div class="container">
@@ -47,7 +47,8 @@
             </div>
 
             <div class="control-group">
-                <button class="info-btn" onclick="UIComponents.openIntervalInfoModal()" title="Interval Spelling & Colour Guide">Information</button>
+                <button class="info-btn" onclick="UIComponents.openIntervalInfoModal()" title="Interval Spelling & Colour Guide">Interval Colours</button>
+                <button class="help-btn" onclick="UIComponents.openHelpModal()" title="Why Learn Guitar Scales: Master the Major Scale First">?</button>
             </div>
         </div>
 
@@ -570,6 +571,246 @@
         </div>
     </div>
 
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Why Learn Guitar Scales: Master the Major Scale First</h3>
+                <button class="close-modal" onclick="UIComponents.closeHelpModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-section">
+                    <h4>The Core Problem Most Guitarists Face</h4>
+                    <p>Most guitarists struggle with scales because they approach them backwards. They try to learn:</p>
+                    <ul>
+                        <li>Natural minor, harmonic minor, dorian, mixolydian as completely separate scales</li>
+                        <li>Dozens of chord formulas with no connection between them</li>
+                        <li>Scale patterns as isolated fretboard shapes</li>
+                        <li>Modes as entirely different systems</li>
+                    </ul>
+                    <p><strong>This leads to years of confusion and slow progress.</strong></p>
+                </div>
+
+                <div class="info-section">
+                    <h4>The Solution: One Universal Reference Point</h4>
+                    <p><strong>Learn the major scale first → everything else clicks into place.</strong></p>
+                    
+                    <p>The major scale isn't just another scale - it's the foundation of all Western music. Every other scale, chord, and musical concept is defined by how it relates to the major scale.</p>
+                    
+                    <div class="color-theory-section">
+                        <p><strong>Instead of memorizing everything separately, you learn:</strong></p>
+                        <ul>
+                            <li><strong>One reference scale</strong> that you can move anywhere on the fretboard</li>
+                            <li><strong>One interval framework</strong> that explains all other intervals</li>
+                            <li><strong>The connections</strong> between scales, chords, and progressions</li>
+                            <li><strong>The logic</strong> behind why certain note and chord combinations work</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h4>What Is the Major Scale?</h4>
+                    <p>The major scale is a sequence of 7 notes following this pattern of whole steps (W) and half steps (H):</p>
+                    
+                    <div class="color-theory-section">
+                        <h5><strong>W - W - H - W - W - W - H</strong></h5>
+                        <p><strong>Example in C major:</strong> C - D - E - F - G - A - B - C</p>
+                    </div>
+                    
+                    <p>The scale covers one octave (12 semitones) from the root note back to the same note at a higher pitch. While there are technically only 7 unique scale degrees, we conventionally include the octave as the 8th degree.</p>
+                </div>
+
+                <div class="info-section">
+                    <h4>Understanding Intervals: The Building Blocks</h4>
+                    <p>Intervals measure the distance between notes, counted in semitones from the root note:</p>
+                    
+                    <div class="example-grid">
+                        <div class="example-item">
+                            <strong>1st - Root</strong><br>
+                            <small>C (0 semitones)</small>
+                        </div>
+                        <div class="example-item">
+                            <strong>2nd - Major 2nd</strong><br>
+                            <small>D (2 semitones)</small>
+                        </div>
+                        <div class="example-item">
+                            <strong>3rd - Major 3rd</strong><br>
+                            <small>E (4 semitones)</small>
+                        </div>
+                        <div class="example-item">
+                            <strong>4th - Perfect 4th</strong><br>
+                            <small>F (5 semitones)</small>
+                        </div>
+                        <div class="example-item">
+                            <strong>5th - Perfect 5th</strong><br>
+                            <small>G (7 semitones)</small>
+                        </div>
+                        <div class="example-item">
+                            <strong>6th - Major 6th</strong><br>
+                            <small>A (9 semitones)</small>
+                        </div>
+                        <div class="example-item">
+                            <strong>7th - Major 7th</strong><br>
+                            <small>B (11 semitones)</small>
+                        </div>
+                        <div class="example-item">
+                            <strong>8th - Octave</strong><br>
+                            <small>C (12 semitones)</small>
+                        </div>
+                    </div>
+
+                    <div class="color-theory-section">
+                        <h5>Guitar-Specific Interval Shapes</h5>
+                        <p><strong>Along one string:</strong> 1 semitone = 1 fret</p>
+                        <ul>
+                            <li>Perfect 5th (7 semitones) = 7 frets higher on the same string</li>
+                        </ul>
+                        
+                        <p><strong>Across strings:</strong> Most interval shapes remain consistent across string pairs</p>
+                        <ul>
+                            <li><strong>Perfect 5th example:</strong> From the low E string (8th fret = C) to the A string (10th fret = G) creates a perfect 5th interval - <strong>this is the power chord shape!</strong> Power chords work everywhere on the fretboard because they maintain the same perfect 5th interval relationship</li>
+                            <li><strong>Exception:</strong> String pairs involving the B string require adjustment due to its different tuning - the same perfect 5th shape would need to move up one fret when crossing to or from the B string</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h4>Why the Major Scale Is Your Universal Reference</h4>
+                    <p>Every other musical element is described by how it differs from the major scale:</p>
+                    
+                    <div class="color-theory-section">
+                        <h5>Other Scales</h5>
+                        <ul>
+                            <li><strong>Natural minor</strong> = major scale with ♭3, ♭6, ♭7</li>
+                            <li><strong>Harmonic minor</strong> = natural minor with raised 7th</li>
+                            <li><strong>Dorian mode</strong> = major scale with ♭3, ♭7</li>
+                            <li><strong>Mixolydian</strong> = major scale with ♭7</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="color-theory-section">
+                        <h5>Chord Construction</h5>
+                        <ul>
+                            <li><strong>Minor chord</strong> = major chord with ♭3</li>
+                            <li><strong>Dominant 7</strong> = major triad + ♭7</li>
+                            <li><strong>Minor 7</strong> = minor triad + ♭7</li>
+                        </ul>
+                    </div>
+                    
+                    <p><strong>This approach makes memorization exponentially easier</strong> - instead of learning dozens of unrelated formulas, you learn one reference point and simple modifications.</p>
+                </div>
+
+                <div class="info-section">
+                    <h4>The Two Key Types That Dominate Music</h4>
+                    <p>Most songs use one of two key types:</p>
+                    
+                    <div class="example-grid">
+                        <div class="example-item">
+                            <strong>Major Keys</strong><br>
+                            <small>Based on the major scale<br>
+                            Bright, resolved sound<br>
+                            Example: C major uses the C major scale</small>
+                        </div>
+                        <div class="example-item">
+                            <strong>Minor Keys</strong><br>
+                            <small>Based on the natural minor scale (relative minor of major)<br>
+                            Darker, more emotional sound<br>
+                            Example: A minor uses the A natural minor scale (same notes as C major)</small>
+                        </div>
+                    </div>
+                    
+                    <div class="hover-tip">
+                        <strong>Key insight:</strong> The major scale and its relative natural minor use identical notes. Master the major scale patterns, and you instantly understand both key types.
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h4>What Are Modes? (Spoiler: You Already Know Them)</h4>
+                    <p>Modes sound intimidating, but they're simply the major scale starting from different notes. Each mode uses the exact same notes as the major scale, just with a different starting point (root).</p>
+                    
+                    <div class="color-theory-section">
+                        <h5>The 7 modes of C major:</h5>
+                        <ul>
+                            <li><strong>Ionian:</strong> C-D-E-F-G-A-B (starts on 1st degree) - <em>This is just the modal name for the major scale</em></li>
+                            <li><strong>Dorian:</strong> D-E-F-G-A-B-C (starts on 2nd degree)</li>
+                            <li><strong>Phrygian:</strong> E-F-G-A-B-C-D (starts on 3rd degree)</li>
+                            <li><strong>Lydian:</strong> F-G-A-B-C-D-E (starts on 4th degree)</li>
+                            <li><strong>Mixolydian:</strong> G-A-B-C-D-E-F (starts on 5th degree)</li>
+                            <li><strong>Aeolian:</strong> A-B-C-D-E-F-G (starts on 6th degree) - <em>This is just the modal name for the natural minor scale</em></li>
+                            <li><strong>Locrian:</strong> B-C-D-E-F-G-A (starts on 7th degree)</li>
+                        </ul>
+                    </div>
+
+                    <div class="color-theory-section">
+                        <h5>Why Different Roots Change Everything</h5>
+                        <p>Here's the crucial concept: <strong>When you change the root note, the interval relationships change completely.</strong></p>
+                        
+                        <p><strong>Example using A and C:</strong></p>
+                        <ul>
+                            <li><strong>In C major (Ionian):</strong> A is the 6th degree, C is the root (1st) → A to C = 6 to 1</li>
+                            <li><strong>In A minor (Aeolian):</strong> A is the root (1st), C is the 3rd degree → A to C = 1 to ♭3</li>
+                        </ul>
+                        
+                        <p>Same notes (A and C), but completely different interval relationships depending on which note you treat as the root.</p>
+                    </div>
+
+                    <div class="color-theory-section">
+                        <h5>Common Modes You'll Actually Use</h5>
+                        <ul>
+                            <li><strong>Dorian:</strong> Minor scale with a brighter sound (natural 6th instead of ♭6)</li>
+                            <li><strong>Mixolydian:</strong> Major scale with a bluesy edge (♭7 instead of major 7th)</li>
+                            <li><strong>Aeolian:</strong> The natural minor scale you already know</li>
+                        </ul>
+                        <p>The other modes are less common in popular music, so focus on these three first.</p>
+                    </div>
+
+                    <div class="hover-tip">
+                        <strong>The Practical Reality:</strong> Instead of memorizing 7 separate scales, you're really just learning where to start the major scale pattern you already know, but understanding how the intervals change when you shift the root.
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h4>How This Transforms Your Playing</h4>
+                    
+                    <div class="example-grid">
+                        <div class="example-item">
+                            <strong>Chord Understanding</strong><br>
+                            <small>Barre chords work everywhere because they maintain the same interval relationships. Modify any chord by knowing which fret changes which interval.</small>
+                        </div>
+                        <div class="example-item">
+                            <strong>Fretboard Navigation</strong><br>
+                            <small>Navigate the entire fretboard with confidence. Connect rhythm and lead playing seamlessly. Transpose to any key instantly.</small>
+                        </div>
+                        <div class="example-item">
+                            <strong>Musical Comprehension</strong><br>
+                            <small>Recognize chord progressions and predict what comes next. Improvise with intention rather than guessing.</small>
+                        </div>
+                        <div class="example-item">
+                            <strong>Universal Skills</strong><br>
+                            <small>Apply knowledge to any instrument, transcribe music, communicate with other musicians effectively.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h4>Your Next Steps</h4>
+                    <ol class="benefits-list">
+                        <li><strong>Master the major scale pattern</strong> in one key (start with C major - learning C major is just learning the natural note names on the fretboard, which helps with remembering note positions)</li>
+                        <li><strong>Learn the interval relationships</strong> within that scale</li>
+                        <li><strong>Review the related modes</strong> - practice starting the same scale pattern from each degree to hear how the intervals change when you shift the root</li>
+                        <li><strong>Change the root note</strong> and watch how the note names shift but the fretboard patterns remain the same</li>
+                        <li><strong>Apply the pattern</strong> to other keys across the fretboard</li>
+                        <li><strong>Use it as your reference point</strong> for understanding all other scales and chords</li>
+                    </ol>
+                    
+                    <div class="hover-tip">
+                        <strong>Remember:</strong> The major scale isn't just another scale to learn - it's the key that unlocks everything else in music. Invest the time to truly understand it, and watch how quickly everything else falls into place.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <!-- Core modules in dependency order -->
     <script src="js/core/constants.js"></script>
@@ -586,7 +827,7 @@
     
     <!-- Other core modules -->
     <script src="js/core/audio-engine.js"></script>
-    <script src="js/ui/components.js?v=20250115-blues-minor-offset-fix"></script>
+    <script src="js/ui/components.js?v=20250115-help-modal-feature"></script>
     <script src="js/ui/audio-controls.js"></script>
     <script src="js/core/app-controller.js?v=20250615-default-ionian-mode"></script>
 
