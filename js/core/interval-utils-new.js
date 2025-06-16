@@ -118,7 +118,22 @@ function getIntervals(notes, root, scaleType = 'major', mode = null) {
             6: 'b5', 7: '5', 8: 'b6', 9: '6', 10: 'b7', 11: '7'
         };
         
-        return intervalMap[semitones] || '1';
+        let interval = intervalMap[semitones] || '1';
+        
+        // Context-aware interval naming for specific modes
+        if (semitones === 6) { // Tritone - can be b5 or #4
+            if (mode === 'lydian' || scaleType === 'lydian') {
+                interval = '#4'; // Lydian mode uses #4, not b5
+            }
+            // Other Lydian-related modes that use #4 instead of b5
+            else if (mode === 'lydian-dominant' || scaleType === 'lydian-dominant' || 
+                     mode === 'lydian-augmented' || scaleType === 'lydian-augmented' || 
+                     mode === 'lydian-sharp-2' || scaleType === 'lydian-sharp-2') {
+                interval = '#4';
+            }
+        }
+        
+        return interval;
     });
 }
 
