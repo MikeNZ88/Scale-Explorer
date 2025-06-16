@@ -571,16 +571,16 @@ function setOptimalModalSize() {
         height: window.innerHeight
     };
     
-    // Set modal to 85% of viewport with max dimensions
+    // Set modal width but let height be determined by content
     const modalWidth = Math.min(viewport.width * 0.85, 1200);
-    const modalHeight = Math.min(viewport.height * 0.85, 800);
     
     modal.style.width = modalWidth + 'px';
-    modal.style.height = modalHeight + 'px';
+    // Remove fixed height - let content determine height
+    modal.style.height = 'auto';
     
-    // Center the modal
+    // Center the modal horizontally, position vertically based on content
     modal.style.left = ((viewport.width - modalWidth) / 2) + 'px';
-    modal.style.top = ((viewport.height - modalHeight) / 2) + 'px';
+    modal.style.top = '10vh'; // Fixed top margin instead of centering
 }
 
 function handleMobileOrientation() {

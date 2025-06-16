@@ -695,22 +695,22 @@ background: white !important;
 border-radius: 8px !important;
 max-width: 98vw !important;
 max-height: 98vh !important;
+height: 96vh !important;
 overflow: hidden !important;
 box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
 position: relative !important;
 display: flex !important;
 flex-direction: column !important;
 width: 96vw !important;
-height: 96vh !important;
 min-width: 280px !important;
 min-height: 300px !important;
 }
 /* === FRETBOARD MODAL SPECIFIC STYLES === */
 #fretboard-modal .modal-content {
 width: 98vw !important;
-height: 96vh !important;
 max-width: 98vw !important;
 max-height: 98vh !important;
+height: 96vh !important;
 min-width: 280px !important;
 min-height: 300px !important;
 }
@@ -2848,13 +2848,12 @@ background: rgba(255, 255, 255, 0.3) !important;
 transform: scale(1.1) !important;
 }
 #interval-info-modal .modal-body {
-padding: 2rem !important;
+padding: 2rem 2rem 0 2rem !important;
 overflow-y: auto !important;
 flex: 1 !important;
 color: #e2e8f0 !important;
 line-height: 1.6 !important;
 background: #1a1a1a !important;
-max-height: calc(90vh - 120px) !important;
 }
 .info-section {
 margin-bottom: 2rem !important;
